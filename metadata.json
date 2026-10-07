@@ -1,0 +1,6 @@
+{
+  "name": "Việt Phục Remix",
+  "description": "Bảng cảm hứng thời trang và giám tuyển phong cách Việt Phục đương đại giao thoa di sản.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
