@@ -28,6 +28,9 @@ export default function App() {
   // Global Step State: 1 | 2 | 3
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
+  // Intro animation play-only-once state
+  const [hasSeenIntro, setHasSeenIntro] = useState<boolean>(false);
+
   // Global Setup Data (Step 1 inputs)
   const [setupData, setSetupData] = useState<SetupData>({
     coreGarment: 'ao-ngu-than',
@@ -126,7 +129,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#241E1A] flex flex-col font-sans selection:bg-[#B7410E]/15 selection:text-[#B7410E]">
+    <div className="min-h-screen bg-[#FAF7EE] text-[#2B231D] flex flex-col font-sans selection:bg-[#B3261E]/20 selection:text-[#B3261E]">
       {/* Header with subtle step indicator: 01 Khám phá — 02 Concept — 03 Remix */}
       <Header
         currentStep={step}
@@ -143,6 +146,8 @@ export default function App() {
               setupData={setupData}
               onChangeSetup={handleChangeSetup}
               onSubmit={() => setStep(2)}
+              hasSeenIntro={hasSeenIntro}
+              onIntroComplete={() => setHasSeenIntro(true)}
             />
           )}
 
@@ -183,7 +188,7 @@ export default function App() {
           <p>
             Việt Phục Remix © 2026 · Fashion Editorial Styling Studio
           </p>
-          <div className="flex items-center gap-4 text-xs font-mono text-[#B7410E]">
+          <div className="flex items-center gap-4 text-xs font-mono text-[#B3261E]">
             <button
               type="button"
               onClick={() => setIsAboutOpen(true)}

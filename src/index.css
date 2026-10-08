@@ -2,19 +2,25 @@
 
 @layer base {
   :root {
-    --font-serif: 'Cormorant Garamond', Georgia, serif;
     --font-sans: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-editorial: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #FAF9F6;
-    color: #241E1A;
+    background-color: #FAF7EE;
+    color: #2B231D;
   }
 
-  h1, h2, h3, .font-editorial {
-    font-family: var(--font-serif);
+  h1, h2, h3, h4, h5, h6, .font-editorial, .font-serif {
+    font-family: var(--font-sans);
   }
+}
+
+.font-editorial,
+.font-serif {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 /* Custom styled range slider for Remix Dial */
@@ -24,8 +30,8 @@ input[type="range"]::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #B7410E;
-  border: 3px solid #FAF9F6;
+  background: #B3261E;
+  border: 3px solid #FAF7EE;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition: transform 0.15s ease, background-color 0.15s ease;
@@ -33,15 +39,15 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  background: #96340B;
+  background: #9A1F18;
 }
 
 input[type="range"]::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #B7410E;
-  border: 3px solid #FAF9F6;
+  background: #B3261E;
+  border: 3px solid #FAF7EE;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
 }
