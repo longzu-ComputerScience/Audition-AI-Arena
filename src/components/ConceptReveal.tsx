@@ -187,28 +187,36 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {concept.palette.map((color, idx) => (
-              <div
+              <motion.div
                 key={`${color.hex}-${idx}`}
-                className="bg-[#FAF7EE] border border-[#E5DEC9] p-2.5 rounded-lg flex items-center gap-2.5"
+                initial={{ opacity: 0.85, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: 'easeOut', delay: idx * 0.04 }}
+                className="group bg-[#FAF7EE] hover:bg-[#FFFDF9] border border-[#E5DEC9] hover:border-[#D5C6B0] p-2.5 rounded-lg flex items-center gap-2.5 transition-colors duration-200"
               >
                 <span
-                  className="w-5 h-5 rounded-full border border-black/10 shrink-0 shadow-2xs"
+                  className="w-5 h-5 rounded-full border border-black/10 shrink-0 shadow-2xs transition-transform duration-200 group-hover:scale-105"
                   style={{ backgroundColor: color.hex }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-semibold text-[#2B231D] truncate">
-                    {color.name}
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs font-semibold text-[#2B231D] truncate">
+                      {color.name}
+                    </span>
+                    <span className="text-[10px] text-[#8C7D70] font-medium tracking-tight shrink-0">
+                      {idx === 0 ? 'Chủ đạo' : idx === 1 ? 'Phối hợp' : 'Điểm xuyết'}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-[#7A6E63] font-mono">
+                  <div className="text-[11px] text-[#7A6E63] font-mono leading-tight">
                     {color.hex}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Cultural Snippet based on the selected Core Garment */}
+                {/* Cultural Snippet based on the selected Core Garment */}
         <div className="border-t border-[#EAE3D6] pt-3.5 space-y-2.5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-[#FAF7EE] border border-[#DDD0C0] p-1.5 shrink-0 flex items-center justify-center">
