@@ -50,8 +50,20 @@ export default function App() {
     accent: null, // Optional slot null by default
   });
 
-  // Target Remix: slider 0–100
-  const [targetRemix, setTargetRemix] = useState<number>(45);
+  // Derived: Actual Remix MUST be a derived value, not stored in state!
+  const actualRemix = useMemo(() => {
+    return computeActualRemix(activeSupportItems);
+  }, [activeSupportItems]);
+
+  // Single unified Remix Dial slider value (0–100)
+  const [remixDialValue, setRemixDialValue] = useState<number>(() =>
+    computeActualRemix({
+      bottom: SUPPORT_ITEMS.bottom[0],
+      shoes: SUPPORT_ITEMS.shoes[0],
+      bag: SUPPORT_ITEMS.bag[0],
+      accent: null,
+    })
+  );
 
   // Shared AI Availability status across Stylist and Image Generator
   const [aiStatus, setAiStatus] = useState<AIStatusInfo>({
@@ -88,11 +100,6 @@ export default function App() {
     return generateConcept(setupData);
   }, [setupData]);
 
-  // Derived: Actual Remix MUST be a derived value, not stored in state!
-  const actualRemix = useMemo(() => {
-    return computeActualRemix(activeSupportItems);
-  }, [activeSupportItems]);
-
   // Keep Cultural Guardrail synchronized with current styling snapshot
   useEffect(() => {
     const result = evaluateGuardrail(
@@ -112,11 +119,12 @@ export default function App() {
       const nextCoreId = data.coreGarment;
       const nextCore = CORE_ITEMS[nextCoreId] || CORE_ITEMS['ao-ngu-than'];
 
-      // Reset activeSupportItems to a deterministic local baseline using findBestSupportCombination() and current targetRemix
+      // Reset activeSupportItems to a deterministic local baseline using findBestSupportCombination() and current remixDialValue
       // Preserve whether the optional Accent slot is active
       const hasAccent = activeSupportItems.accent !== null;
-      const baselineCombination = findBestSupportCombination(targetRemix, hasAccent);
+      const baselineCombination = findBestSupportCombination(remixDialValue, hasAccent);
       setActiveSupportItems(baselineCombination);
+      setRemixDialValue(computeActualRemix(baselineCombination));
 
       // Reevaluate existing refinement/Guardrail status against the new core if needed
       if (refinementText) {
@@ -131,39 +139,56 @@ export default function App() {
     }));
   };
 
-  // When Target Remix slider changes:
-  // Search local support catalog for a combination whose average modernityScore is closest to Target
-  // Updates support selections immediately; actualRemix is derived again.
-  const handleTargetRemixChange = (newTarget: number) => {
-    setTargetRemix(newTarget);
+  // When user drags Remix Dial slider (0–100):
+  // 1. Freely moves slider position according to user drag
+  // 2. Searches catalog for best support combination
+  // 3. Only updates outfit if a strictly better/different combination is found
+  // 4. Never snaps back; outfit stays until a better combination is reached
+  const handleRemixDialChange = (newDialValue: number) => {
+    setRemixDialValue(newDialValue);
     const hasAccent = activeSupportItems.accent !== null;
-    const bestCombination = findBestSupportCombination(newTarget, hasAccent);
-    setActiveSupportItems(bestCombination);
+    const bestCombination = findBestSupportCombination(newDialValue, hasAccent, activeSupportItems);
+
+    const isDifferent =
+      bestCombination.bottom.id !== activeSupportItems.bottom.id ||
+      bestCombination.shoes.id !== activeSupportItems.shoes.id ||
+      bestCombination.bag.id !== activeSupportItems.bag.id ||
+      bestCombination.accent?.id !== activeSupportItems.accent?.id;
+
+    if (isDifferent) {
+      setActiveSupportItems(bestCombination);
+    }
   };
 
   // Manual selection:
-  // Updates only that support slot, recalculates derived actualRemix, does NOT move targetRemix!
+  // Updates only target support slot, recalculates derived actualRemix, and synchronizes slider to new actualRemix!
   const handleSelectSupportItem = (category: SupportCategoryId, item: SupportOption) => {
-    setActiveSupportItems((prev) => ({
-      ...prev,
+    const nextItems: ActiveSupportItems = {
+      ...activeSupportItems,
       [category]: item,
-    }));
+    };
+    setActiveSupportItems(nextItems);
+    setRemixDialValue(computeActualRemix(nextItems));
   };
 
-  // Add optional accent
+  // Add optional accent -> recalculates actualRemix & synchronizes slider
   const handleAddAccent = () => {
-    setActiveSupportItems((prev) => ({
-      ...prev,
+    const nextItems: ActiveSupportItems = {
+      ...activeSupportItems,
       accent: SUPPORT_ITEMS.accent[0],
-    }));
+    };
+    setActiveSupportItems(nextItems);
+    setRemixDialValue(computeActualRemix(nextItems));
   };
 
-  // Remove optional accent
+  // Remove optional accent -> recalculates actualRemix & synchronizes slider
   const handleRemoveAccent = () => {
-    setActiveSupportItems((prev) => ({
-      ...prev,
+    const nextItems: ActiveSupportItems = {
+      ...activeSupportItems,
       accent: null,
-    }));
+    };
+    setActiveSupportItems(nextItems);
+    setRemixDialValue(computeActualRemix(nextItems));
   };
 
   // Apply refinement text -> evaluates Cultural Guardrail locally
@@ -213,12 +238,12 @@ export default function App() {
               core={currentCore}
               supportItems={activeSupportItems}
               setupData={setupData}
-              targetRemix={targetRemix}
+              remixDialValue={remixDialValue}
               actualRemix={actualRemix}
               refinementText={refinementText}
               guardrailResult={guardrailResult}
               aiStatus={aiStatus}
-              onTargetRemixChange={handleTargetRemixChange}
+              onRemixDialChange={handleRemixDialChange}
               onSelectSupportItem={handleSelectSupportItem}
               onAddAccent={handleAddAccent}
               onRemoveAccent={handleRemoveAccent}

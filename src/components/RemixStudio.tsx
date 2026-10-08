@@ -28,12 +28,12 @@ interface RemixStudioProps {
   core: CoreItem;
   supportItems: ActiveSupportItems;
   setupData: SetupData;
-  targetRemix: number;
+  remixDialValue: number;
   actualRemix: number;
   refinementText: string;
   guardrailResult: GuardrailResult;
   aiStatus: AIStatusInfo;
-  onTargetRemixChange: (value: number) => void;
+  onRemixDialChange: (value: number) => void;
   onSelectSupportItem: (category: SupportCategoryId, item: SupportOption) => void;
   onAddAccent: () => void;
   onRemoveAccent: () => void;
@@ -46,12 +46,12 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   core,
   supportItems,
   setupData,
-  targetRemix,
+  remixDialValue,
   actualRemix,
   refinementText,
   guardrailResult,
   aiStatus,
-  onTargetRemixChange,
+  onRemixDialChange,
   onSelectSupportItem,
   onAddAccent,
   onRemoveAccent,
@@ -107,16 +107,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </h1>
           </div>
         </div>
-
-        {/* Status indicator */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#E5DEC9] px-3 py-1.5 rounded-lg">
-            <span className="text-[11px] font-mono text-[#8C7E72]">Remix thực tế:</span>
-            <span className="text-sm font-editorial font-bold text-[#B3261E] tabular-nums">
-              {actualRemix}%
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Main Two-Column Layout (~60% Visual Pane / ~40% Controls Pane) */}
@@ -132,7 +122,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
         {/* Right Side: Wardrobe & Styling Controls (~40% -> lg:col-span-5) */}
         <div className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
-          {/* 1. Tủ Đồ Phối Kèm */}
+          {/* 1. Tủ Đồ Phối Kèm (tích hợp Remix Dial ở đáy) */}
           <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3.5">
             <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
@@ -192,6 +182,49 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
               onAddSlot={onAddAccent}
               onRemoveSlot={supportItems.accent ? onRemoveAccent : undefined}
             />
+
+            {/* Integrated Remix Dial */}
+            <div className="border-t border-[#EFE8DC] pt-3.5 mt-2 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="remix-dial-slider"
+                  className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
+                >
+                  <Sliders className="w-3.5 h-3.5 text-[#B3261E]" />
+                  <span>Mức độ Remix</span>
+                </label>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-editorial text-lg font-bold text-[#B3261E] tabular-nums">
+                    {remixDialValue}%
+                  </span>
+                  {remixDialValue !== actualRemix && (
+                    <span
+                      className="text-[10px] font-mono text-[#8C7E72]"
+                      title={`Điểm đồ phối thực tế: ${actualRemix}%`}
+                    >
+                      (Đồ phối: {actualRemix}%)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <input
+                id="remix-dial-slider"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={remixDialValue}
+                onChange={(e) => onRemixDialChange(Number(e.target.value))}
+                className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B3261E]"
+              />
+
+              <div className="flex justify-between text-[10px] font-mono text-[#8C7E72]">
+                <span>Truyền thống (0%)</span>
+                <span>Cân bằng (50%)</span>
+                <span>Hiện đại (100%)</span>
+              </div>
+            </div>
           </section>
 
           {/* 2. Prominent AI Stylist Consultation Panel */}
@@ -199,51 +232,13 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             core={core}
             supportItems={supportItems}
             setupData={setupData}
-            targetRemix={targetRemix}
+            targetRemix={remixDialValue}
             actualRemix={actualRemix}
             aiStatus={aiStatus}
             onSelectSupportItem={onSelectSupportItem}
             onApplyRefinementText={onApplyRefinement}
             currentRefinementText={refinementText}
           />
-
-          {/* 3. Target Remix Dial */}
-          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
-            <div className="flex items-baseline justify-between">
-              <label
-                htmlFor="remix-dial-slider"
-                className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
-              >
-                <Sliders className="w-3.5 h-3.5 text-[#B3261E]" />
-                <span>Mục Tiêu Remix Dial</span>
-              </label>
-              <div className="flex items-baseline gap-1">
-                <span className="font-editorial text-2xl font-bold text-[#B3261E] tabular-nums">
-                  {targetRemix}%
-                </span>
-                <span className="text-[10px] font-mono text-[#8C7E72] uppercase">
-                  Mục tiêu
-                </span>
-              </div>
-            </div>
-
-            <input
-              id="remix-dial-slider"
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={targetRemix}
-              onChange={(e) => onTargetRemixChange(Number(e.target.value))}
-              className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B3261E]"
-            />
-
-            <div className="flex justify-between text-[10px] font-mono text-[#8C7E72]">
-              <span>0% Thuần Cổ Điển</span>
-              <span>50% Cân Bằng</span>
-              <span>100% Siêu Hiện Đại</span>
-            </div>
-          </section>
 
           {/* 4. Góc Nhìn Di Sản (Compact Editorial Card replacing Cultural Guardrail) */}
           <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">

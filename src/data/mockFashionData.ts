@@ -5,6 +5,7 @@ import {
   SupportCategoryId,
   SetupData,
   ConceptData,
+  ActiveSupportItems,
 } from '../types';
 
 export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
@@ -733,7 +734,8 @@ export function generateConcept(setup: SetupData): ConceptData {
 // Combinations search for Target Remix
 export function findBestSupportCombination(
   targetRemix: number,
-  includeAccent: boolean
+  includeAccent: boolean,
+  currentItems?: ActiveSupportItems
 ): {
   bottom: SupportOption;
   shoes: SupportOption;
@@ -753,6 +755,27 @@ export function findBestSupportCombination(
     accent: includeAccent ? accents[0] : null,
   };
 
+  // If currentItems are provided and match the includeAccent condition,
+  // initialize baseline with currentItems so we only switch when a strictly closer combination exists.
+  if (currentItems && (includeAccent ? Boolean(currentItems.accent) : !currentItems.accent)) {
+    const currentScores = [
+      currentItems.bottom.modernityScore,
+      currentItems.shoes.modernityScore,
+      currentItems.bag.modernityScore,
+    ];
+    if (includeAccent && currentItems.accent) {
+      currentScores.push(currentItems.accent.modernityScore);
+    }
+    const currentAvg = currentScores.reduce((a, b) => a + b, 0) / currentScores.length;
+    bestDiff = Math.abs(currentAvg - targetRemix);
+    best = {
+      bottom: currentItems.bottom,
+      shoes: currentItems.shoes,
+      bag: currentItems.bag,
+      accent: includeAccent ? currentItems.accent : null,
+    };
+  }
+
   if (includeAccent) {
     for (const b of bottoms) {
       for (const s of shoes) {
@@ -760,7 +783,7 @@ export function findBestSupportCombination(
           for (const a of accents) {
             const avg = (b.modernityScore + s.modernityScore + g.modernityScore + a.modernityScore) / 4;
             const diff = Math.abs(avg - targetRemix);
-            if (diff < bestDiff) {
+            if (diff < bestDiff - 0.001) {
               bestDiff = diff;
               best = { bottom: b, shoes: s, bag: g, accent: a };
             }
@@ -774,7 +797,7 @@ export function findBestSupportCombination(
         for (const g of bags) {
           const avg = (b.modernityScore + s.modernityScore + g.modernityScore) / 3;
           const diff = Math.abs(avg - targetRemix);
-          if (diff < bestDiff) {
+          if (diff < bestDiff - 0.001) {
             bestDiff = diff;
             best = { bottom: b, shoes: s, bag: g, accent: null };
           }
