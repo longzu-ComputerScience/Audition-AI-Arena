@@ -346,23 +346,29 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
 
 export const PREFERRED_COLOR_OPTIONS = [
   'Để hệ thống gợi ý',
-  'Đỏ thắm / Crimson',
-  'Vàng hoàng yến / Ochre Gold',
-  'Xanh chàm / Indigo Blue',
-  'Xanh khổng tước / Emerald Peacock',
-  'Bạch ngọc / Trắng ngà Ivory',
-  'Nâu hổ phách / Amber Brown',
-  'Than chì / Charcoal Black',
+  'Đỏ son',
+  'Xanh lam',
+  'Xanh ngọc',
+  'Trắng / kem',
+  'Hồng dịu',
+  'Đen',
+  'Vàng hoàng yến',
+  'Tím Huế',
+  'Xanh rêu cổ kính',
+  'Nâu trầm',
 ] as const;
 
 export const COLOR_MAP: Record<string, { name: string; hex: string }> = {
-  'Đỏ thắm / Crimson': { name: 'Đỏ Thắm', hex: '#8C2D19' },
-  'Vàng hoàng yến / Ochre Gold': { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
-  'Xanh chàm / Indigo Blue': { name: 'Xanh Chàm Cổ', hex: '#1C3144' },
-  'Xanh khổng tước / Emerald Peacock': { name: 'Xanh Khổng Tước', hex: '#1C494A' },
-  'Bạch ngọc / Trắng ngà Ivory': { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
-  'Nâu hổ phách / Amber Brown': { name: 'Nâu Hổ Phách', hex: '#633B26' },
-  'Than chì / Charcoal Black': { name: 'Than Chì', hex: '#2B2623' },
+  'Đỏ son': { name: 'Đỏ Son', hex: '#C23B22' },
+  'Xanh lam': { name: 'Xanh Lam', hex: '#1D4E89' },
+  'Xanh ngọc': { name: 'Xanh Ngọc', hex: '#267365' },
+  'Trắng / kem': { name: 'Trắng / Kem', hex: '#F5EFEB' },
+  'Hồng dịu': { name: 'Hồng Dịu', hex: '#D98282' },
+  'Đen': { name: 'Đen', hex: '#1A1817' },
+  'Vàng hoàng yến': { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+  'Tím Huế': { name: 'Tím Huế', hex: '#683363' },
+  'Xanh rêu cổ kính': { name: 'Xanh Rêu Cổ Kính', hex: '#4B5842' },
+  'Nâu trầm': { name: 'Nâu Trầm', hex: '#543D2B' },
 };
 
 // Local Concept Generator based on setup inputs
@@ -391,13 +397,13 @@ export function generateConcept(setup: SetupData): ConceptData {
       break;
   }
 
-  // Short rationale reacting to occasion, style, and preferredColor
+  // Short rationale reacting to occasion, location, style, and preferredColor
   const colorNote =
     setup.preferredColor && setup.preferredColor !== 'Để hệ thống gợi ý'
-      ? `, nhấn nhá với sắc ${setup.preferredColor.split('/')[0].trim()}`
+      ? `, nhấn nhá với sắc ${setup.preferredColor.toLowerCase()}`
       : '';
 
-  const rationale = `Ý tưởng kết hợp ${core.name} cho dịp ${setup.occasion.toLowerCase()}, mang định hướng ${setup.style.toLowerCase()}${colorNote}. Bản phối tôn vinh cấu trúc nguyên bản của di sản, đồng thời tạo nét phóng khoáng hài hòa cho nhịp sống hiện đại.`;
+  const rationale = `Ý tưởng kết hợp ${core.name} cho dịp ${setup.occasion.toLowerCase()} tại ${setup.location}, mang định hướng ${setup.style.toLowerCase()}${colorNote}. Bản phối tôn vinh cấu trúc nguyên bản của di sản, đồng thời tạo nét phóng khoáng hài hòa cho nhịp sống hiện đại.`;
 
   // 3-Color Palette: coherent & no duplicate swatches
   const palette: { name: string; hex: string }[] = [];

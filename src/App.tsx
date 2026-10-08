@@ -79,12 +79,30 @@ export default function App() {
     return computeActualRemix(activeSupportItems);
   }, [activeSupportItems]);
 
-  // Handle changing setup fields in Step 1
+  // Handle changing setup fields in Step 1 and Step 2
   const handleChangeSetup = (data: Partial<SetupData>) => {
-    setSetupData((prev) => {
-      const next = { ...prev, ...data };
-      return next;
-    });
+    // Only when user actually changes coreGarment to a DIFFERENT garment:
+    if (data.coreGarment && data.coreGarment !== setupData.coreGarment) {
+      const nextCoreId = data.coreGarment;
+      const nextCore = CORE_ITEMS[nextCoreId] || CORE_ITEMS['ao-ngu-than'];
+
+      // Reset activeSupportItems to a deterministic local baseline using findBestSupportCombination() and current targetRemix
+      // Preserve whether the optional Accent slot is active
+      const hasAccent = activeSupportItems.accent !== null;
+      const baselineCombination = findBestSupportCombination(targetRemix, hasAccent);
+      setActiveSupportItems(baselineCombination);
+
+      // Reevaluate existing refinement/Guardrail status against the new core if needed
+      if (refinementText) {
+        const result = evaluateGuardrail(refinementText, nextCore);
+        setGuardrailResult(result);
+      }
+    }
+
+    setSetupData((prev) => ({
+      ...prev,
+      ...data,
+    }));
   };
 
   // When Target Remix slider changes:
