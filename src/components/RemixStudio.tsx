@@ -6,10 +6,12 @@ import {
   SupportOption,
   SupportCategoryId,
   GuardrailResult,
+  SetupData,
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
 import { MannequinCanvas } from './MannequinCanvas';
 import { WardrobeSlot } from './WardrobeSlot';
+import { AIResultModal, OutfitSnapshot } from './AIResultModal';
 import { computeCompactDna } from '../utils/fashionCalculations';
 import {
   Sliders,
@@ -26,6 +28,7 @@ import {
 interface RemixStudioProps {
   core: CoreItem;
   supportItems: ActiveSupportItems;
+  setupData: SetupData;
   targetRemix: number;
   actualRemix: number;
   refinementText: string;
@@ -42,6 +45,7 @@ interface RemixStudioProps {
 export const RemixStudio: React.FC<RemixStudioProps> = ({
   core,
   supportItems,
+  setupData,
   targetRemix,
   actualRemix,
   refinementText,
@@ -59,6 +63,21 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
   // Local state for refinement text input until user clicks "Áp dụng"
   const [draftRefinement, setDraftRefinement] = useState<string>(refinementText);
+
+  // State for AI image generation modal snapshot
+  const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
+  const [aiSnapshot, setAiSnapshot] = useState<OutfitSnapshot | null>(null);
+
+  const handleOpenAIModal = () => {
+    // Capture immutable snapshot of current styling selections
+    setAiSnapshot({
+      core,
+      supportItems,
+      setupData,
+      actualRemix,
+    });
+    setIsAIModalOpen(true);
+  };
 
   const compactDna = computeCompactDna(core, supportItems, actualRemix);
 
@@ -340,24 +359,30 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </div>
           </section>
 
-          {/* 5. Final AI Action (Disabled) */}
+          {/* 5. Final AI Action (Active) */}
           <div className="pt-1 space-y-2">
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              className="w-full py-3.5 px-4 rounded-xs bg-[#E8E1D5] text-[#8C7E72] font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 cursor-not-allowed border border-[#D5C7B4] select-none opacity-85"
+              onClick={handleOpenAIModal}
+              className="w-full py-3.5 px-4 rounded-xs bg-[#B3261E] hover:bg-[#8F1E18] text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 cursor-pointer shadow-xs transition-colors"
             >
-              <Lock className="w-3.5 h-3.5 text-[#8C7E72]" />
+              <Sparkles className="w-4 h-4 text-white" />
               <span>Tạo bản minh họa AI</span>
             </button>
 
-            <p className="text-[11px] text-center text-[#8C7E72] font-serif italic">
-              Tính năng minh họa AI sẽ được kết nối ở bước tiếp theo.
+            <p className="text-[11px] text-center text-[#7A6E63] font-serif italic">
+              Minh họa phối đồ cá nhân hóa dựa trên mô hình Gemini thế hệ mới.
             </p>
           </div>
         </div>
       </div>
+
+      {/* AI Image Generation Result Modal */}
+      <AIResultModal
+        isOpen={isAIModalOpen}
+        snapshot={aiSnapshot}
+        onClose={() => setIsAIModalOpen(false)}
+      />
     </motion.section>
   );
 };

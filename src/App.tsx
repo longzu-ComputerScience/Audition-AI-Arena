@@ -186,6 +186,7 @@ export default function App() {
               key="step-3"
               core={currentCore}
               supportItems={activeSupportItems}
+              setupData={setupData}
               targetRemix={targetRemix}
               actualRemix={actualRemix}
               refinementText={refinementText}
