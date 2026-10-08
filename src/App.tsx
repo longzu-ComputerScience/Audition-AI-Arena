@@ -29,6 +29,13 @@ import { AboutModal } from './components/AboutModal';
 export default function App() {
   // Global Step State: 1 | 2 | 3
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [maxUnlockedStep, setMaxUnlockedStep] = useState<1 | 2 | 3>(1);
+
+  // Navigate to step and remember the highest unlocked step
+  const goToStep = (targetStep: 1 | 2 | 3) => {
+    setStep(targetStep);
+    setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
+  };
 
   // Intro animation play-only-once state
   const [hasSeenIntro, setHasSeenIntro] = useState<boolean>(false);
@@ -200,10 +207,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF7EE] text-[#2B231D] flex flex-col font-sans selection:bg-[#B3261E]/20 selection:text-[#B3261E]">
-      {/* Header with subtle step indicator: 01 Khám phá — 02 Concept — 03 Remix */}
+      {/* Header with unlocked visited steps navigation */}
       <Header
         currentStep={step}
-        onStepClick={(targetStep) => setStep(targetStep)}
+        maxUnlockedStep={maxUnlockedStep}
+        onStepClick={(targetStep) => goToStep(targetStep)}
         onOpenAbout={() => setIsAboutOpen(true)}
       />
 
@@ -215,7 +223,7 @@ export default function App() {
               key="step-1"
               setupData={setupData}
               onChangeSetup={handleChangeSetup}
-              onSubmit={() => setStep(2)}
+              onSubmit={() => goToStep(2)}
               hasSeenIntro={hasSeenIntro}
               onIntroComplete={() => setHasSeenIntro(true)}
             />
@@ -227,8 +235,8 @@ export default function App() {
               setupData={setupData}
               concept={concept}
               onChangeSetup={handleChangeSetup}
-              onBack={() => setStep(1)}
-              onProceed={() => setStep(3)}
+              onBack={() => goToStep(1)}
+              onProceed={() => goToStep(3)}
             />
           )}
 
@@ -248,7 +256,7 @@ export default function App() {
               onAddAccent={handleAddAccent}
               onRemoveAccent={handleRemoveAccent}
               onApplyRefinement={handleApplyRefinement}
-              onBackToConcept={() => setStep(2)}
+              onBackToConcept={() => goToStep(2)}
               onOpenCoreDetail={() => setIsLookbookOpen(true)}
             />
           )}

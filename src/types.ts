@@ -34,6 +34,7 @@ export interface CoreItem {
   baseModernity: number;
   palette: { name: string; hex: string }[];
   heritageDna: string[];
+  heritageStory?: string;
   editorialDescription: string;
   patternType: string;
 }

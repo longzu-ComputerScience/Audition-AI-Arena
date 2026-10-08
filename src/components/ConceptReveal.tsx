@@ -148,7 +148,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
         <div className="flex items-start gap-1.5 pt-0.5 text-[11px] text-[#7A6E63]">
           <Info className="w-3.5 h-3.5 shrink-0 text-[#B3261E] mt-0.5" />
           <span>
-            Tông màu ưu tiên dùng để định hướng bảng màu ý niệm phối đồ; không tự động thay đổi màu nguyên bản của trang phục.
+            Chọn sắc màu bạn yêu thích để định hình phong cách phối đồ.
           </span>
         </div>
       </div>

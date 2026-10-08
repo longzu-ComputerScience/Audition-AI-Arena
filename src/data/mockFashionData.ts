@@ -29,6 +29,8 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       'Dải ngũ sắc tượng trưng ngũ hành trước ngực áo',
       'Phom dáng thụ rộng tôn phong thái đoan trang lễ nghi',
     ],
+    heritageStory:
+      'Áo Nhật Bình vốn là thường phục của bậc hậu phi, công chúa và là lễ phục của hàng mệnh phụ triều Nguyễn. Tên gọi bắt nguồn từ viền cổ áo hình chữ nhật ghép dải ngũ sắc cân xứng trước ngực, tượng trưng cho nét đẹp trang trọng chốn hoàng cung xưa.',
     editorialDescription:
       'Lễ phục trang trọng của hoàng tộc triều Nguyễn, nhận diện qua cổ áo hình chữ nhật đặc trưng và các dải viền ngũ sắc tượng trưng cho năm cung bậc ngũ hành.',
     patternType: 'phoenix-court',
@@ -53,6 +55,8 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       'Đường may can giữa sống lưng giữ trục ngay thẳng',
       'Năm hạt khuy cài ngũ thường (Nhân - Lễ - Nghĩa - Trí - Tín)',
     ],
+    heritageStory:
+      'Áo Tấc là dạng áo ngũ thân tay thụng dài quá tấc, từng là lễ phục tôn nghiêm được diện trong tế lễ, hôn sự và việc đại sự thời Nguyễn. Chiều dài tay áo phủ kín bàn tay khi cung kính chắp lễ thể hiện phẩm hạnh đoan chính và cốt cách đĩnh đạc của tiền nhân.',
     editorialDescription:
       'Lễ phục ngũ thân tay thụ rộng rãi, mang vẻ đẹp mực thước và điềm đạm, thường diện trong những dịp đại lễ và không gian trang trọng.',
     patternType: 'wave-mandarin',
@@ -77,6 +81,8 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       'Cổ áo đứng tròn ôm nhẹ, hàng khuy bọc vải thủ công',
       'Độ buông rủ tự nhiên của chất liệu tơ tằm nguyên bản',
     ],
+    heritageStory:
+      'Phát triển từ áo ngũ thân truyền thống qua những cải tiến thẩm mỹ đầu thế kỷ 20, tà Áo Dài tinh giản còn hai vạt buông thướt tha. Trang phục trở thành biểu tượng giao thoa văn hóa, kết hợp giữa vẻ kín đáo truyền thống và tinh thần tự do thanh lịch đương thời.',
     editorialDescription:
       'Dáng áo thân quen của thẩm mỹ Việt Nam với hai vạt buông bay bổng. Phiên bản phom suông tối giản mang lại sự thoải mái trong sinh hoạt hiện đại.',
     patternType: 'lotus-imperial',
@@ -101,6 +107,8 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       'Dải thắt lưng lụa mềm buông rủ trước bụng tạo điểm nhấn nhịp điệu',
       'Cổ áo buông mở để lộ vạt yếm duyên dáng',
     ],
+    heritageStory:
+      'Gắn liền với không gian làng quê Bắc Bộ, Áo Tứ Thân gồm bốn vạt mộc mạc khoác ngoài chiếc yếm lụa, vạt trước buông tự nhiên hoặc buộc thắt linh hoạt. Cấu trúc bốn vạt vừa thuận tiện trong sinh hoạt thường nhật, vừa gửi gắm ý niệm trân quý tình thân gia đình tứ thân phụ mẫu.',
     editorialDescription:
       'Y phục truyền thống gắn liền với đời sống văn hóa Bắc Bộ. Cấu trúc bốn vạt và dải thắt eo đem đến sự mềm mại, mộc mạc và linh hoạt cho người mặc.',
     patternType: 'silk-ribbon',
@@ -125,6 +133,8 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       'Hàng năm khuy cài ngũ thường biểu trưng đạo đức tiền nhân',
       'Kết cấu năm thân ghép mí tượng trưng tình thân gia đình',
     ],
+    heritageStory:
+      'Được định hình từ các cuộc cải cách trang phục thời chúa Nguyễn và vua Minh Mạng, Áo Ngũ Thân tay chẽn là chuẩn mực phục sức lịch thiệp của người Việt suốt nhiều thế kỷ. Năm thân áo cùng hàng năm khuy cài tượng trưng cho đạo làm người ngũ thường và sự hiếu nghĩa gia tộc.',
     editorialDescription:
       'Nền tảng của y phục thời Nguyễn với tay áo chẽn gọn gàng, cổ đứng lập lĩnh và kết cấu năm thân chỉn chu, mang nét trang nhã trường tồn.',
     patternType: 'clouds-phoenix',
@@ -304,7 +314,7 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       id: 'accent-silver-jewelry',
       name: 'Chuỗi Bạc Thái Chạm Hoa Sen',
       category: 'accent',
-      categoryLabel: 'Điểm Nhấn · Accent',
+      categoryLabel: 'Phụ Kiện · Accent',
       material: 'Bạc 925 đánh mờ khắc hoa văn sen',
       modernityScore: 30,
       colorName: 'Bạc Mờ',
@@ -318,7 +328,7 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       id: 'accent-quai-thao-mini',
       name: 'Nón Quai Thao Mini Đính Bạc',
       category: 'accent',
-      categoryLabel: 'Điểm Nhấn · Accent',
+      categoryLabel: 'Phụ Kiện · Accent',
       material: 'Lá gồi đan tay, viền lụa tơ, chuỗi bạc hoa mai',
       modernityScore: 65,
       colorName: 'Lá Khô & Ánh Bạc',
@@ -332,7 +342,7 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       id: 'accent-y2k-shades',
       name: 'Kính Mát Gọng Bạc Slim Y2K',
       category: 'accent',
-      categoryLabel: 'Điểm Nhấn · Accent',
+      categoryLabel: 'Phụ Kiện · Accent',
       material: 'Hợp kim titan mạ bạc bóng & Tròng kính trà',
       modernityScore: 95,
       colorName: 'Titan Bạc & Trà',

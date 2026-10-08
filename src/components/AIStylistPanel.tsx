@@ -77,8 +77,8 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
     },
     {
       id: 'remix',
-      label: `⚡ Cân bằng Remix (${actualRemix}% vs ${targetRemix}%)`,
-      prompt: `Mức Remix thực tế đang là ${actualRemix}%, mục tiêu là ${targetRemix}%. Hãy gợi ý cách cân bằng hoàn hảo nhất.`,
+      label: '⚡ Gợi ý phối đồ cân bằng',
+      prompt: 'Hãy gợi ý cách cân bằng mức độ đương đại và di sản để bản phối hài hòa nhất.',
       type: 'remix' as const,
     },
   ];
@@ -139,7 +139,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A] flex items-center gap-2">
-              <span>Trợ Lý AI Stylist</span>
+              <span>Trợ lý phối đồ AI</span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-normal normal-case bg-[#F5ECE0] text-[#8C3428] border border-[#ECDCCB]">
                 Gemini 3.8
               </span>

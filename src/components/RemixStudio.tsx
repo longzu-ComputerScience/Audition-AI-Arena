@@ -172,7 +172,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             {/* Optional Accent Slot */}
             <WardrobeSlot
               category="accent"
-              label="Điểm nhấn"
+              label="Phụ kiện"
               item={supportItems.accent}
               options={SUPPORT_ITEMS.accent}
               isOpen={openSlot === 'accent'}
@@ -197,14 +197,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
                   <span className="font-editorial text-lg font-bold text-[#B3261E] tabular-nums">
                     {remixDialValue}%
                   </span>
-                  {remixDialValue !== actualRemix && (
-                    <span
-                      className="text-[10px] font-mono text-[#8C7E72]"
-                      title={`Điểm đồ phối thực tế: ${actualRemix}%`}
-                    >
-                      (Đồ phối: {actualRemix}%)
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -240,41 +232,43 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             currentRefinementText={refinementText}
           />
 
-          {/* 4. Góc Nhìn Di Sản (Compact Editorial Card replacing Cultural Guardrail) */}
-          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[#B3261E]" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
-                  Góc Nhìn Di Sản
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-[#8C7E72]">
-                {core.archiveCode}
-              </span>
+          {/* 3. Góc Nhìn Di Sản (Storytelling & Cultural Context) */}
+          <section className="bg-[#FFFDF9] border border-[#E8DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+            <div className="flex items-center gap-2 border-b border-[#EFE8DC] pb-2">
+              <BookOpen className="w-4 h-4 text-[#B3261E]" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
+                Góc Nhìn Di Sản
+              </h3>
             </div>
 
-            {/* A. Short heritage introduction (2-3 short lines from trusted metadata) */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-[#241E1A]">
+            {/* A. Heritage Origin & Cultural Story */}
+            <div className="space-y-1.5">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-sm font-bold text-[#241E1A]">
                   {core.vietnameseTitle || core.name}
                 </span>
-                <span className="text-[10px] font-mono text-[#B3261E] bg-[#FAF0EB] px-2 py-0.5 rounded-md border border-[#F2C2B5]">
-                  {core.era}
+                <span className="text-xs text-[#8C7E72] font-serif">
+                  ({core.era})
                 </span>
               </div>
-              <p className="text-xs text-[#5A4F46] leading-relaxed">
-                {core.silhouette}
+
+              {core.heritageStory && (
+                <p className="text-xs text-[#4E433C] leading-relaxed font-serif">
+                  {core.heritageStory}
+                </p>
+              )}
+
+              <p className="text-[11px] text-[#7A6E63] leading-relaxed">
+                <span className="font-medium text-[#4E433C]">Đặc trưng phom dáng:</span> {core.silhouette}
               </p>
             </div>
 
-            {/* B. Practical style etiquette */}
+            {/* B. Practical style etiquette - ngắn gọn */}
             {guardrailResult.etiquetteTip && (
-              <div className="bg-[#FAF7EE] border border-[#E5DEC9] rounded-lg p-2.5 flex items-start gap-2 text-xs text-[#5A4F46]">
+              <div className="bg-[#FAF7EE] border border-[#EAE3D6] rounded-lg p-2.5 flex items-start gap-2 text-xs text-[#5A4F46]">
                 <Info className="w-3.5 h-3.5 text-[#B3261E] shrink-0 mt-0.5" />
                 <p className="text-[11px] leading-relaxed">
-                  <span className="font-semibold text-[#241E1A]">Chuẩn mực mặc đẹp:</span> {guardrailResult.etiquetteTip}
+                  <span className="font-semibold text-[#241E1A]">Chuẩn mực:</span> {guardrailResult.etiquetteTip}
                 </p>
               </div>
             )}
