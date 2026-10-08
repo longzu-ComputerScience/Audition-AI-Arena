@@ -12,6 +12,64 @@ export const PatternMotif: React.FC<PatternMotifProps> = ({
   color = 'currentColor',
 }) => {
   switch (type) {
+    case 'phoenix-court':
+      // Imperial court embroidery motif for Áo Nhật Bình
+      return (
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <rect x="35" y="35" width="130" height="130" rx="2" stroke={color} strokeWidth="1.2" strokeDasharray="6 3" opacity="0.5" />
+          <path
+            d="M100 45 L135 80 L135 120 L100 155 L65 120 L65 80 Z"
+            stroke={color}
+            strokeWidth="1.5"
+            fill={color}
+            fillOpacity="0.06"
+          />
+          <path d="M100 35 L100 165" stroke={color} strokeWidth="1" opacity="0.4" />
+          <path d="M35 100 L165 100" stroke={color} strokeWidth="1" opacity="0.4" />
+          <circle cx="100" cy="100" r="14" stroke={color} strokeWidth="1.5" fill="none" />
+          <circle cx="100" cy="100" r="4" fill={color} />
+          {/* Five color bands hint */}
+          <path d="M75 140 Q100 125 125 140" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M70 148 Q100 133 130 148" stroke={color} strokeWidth="1.2" opacity="0.7" strokeLinecap="round" />
+        </svg>
+      );
+
+    case 'silk-ribbon':
+      // Graceful flowing ribbons for Áo Tứ Thân
+      return (
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <path
+            d="M70 30 C70 80 50 120 50 170"
+            stroke={color}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M90 30 C90 85 80 125 80 170"
+            stroke={color}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          <path
+            d="M110 30 C110 85 120 125 120 170"
+            stroke={color}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          <path
+            d="M130 30 C130 80 150 120 150 170"
+            stroke={color}
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          {/* Waist knot */}
+          <ellipse cx="100" cy="95" rx="20" ry="10" stroke={color} strokeWidth="1.4" fill={color} fillOpacity="0.08" />
+          <path d="M90 95 Q100 115 110 95" stroke={color} strokeWidth="1.5" />
+        </svg>
+      );
+
     case 'lotus-imperial':
     case 'lotus':
       return (
@@ -115,7 +173,6 @@ export const PatternMotif: React.FC<PatternMotifProps> = ({
           <line x1="60" y1="20" x2="60" y2="180" stroke={color} strokeWidth="1.5" strokeDasharray="18 4" />
           <line x1="100" y1="20" x2="100" y2="180" stroke={color} strokeWidth="2" strokeDasharray="24 6" />
           <line x1="140" y1="20" x2="140" y2="180" stroke={color} strokeWidth="1.5" strokeDasharray="18 4" />
-          {/* subtle leaf shoots */}
           <path d="M100 80 C115 70 130 72 135 65" stroke={color} strokeWidth="1" strokeLinecap="round" />
           <path d="M100 110 C85 100 70 102 65 95" stroke={color} strokeWidth="1" strokeLinecap="round" />
           <path d="M140 130 C155 120 170 122 175 115" stroke={color} strokeWidth="1" strokeLinecap="round" />

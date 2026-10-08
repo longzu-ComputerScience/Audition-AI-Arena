@@ -26,7 +26,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </button>
 
         <div className="border-b border-[#EFE8DC] pb-4 mb-5">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8C3B24]">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#B7410E]">
             <Compass className="w-3.5 h-3.5" />
             <span>Tuyên Ngôn Thiết Kế</span>
           </div>
@@ -40,9 +40,9 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <strong>Việt Phục Remix</strong> ra đời với một câu hỏi cốt lõi: <em>Làm thế nào để cổ phục không chỉ nằm trong bảo tàng hay dịp lễ hội, mà bước thẳng vào đời sống thường nhật của giới trẻ hôm nay?</em>
           </p>
           <p>
-            Chúng tôi tin rằng bảo tồn di sản không đồng nghĩa với việc đóng băng nó trong quá khứ. Bằng cách giữ nguyên cấu trúc trụ cột (cổ đứng lập lĩnh, khuy cài ngũ thường, đường lượn tà áo) và táo bạo kết hợp với raw denim, chunky loafer, túi techwear hay sneaker năng động, chiếc áo Việt tìm lại được nhịp đập đương đại.
+            Chúng tôi tin rằng bảo tồn di sản không đồng nghĩa với việc đóng băng nó trong quá khứ. Bằng cách giữ nguyên cấu trúc trụ cột (cổ đứng lập lĩnh, khuy cài ngũ thường, đường lượn tà áo) và táo bạo kết hợp với raw denim, chunky loafer, túi techwear hay sneaker năng động, chiếc áo Việt tìm lại được nhịp đập hiện đại.
           </p>
-          <blockquote className="p-3.5 bg-[#FAF7F2] border-l-2 border-[#8C3B24] rounded-r-xs italic font-serif text-[#241E1A]">
+          <blockquote className="p-3.5 bg-[#FAF7F2] border-l-2 border-[#B7410E] rounded-r-xs italic font-serif text-[#241E1A]">
             "Di sản không phải là đống tro tàn cần thờ phụng, mà là ngọn lửa cần được tiếp nối và bùng cháy rực rỡ hơn."
           </blockquote>
         </div>
@@ -51,7 +51,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             type="button"
-            className="px-5 py-2 bg-[#241E1A] hover:bg-[#8C3B24] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
+            className="px-5 py-2 bg-[#241E1A] hover:bg-[#B7410E] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
           >
             Đã Hiểu
           </button>

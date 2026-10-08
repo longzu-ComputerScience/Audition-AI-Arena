@@ -1,224 +1,207 @@
 import React, { useState, useMemo } from 'react';
-import { CoreVietPhucId, ContextId, StyleId } from './types';
-import { CORE_ITEMS, SUPPORT_ITEMS, PRESET_LOOKS } from './data/mockFashionData';
-import { computeCulturalDna } from './utils/fashionCalculations';
+import { AnimatePresence } from 'motion/react';
+import {
+  SetupData,
+  ActiveSupportItems,
+  SupportOption,
+  SupportCategoryId,
+  GuardrailResult,
+} from './types';
+import {
+  CORE_ITEMS,
+  SUPPORT_ITEMS,
+  generateConcept,
+  findBestSupportCombination,
+} from './data/mockFashionData';
+import {
+  computeActualRemix,
+  evaluateGuardrail,
+} from './utils/fashionCalculations';
 import { Header } from './components/Header';
-import { StylingControls } from './components/StylingControls';
-import { FashionBoard } from './components/FashionBoard';
+import { DiscoveryScreen } from './components/DiscoveryScreen';
+import { ConceptReveal } from './components/ConceptReveal';
+import { RemixStudio } from './components/RemixStudio';
 import { LookbookModal } from './components/LookbookModal';
 import { AboutModal } from './components/AboutModal';
-import { Toast } from './components/Toast';
 
 export default function App() {
-  // State for styling controls
-  const [selectedCore, setSelectedCore] = useState<CoreVietPhucId>('ao-ngu-than');
-  const [selectedContext, setSelectedContext] = useState<ContextId>('rap-concert');
-  const [selectedStyle, setSelectedStyle] = useState<StyleId>('streetwear');
-  const [targetRemixLevel, setTargetRemixLevel] = useState<number>(75);
-  const [preferences, setPreferences] = useState<string>(
-    'Ưu tiên đối lập chất liệu: raw denim cứng cáp với tà gấm sa ngũ thân buông mềm.'
-  );
+  // Global Step State: 1 | 2 | 3
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // State for support items in the Fashion Board (indexes into SUPPORT_ITEMS)
-  const [bottomIndex, setBottomIndex] = useState<number>(1); // Default Raw Denim
-  const [shoesIndex, setShoesIndex] = useState<number>(1); // Default Chunky Loafer
-  const [accessoryIndex, setAccessoryIndex] = useState<number>(1); // Default Techwear Crossbody
+  // Global Setup Data (Step 1 inputs)
+  const [setupData, setSetupData] = useState<SetupData>({
+    coreGarment: 'ao-ngu-than',
+    occasion: 'Chụp ảnh kỷ niệm / Lookbook',
+    location: 'Đại Nội Huế',
+    style: 'Thanh lịch',
+  });
 
-  // Modals & toast state
+  // Global Support Items (Step 3 active slots)
+  const [activeSupportItems, setActiveSupportItems] = useState<ActiveSupportItems>({
+    bottom: SUPPORT_ITEMS.bottom[0], // Quần Lụa Ống Rộng (15)
+    shoes: SUPPORT_ITEMS.shoes[0], // Guốc Mộc Sơn Mài (10)
+    bag: SUPPORT_ITEMS.bag[0], // Túi Gấm Cổ Điển (20)
+    accent: null, // Optional slot null by default
+  });
+
+  // Target Remix: slider 0–100
+  const [targetRemix, setTargetRemix] = useState<number>(45);
+
+  // Refinement text & Cultural Guardrail
+  const [refinementText, setRefinementText] = useState<string>('');
+  const [guardrailResult, setGuardrailResult] = useState<GuardrailResult>({
+    status: 'green',
+    message: 'Cấu trúc di sản cốt lõi được bảo toàn nguyên vẹn.',
+  });
+
+  // Modals state
   const [isLookbookOpen, setIsLookbookOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string>('');
-  const [isToastVisible, setIsToastVisible] = useState<boolean>(false);
-  const [savedCount, setSavedCount] = useState<number>(0);
 
-  // Active items
-  const currentCore = CORE_ITEMS[selectedCore] || CORE_ITEMS['ao-ngu-than'];
-  const currentBottom = SUPPORT_ITEMS.bottom[bottomIndex] || SUPPORT_ITEMS.bottom[0];
-  const currentShoes = SUPPORT_ITEMS.shoes[shoesIndex] || SUPPORT_ITEMS.shoes[0];
-  const currentAccessory = SUPPORT_ITEMS.accessory[accessoryIndex] || SUPPORT_ITEMS.accessory[0];
+  // Derived: Current Core Item
+  const currentCore = useMemo(() => {
+    return CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
+  }, [setupData.coreGarment]);
 
-  // Dynamic Cultural DNA & Actual Remix calculation
-  // Updates locally whenever core, bottom, shoes, accessory, context, or style change
-  // Does NOT mutate targetRemixLevel!
-  const culturalDna = useMemo(() => {
-    return computeCulturalDna(
-      currentCore,
-      currentBottom,
-      currentShoes,
-      currentAccessory,
-      selectedContext,
-      selectedStyle,
-      targetRemixLevel
-    );
-  }, [
-    currentCore,
-    currentBottom,
-    currentShoes,
-    currentAccessory,
-    selectedContext,
-    selectedStyle,
-    targetRemixLevel,
-  ]);
+  // Derived: Concept Data for Step 2
+  const concept = useMemo(() => {
+    return generateConcept(setupData);
+  }, [setupData]);
 
-  // Support item cycling handlers (cycles 0 -> 1 -> 2 -> 0)
-  const handleCycleBottom = () => {
-    setBottomIndex((prev) => (prev + 1) % SUPPORT_ITEMS.bottom.length);
+  // Derived: Actual Remix MUST be a derived value, not stored in state!
+  // actualRemix = average(modernityScore of active, non-null support items)
+  // Core garment is excluded. Null optional slot (accent === null) does not count as score 0.
+  const actualRemix = useMemo(() => {
+    return computeActualRemix(activeSupportItems);
+  }, [activeSupportItems]);
+
+  // Handle changing setup fields in Step 1
+  const handleChangeSetup = (data: Partial<SetupData>) => {
+    setSetupData((prev) => {
+      const next = { ...prev, ...data };
+      return next;
+    });
   };
 
-  const handleCycleShoes = () => {
-    setShoesIndex((prev) => (prev + 1) % SUPPORT_ITEMS.shoes.length);
+  // When Target Remix slider changes:
+  // Search local support catalog for a combination whose average modernityScore is closest to Target
+  // Updates support selections immediately; actualRemix is derived again.
+  const handleTargetRemixChange = (newTarget: number) => {
+    setTargetRemix(newTarget);
+    const hasAccent = activeSupportItems.accent !== null;
+    const bestCombination = findBestSupportCombination(newTarget, hasAccent);
+    setActiveSupportItems(bestCombination);
   };
 
-  const handleCycleAccessory = () => {
-    setAccessoryIndex((prev) => (prev + 1) % SUPPORT_ITEMS.accessory.length);
+  // Manual selection:
+  // Updates only that support slot, recalculates derived actualRemix, does NOT move targetRemix!
+  const handleSelectSupportItem = (category: SupportCategoryId, item: SupportOption) => {
+    setActiveSupportItems((prev) => ({
+      ...prev,
+      [category]: item,
+    }));
   };
 
-  // Quick Shuffle all support pieces
-  const handleShuffleAll = () => {
-    setBottomIndex(Math.floor(Math.random() * SUPPORT_ITEMS.bottom.length));
-    setShoesIndex(Math.floor(Math.random() * SUPPORT_ITEMS.shoes.length));
-    setAccessoryIndex(Math.floor(Math.random() * SUPPORT_ITEMS.accessory.length));
-    showToast('Đã ngẫu nhiên đổi các món phối trợ lực!');
+  // Add optional accent
+  const handleAddAccent = () => {
+    setActiveSupportItems((prev) => ({
+      ...prev,
+      accent: SUPPORT_ITEMS.accent[0],
+    }));
   };
 
-  // Apply a preset look
-  const handleApplyPreset = (index: number) => {
-    const preset = PRESET_LOOKS[index];
-    if (!preset) return;
-    setSelectedCore(preset.core);
-    setSelectedContext(preset.context);
-    setSelectedStyle(preset.style);
-    setTargetRemixLevel(preset.target);
-    setBottomIndex(preset.bottomIdx);
-    setShoesIndex(preset.shoesIdx);
-    setAccessoryIndex(preset.accIdx);
-    setPreferences(preset.pref);
-    showToast(`Đã áp dụng bản phối "${preset.title}"`);
+  // Remove optional accent
+  const handleRemoveAccent = () => {
+    setActiveSupportItems((prev) => ({
+      ...prev,
+      accent: null,
+    }));
   };
 
-  // Toast notification helper
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setIsToastVisible(true);
-    setTimeout(() => {
-      setIsToastVisible(false);
-    }, 3200);
-  };
-
-  // Save moodboard handler
-  const handleSaveMoodboard = () => {
-    setSavedCount((prev) => prev + 1);
-    showToast(`Đã lưu "${currentCore.name} Remix" vào bộ sưu tập cá nhân!`);
+  // Apply refinement text -> evaluates Cultural Guardrail locally
+  const handleApplyRefinement = (text: string) => {
+    setRefinementText(text);
+    const result = evaluateGuardrail(text, currentCore);
+    setGuardrailResult(result);
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F5EE] text-[#241E1A] flex flex-col font-sans selection:bg-[#8C3B24]/15 selection:text-[#8C3B24]">
-      {/* Top Navigation Bar adhering strictly to Top Bar Contract */}
+    <div className="min-h-screen bg-[#FAF9F6] text-[#241E1A] flex flex-col font-sans selection:bg-[#B7410E]/15 selection:text-[#B7410E]">
+      {/* Header with subtle step indicator: 01 Khám phá — 02 Concept — 03 Remix */}
       <Header
-        onSaveMoodboard={handleSaveMoodboard}
+        currentStep={step}
+        onStepClick={(targetStep) => setStep(targetStep)}
         onOpenAbout={() => setIsAboutOpen(true)}
-        savedCount={savedCount}
       />
 
-      {/* Main Content: Two-column desktop layout that stacks vertically on mobile */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
-        {/* Curatorial Intro Banner */}
-        <section className="mb-8 lg:mb-10 border-b border-[#E3D9CC] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="max-w-3xl">
-            <div className="text-[11px] uppercase tracking-widest font-mono text-[#8C3B24] mb-1">
-              Phòng Giám Tuyển Cổ Phục Đương Đại · Quy Chuẩn 2026
-            </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-editorial font-bold text-[#241E1A] tracking-tight leading-tight">
-              Việt Phục Remix // Bảng Cảm Hứng Thời Trang
-            </h1>
-            <p className="text-sm sm:text-base text-[#6B5E52] mt-2 font-serif leading-relaxed">
-              Khám phá sự giao thoa giữa cấu trúc trang phục truyền thống Việt Nam và tư duy thời trang đường phố đương đại. Giữ trọn cốt cách di sản, tự do tiếp biến công năng.
-            </p>
-          </div>
-
-          <div className="text-left md:text-right shrink-0">
-            <span className="text-xs font-mono text-[#8C7E72] block">
-              Tỷ Lệ Hòa Nhập Di Sản
-            </span>
-            <span className="text-xl sm:text-2xl font-editorial font-bold text-[#8C3B24]">
-              {culturalDna.synergyLevel}
-            </span>
-          </div>
-        </section>
-
-        {/* Two-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-start">
-          {/* Left Column: Styling Controls (5 columns on large screen) */}
-          <aside className="lg:col-span-5 xl:col-span-5 w-full">
-            <StylingControls
-              selectedCore={selectedCore}
-              selectedContext={selectedContext}
-              selectedStyle={selectedStyle}
-              targetRemix={targetRemixLevel}
-              preferences={preferences}
-              culturalDna={culturalDna}
-              onCoreChange={setSelectedCore}
-              onContextChange={setSelectedContext}
-              onStyleChange={setSelectedStyle}
-              onTargetRemixChange={setTargetRemixLevel}
-              onPreferencesChange={setPreferences}
-              onApplyPreset={handleApplyPreset}
+      {/* Main Multi-step Content (Preserving state across back/forward navigation) */}
+      <main className="flex-1 w-full">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <DiscoveryScreen
+              key="step-1"
+              setupData={setupData}
+              onChangeSetup={handleChangeSetup}
+              onSubmit={() => setStep(2)}
             />
-          </aside>
+          )}
 
-          {/* Right Column: Interactive Fashion Board (7 columns on large screen) */}
-          <section className="lg:col-span-7 xl:col-span-7 w-full">
-            <FashionBoard
+          {step === 2 && (
+            <ConceptReveal
+              key="step-2"
+              setupData={setupData}
+              concept={concept}
+              onBack={() => setStep(1)}
+              onProceed={() => setStep(3)}
+            />
+          )}
+
+          {step === 3 && (
+            <RemixStudio
+              key="step-3"
               core={currentCore}
-              bottomItem={currentBottom}
-              bottomIndex={bottomIndex}
-              totalBottoms={SUPPORT_ITEMS.bottom.length}
-              onCycleBottom={handleCycleBottom}
-              shoesItem={currentShoes}
-              shoesIndex={shoesIndex}
-              totalShoes={SUPPORT_ITEMS.shoes.length}
-              onCycleShoes={handleCycleShoes}
-              accessoryItem={currentAccessory}
-              accessoryIndex={accessoryIndex}
-              totalAccessories={SUPPORT_ITEMS.accessory.length}
-              onCycleAccessory={handleCycleAccessory}
-              actualRemix={culturalDna.actualRemix}
-              targetRemix={targetRemixLevel}
-              onShuffleAll={handleShuffleAll}
+              supportItems={activeSupportItems}
+              targetRemix={targetRemix}
+              actualRemix={actualRemix}
+              refinementText={refinementText}
+              guardrailResult={guardrailResult}
+              onTargetRemixChange={handleTargetRemixChange}
+              onSelectSupportItem={handleSelectSupportItem}
+              onAddAccent={handleAddAccent}
+              onRemoveAccent={handleRemoveAccent}
+              onApplyRefinement={handleApplyRefinement}
+              onBackToConcept={() => setStep(2)}
               onOpenCoreDetail={() => setIsLookbookOpen(true)}
             />
-          </section>
-        </div>
+          )}
+        </AnimatePresence>
+      </main>
 
-        {/* Editorial Footnotes & Cultural Attribution */}
-        <footer className="mt-16 sm:mt-20 pt-8 border-t border-[#E3D9CC] text-xs text-[#7A6A5C] flex flex-col sm:flex-row items-center justify-between gap-4 font-serif">
-          <div>
-            <p>
-              Việt Phục Remix © 2026. Khảo cứu dựa trên chuẩn mực y phục triều Nguyễn và giao thời thế kỷ 20.
-            </p>
-            <p className="text-[11px] text-[#A89C8F] font-sans mt-0.5">
-              Dự án nghiên cứu thị giác phi lợi nhuận tôn vinh di sản dệt may thủ công Việt Nam.
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-mono text-[#8C3B24]">
+      {/* Footer */}
+      <footer className="border-t border-[#EAE3D6] py-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-[#7A6E63] font-serif">
+        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p>
+            Việt Phục Remix © 2026 · Fashion Editorial Styling Studio
+          </p>
+          <div className="flex items-center gap-4 text-xs font-mono text-[#B7410E]">
             <button
               type="button"
               onClick={() => setIsAboutOpen(true)}
               className="hover:underline cursor-pointer"
             >
-              Tuyên Ngôn Tiếp Biến
+              Triết lý thiết kế
             </button>
-            <span aria-hidden="true">·</span>
+            <span aria-hidden="true" className="text-[#C8BCAC]">·</span>
             <button
               type="button"
               onClick={() => setIsLookbookOpen(true)}
               className="hover:underline cursor-pointer"
             >
-              Hồ Sơ Cổ Phục
+              Hồ sơ cổ phục
             </button>
           </div>
-        </footer>
-      </main>
+        </div>
+      </footer>
 
       {/* Detail Modals */}
       <LookbookModal
@@ -231,9 +214,6 @@ export default function App() {
         isOpen={isAboutOpen}
         onClose={() => setIsAboutOpen(false)}
       />
-
-      {/* Floating Interactive Toast */}
-      <Toast message={toastMessage} isVisible={isToastVisible} />
     </div>
   );
 }

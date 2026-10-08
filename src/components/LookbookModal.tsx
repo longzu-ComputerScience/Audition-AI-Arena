@@ -30,7 +30,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
 
         {/* Modal Header */}
         <div className="border-b border-[#EFE8DC] pb-4 mb-5">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8C3B24]">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#B7410E]">
             <BookOpen className="w-3.5 h-3.5" />
             <span>Hồ Sơ Di Sản // Cổ Vật Học</span>
             <span aria-hidden="true" className="text-[#C8BCAC]">·</span>
@@ -47,7 +47,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
         {/* Graphic & Provenance */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center bg-[#FAF7F2] p-5 rounded-xs border border-[#E7DECE] mb-6">
           <div className="w-28 h-28 mx-auto rounded-full bg-[#FFFDF9] border border-[#D5C7B4] flex items-center justify-center p-4 shadow-inner">
-            <PatternMotif type={core.patternType} color="#8C3B24" className="w-full h-full" />
+            <PatternMotif type={core.patternType} color="#B7410E" className="w-full h-full" />
           </div>
           <div className="sm:col-span-2 space-y-2">
             <span className="text-xs uppercase font-mono text-[#8C7E72] block">
@@ -62,14 +62,14 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
         {/* Detailed Points */}
         <div className="space-y-4">
           <h3 className="text-base font-editorial font-bold text-[#241E1A] flex items-center gap-2">
-            <Feather className="w-4 h-4 text-[#8C3B24]" />
+            <Feather className="w-4 h-4 text-[#B7410E]" />
             <span>3 Đặc Điểm Nhận Diện Không Thể Thay Thế</span>
           </h3>
           <div className="space-y-2.5">
             {core.heritageDna.map((item, index) => (
               <div
                 key={index}
-                className="p-3 bg-[#FAF7F2] border-l-2 border-[#8C3B24] rounded-r-xs text-xs sm:text-sm text-[#52463E] leading-relaxed"
+                className="p-3 bg-[#FAF7F2] border-l-2 border-[#B7410E] rounded-r-xs text-xs sm:text-sm text-[#52463E] leading-relaxed"
               >
                 {item}
               </div>
@@ -101,7 +101,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           <button
             onClick={onClose}
             type="button"
-            className="px-5 py-2 bg-[#241E1A] hover:bg-[#8C3B24] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
+            className="px-5 py-2 bg-[#241E1A] hover:bg-[#B7410E] text-[#FAF7F2] text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
           >
             Đóng Hồ Sơ
           </button>

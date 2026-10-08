@@ -1,10 +1,11 @@
-export type CoreVietPhucId = 'ao-dai' | 'ao-ngu-than' | 'ao-tac' | 'ao-giao-linh';
+export type CoreVietPhucId =
+  | 'ao-nhat-binh'
+  | 'ao-tac'
+  | 'ao-dai'
+  | 'ao-tu-than'
+  | 'ao-ngu-than';
 
-export type ContextId = 'rap-concert' | 'coffee' | 'tet' | 'school-event';
-
-export type StyleId = 'streetwear' | 'minimalist' | 'neo-classic' | 'cyber-y2k' | 'casual-indie';
-
-export type SupportCategoryId = 'bottom' | 'shoes' | 'accessory';
+export type SupportCategoryId = 'bottom' | 'shoes' | 'bag' | 'accent';
 
 export interface SupportOption {
   id: string;
@@ -18,9 +19,7 @@ export interface SupportOption {
   accentHex: string;
   badgeLabel: string;
   editorialNote: string;
-  dnaPreserved: string;
-  dnaModernized: string;
-  patternType: 'waves' | 'grid' | 'stripes' | 'lotus' | 'geometric';
+  patternType: string;
 }
 
 export interface CoreItem {
@@ -36,16 +35,33 @@ export interface CoreItem {
   palette: { name: string; hex: string }[];
   heritageDna: string[];
   editorialDescription: string;
-  patternType: 'lotus-imperial' | 'clouds-phoenix' | 'wave-mandarin' | 'bamboo-scholar';
+  patternType: string;
 }
 
-export interface MoodboardSelection {
-  coreId: CoreVietPhucId;
-  contextId: ContextId;
-  styleId: StyleId;
-  targetRemixLevel: number; // 0 to 100 (from Remix Dial)
-  preferences: string;
-  selectedBottomIndex: number;
-  selectedShoesIndex: number;
-  selectedAccessoryIndex: number;
+export interface SetupData {
+  coreGarment: CoreVietPhucId;
+  occasion: string;
+  location: string;
+  style: string;
+}
+
+export interface ActiveSupportItems {
+  bottom: SupportOption;
+  shoes: SupportOption;
+  bag: SupportOption;
+  accent: SupportOption | null; // Optional slot
+}
+
+export interface ConceptData {
+  title: string;
+  rationale: string;
+  palette: { name: string; hex: string }[];
+  description: string;
+}
+
+export type GuardrailStatus = 'green' | 'yellow' | 'orange';
+
+export interface GuardrailResult {
+  status: GuardrailStatus;
+  message: string;
 }

@@ -1,15 +1,70 @@
-import { CoreItem, SupportOption, ContextId, StyleId, CoreVietPhucId, SupportCategoryId } from '../types';
+import {
+  CoreItem,
+  SupportOption,
+  CoreVietPhucId,
+  SupportCategoryId,
+  SetupData,
+  ConceptData,
+} from '../types';
 
 export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
+  'ao-nhat-binh': {
+    id: 'ao-nhat-binh',
+    name: 'Áo Nhật Bình',
+    vietnameseTitle: 'Áo Nhật Bình Cung Đình',
+    subTitle: 'Lễ phục quý tộc thời Nguyễn',
+    archiveCode: 'VPR-NB-1802',
+    era: 'Triều Nguyễn (1802–1945)',
+    silhouette: 'Cổ áo hình chữ nhật viền bản lớn, dải ngũ sắc trước ngực, hai vạt xẻ buông thẳng',
+    material: 'Gấm Thượng Uyển dệt hoa mẫu đơn, dải ngũ sắc sa lụa',
+    baseModernity: 15,
+    palette: [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+    heritageDna: [
+      'Viền cổ hình chữ nhật (Nhật Bình) đính hoa văn chỉ vàng',
+      'Dải ngũ sắc tượng trưng ngũ hành trước ngực áo',
+      'Phom dáng thụ rộng tôn phong thái đoan trang lễ nghi',
+    ],
+    editorialDescription:
+      'Lễ phục trang trọng của hoàng tộc triều Nguyễn, nhận diện qua cổ áo hình chữ nhật đặc trưng và các dải viền ngũ sắc tượng trưng cho năm cung bậc ngũ hành.',
+    patternType: 'phoenix-court',
+  },
+  'ao-tac': {
+    id: 'ao-tac',
+    name: 'Áo Tấc',
+    vietnameseTitle: 'Áo Tấc Ngũ Thân Tay Thụ',
+    subTitle: 'Lễ phục truyền thống tôn nghiêm',
+    archiveCode: 'VPR-AT-1828',
+    era: 'Triều Nguyễn · Nghi lễ & Tế tự',
+    silhouette: 'Tay áo thụ rộng quá tấc buông thõng, thân áo dài qua gối phủ rộng cân xứng',
+    material: 'Lụa Vạn Phúc mộc dệt vân mây chìm hoặc gấm hoa cúc',
+    baseModernity: 15,
+    palette: [
+      { name: 'Nâu Hổ Phách', hex: '#633B26' },
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    heritageDna: [
+      'Tay áo rộng một tấc buông rủ mang khí chất tôn nghiêm',
+      'Đường may can giữa sống lưng giữ trục ngay thẳng',
+      'Năm hạt khuy cài ngũ thường (Nhân - Lễ - Nghĩa - Trí - Tín)',
+    ],
+    editorialDescription:
+      'Lễ phục ngũ thân tay thụ rộng rãi, mang vẻ đẹp mực thước và điềm đạm, thường diện trong những dịp đại lễ và không gian trang trọng.',
+    patternType: 'wave-mandarin',
+  },
   'ao-dai': {
     id: 'ao-dai',
-    name: 'Áo Dài Dáng Suông',
-    vietnameseTitle: 'Áo Dài Dáng Suông Tân Thời',
-    subTitle: 'Kế thừa phom dáng tự do thập niên 1930',
+    name: 'Áo Dài',
+    vietnameseTitle: 'Áo Dài Phom Suông Tân Thời',
+    subTitle: 'Biểu tượng giao thoa thế kỷ 20',
     archiveCode: 'VPR-AD-1930',
-    era: 'Thế kỷ 20 · Giao thời Đông Dương',
-    silhouette: 'Thân dài chấm mắt cá, hai vạt xẻ cao đến eo, vai liền raglan thả mềm',
-    material: 'Lụa tơ tằm Hà Đông nguyên bản, dệt trơn dẻo dai',
+    era: 'Thế kỷ 20 · Giao thời hiện đại',
+    silhouette: 'Thân dài chấm mắt cá chân, hai vạt xẻ cao đến thắt lưng, vai liền raglan thả mềm',
+    material: 'Lụa tơ tằm Hà Đông trơn dệt thoi mềm mại',
     baseModernity: 35,
     palette: [
       { name: 'Ngà Kem', hex: '#F4ECE1' },
@@ -17,141 +72,97 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
       { name: 'Nâu Trầm', hex: '#4A3728' },
     ],
     heritageDna: [
-      'Đường xẻ tà phóng khoáng tôn dáng đi nhịp nhàng',
-      'Cổ áo đứng tròn 3cm thanh thoát, khuy bọc vải thủ công',
-      'Đường chỉ viền tơ tằm giấu mối tinh xảo',
+      'Đường xẻ tà hai bên eo thanh thoát khi sải bước',
+      'Cổ áo đứng tròn ôm nhẹ, hàng khuy bọc vải thủ công',
+      'Độ buông rủ tự nhiên của chất liệu tơ tằm nguyên bản',
     ],
     editorialDescription:
-      'Biểu tượng trường tồn của thẩm mỹ Việt Nam. Phiên bản phom suông tối giản mang tinh thần phóng khoáng, dễ dàng kết đôi cùng nhịp sống đương đại mà không mất đi nét đoan trang bản nguyên.',
+      'Dáng áo thân quen của thẩm mỹ Việt Nam với hai vạt buông bay bổng. Phiên bản phom suông tối giản mang lại sự thoải mái trong sinh hoạt hiện đại.',
     patternType: 'lotus-imperial',
+  },
+  'ao-tu-than': {
+    id: 'ao-tu-than',
+    name: 'Áo Tứ Thân',
+    vietnameseTitle: 'Áo Tứ Thân Truyền Thống',
+    subTitle: 'Nét duyên dáng đồng bằng Bắc Bộ',
+    archiveCode: 'VPR-TT-1750',
+    era: 'Thế kỷ 18–19 · Bắc Bộ dân dã',
+    silhouette: 'Bốn vạt áo buông mở, hai vạt trước buộc thắt duyên dáng, khoác ngoài yếm lụa',
+    material: 'Vải đũi tơ tằm dệt tay nhuộm củ nâu, sồi thô mộc',
+    baseModernity: 25,
+    palette: [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    heritageDna: [
+      'Bốn vạt tượng trưng tứ thân phụ mẫu ôm bọc con cái',
+      'Dải thắt lưng lụa mềm buông rủ trước bụng tạo điểm nhấn nhịp điệu',
+      'Cổ áo buông mở để lộ vạt yếm duyên dáng',
+    ],
+    editorialDescription:
+      'Y phục truyền thống gắn liền với đời sống văn hóa Bắc Bộ. Cấu trúc bốn vạt và dải thắt eo đem đến sự mềm mại, mộc mạc và linh hoạt cho người mặc.',
+    patternType: 'silk-ribbon',
   },
   'ao-ngu-than': {
     id: 'ao-ngu-than',
-    name: 'Áo Ngũ Thân Tay Chẽn',
-    vietnameseTitle: 'Áo Ngũ Thân Tay Chẽn Hoàng Gia',
-    subTitle: 'Chuẩn mực lễ nghi thời Nguyễn (1802–1945)',
+    name: 'Áo Ngũ Thân',
+    vietnameseTitle: 'Áo Ngũ Thân Tay Chẽn',
+    subTitle: 'Chuẩn mực y phục lịch lãm thời Nguyễn',
     archiveCode: 'VPR-NT-1802',
-    era: 'Triều Nguyễn · Định hình y phục toàn quốc',
-    silhouette: 'Năm thân tượng trưng tứ thân phụ mẫu ôm bọc con cái, tay áo ôm gọn cổ tay',
-    material: 'Sa dệt hoa cúc Huế hoặc Gấm Thượng Uyển nhuộm củ nâu',
+    era: 'Triều Nguyễn (1802–1945)',
+    silhouette: 'Năm thân áo kín đáo, tay áo ôm gọn vừa vặn cổ tay, cổ lập lĩnh đứng thẳng',
+    material: 'Sa dệt hoa cúc Huế hoặc Gấm Thượng Uyển dệt vân mây',
     baseModernity: 20,
     palette: [
-      { name: 'Đỏ Đất Sa Thạch', hex: '#8C3B24' },
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
       { name: 'Chàm Cổ', hex: '#26384C' },
       { name: 'Mộc Hương', hex: '#D1BEA8' },
     ],
     heritageDna: [
-      'Năm hạt khuy cài ngũ thường (Nhân - Lễ - Nghĩa - Trí - Tín)',
       'Cổ lập lĩnh cứng cáp cao 3.5cm giữ phong thái đĩnh đạc',
-      'Cấu trúc năm thân ghép mí tượng trưng tình mẫu tử phụ tử',
+      'Hàng năm khuy cài ngũ thường biểu trưng đạo đức tiền nhân',
+      'Kết cấu năm thân ghép mí tượng trưng tình thân gia đình',
     ],
     editorialDescription:
-      'Nền tảng của cổ phục truyền thống Việt Nam. Với tay chẽn gọn gàng và năm thân cân đối, chiếc áo ngũ thân chứa đựng cả triết lý đạo học và khí phách điềm đạm của tiền nhân.',
+      'Nền tảng của y phục thời Nguyễn với tay áo chẽn gọn gàng, cổ đứng lập lĩnh và kết cấu năm thân chỉn chu, mang nét trang nhã trường tồn.',
     patternType: 'clouds-phoenix',
-  },
-  'ao-tac': {
-    id: 'ao-tac',
-    name: 'Áo Tấc Ngũ Thân Tay Thụ',
-    vietnameseTitle: 'Áo Tấc Lễ Phục Tay Thụ Phóng Khoáng',
-    subTitle: 'Trang phục trang trọng trong các dịp trọng đại',
-    archiveCode: 'VPR-AT-1828',
-    era: 'Triều Nguyễn · Đại lễ & Tế tự',
-    silhouette: 'Tay thụ rộng quá tấc buông thõng, vạt áo dài qua gối phủ rộng',
-    material: 'Lụa Vạn Phúc mộc dệt vân mây chìm',
-    baseModernity: 15,
-    palette: [
-      { name: 'Hổ Phách Trầm', hex: '#9C6233' },
-      { name: 'Bạch Ngọc', hex: '#EDE8DF' },
-      { name: 'Than Đen', hex: '#23201D' },
-    ],
-    heritageDna: [
-      'Tay áo rộng một tấc buông rủ mang khí chất tôn nghiêm',
-      'Đường may can giữa sống lưng tạo trục nhân cách chính trực',
-      'Khuy cài kim loại đúc thủ công hình hoa sen hoặc khuyên đồng',
-    ],
-    editorialDescription:
-      'Trang phục mang tính nghi lễ cao nhất của người Việt xưa. Khi bước vào không gian đương đại, độ buông thõng của tay áo tấc trở thành chất liệu tuyệt vời cho những bản phối avant-garde.',
-    patternType: 'wave-mandarin',
-  },
-  'ao-giao-linh': {
-    id: 'ao-giao-linh',
-    name: 'Áo Giao Lĩnh Cổ Chéo',
-    vietnameseTitle: 'Áo Giao Lĩnh Vạt Chéo Thời Lê',
-    subTitle: 'Dáng áo cổ xưa nhất trước thế kỷ 18',
-    archiveCode: 'VPR-GL-1428',
-    era: 'Thời Lê Sơ & Lê Trung Hưng',
-    silhouette: 'Cổ vạt chéo đan qua ngực, buộc dây lụa bên hông, phom dáng suông rộng',
-    material: 'Đũi dệt tay tự nhiên hoặc Linen thô nhuộm vỏ cây',
-    baseModernity: 25,
-    palette: [
-      { name: 'Màu Chàm Rừng', hex: '#2E473F' },
-      { name: 'Gốm Nung', hex: '#B8583B' },
-      { name: 'Cát Trắng', hex: '#EAE5DB' },
-    ],
-    heritageDna: [
-      'Cổ áo giao chéo âm dương tạo điểm nhấn thị giác thanh nhã',
-      'Dây thắt lụa mềm buông lơi tự nhiên bên sườn áo',
-      'Cấu trúc tà buông tự do không gò bó',
-    ],
-    editorialDescription:
-      'Cổ vật của chiều sâu lịch sử với vạt cổ chéo thanh tao. Khi remix với các món đồ hiện đại, giao lĩnh gợi lên cảm giác vừa cổ phong kiếm hiệp vừa tối giản thiền vị.',
-    patternType: 'bamboo-scholar',
   },
 };
 
-export const CONTEXT_OPTIONS: { id: ContextId; label: string; vibe: string; subtitle: string }[] = [
-  {
-    id: 'rap-concert',
-    label: 'Rap Concert & Sân Khấu',
-    vibe: 'Năng lượng bùng nổ, tương phản mạnh, ánh đèn sân khấu và nhịp bass đường phố.',
-    subtitle: 'Underground Stage & Urban Rhythm',
-  },
-  {
-    id: 'coffee',
-    label: 'Coffee Cuối Tuần & Phố Cổ',
-    vibe: 'Thư thả, ấm cúng, gam màu trung tính, thoáng mát cùng chất liệu sợi tự nhiên.',
-    subtitle: 'Old Quarter Cafe & Casual Walk',
-  },
-  {
-    id: 'tet',
-    label: 'Tết Cổ Truyền & Du Xuân',
-    vibe: 'Trang trọng hoài niệm, sắc thái may mắn, tôn kính gia đình và sắc xuân sum vầy.',
-    subtitle: 'Lunar New Year Spring Pilgrimage',
-  },
-  {
-    id: 'school-event',
-    label: 'School Event & Diễn Đàn Văn Hóa',
-    vibe: 'Trẻ trung, tự tin, chỉn chu học thuật và truyền cảm hứng tự hào cội nguồn.',
-    subtitle: 'Academic Gala & Cultural Showcase',
-  },
+// 7 Occasions as requested
+export const OCCASIONS: string[] = [
+  'Chụp ảnh kỷ niệm / Lookbook',
+  'Sự kiện trang trọng',
+  'Lễ hội ở trường',
+  'Đi chơi cuối tuần',
+  'Đón Tết cổ truyền',
+  'Lễ tốt nghiệp / Bế giảng',
+  'Đám cưới / Ăn hỏi bạn bè',
 ];
 
-export const STYLE_OPTIONS: { id: StyleId; label: string; description: string }[] = [
-  {
-    id: 'streetwear',
-    label: 'Streetwear Avant-Garde',
-    description: 'Đối lập cấu trúc di sản với phom dáng baggy quá khổ, khóa kim khí và techwear.',
-  },
-  {
-    id: 'minimalist',
-    label: 'Minimalist Zen (Tối Giản)',
-    description: 'Tôn trọng triệt để đường nét nguyên bản, loại bỏ tiểu tiết, chú trọng vào độ rủ của chất liệu.',
-  },
-  {
-    id: 'neo-classic',
-    label: 'Neo-Classic Heritage',
-    description: 'Giữ trọn khí chất quý tộc truyền thống với điểm nhấn phụ kiện tinh tế đương đại.',
-  },
-  {
-    id: 'cyber-y2k',
-    label: 'Cyber Y2K Heritage',
-    description: 'Thắt chặt tương lai và quá khứ qua sắc bạc kim loại, mắt kính vị lai và góc cạnh sắc sảo.',
-  },
-  {
-    id: 'casual-indie',
-    label: 'Indie Casual (Đời Thường)',
-    description: 'Mộc mạc, gần gũi với vải lanh thô, giày vải cổ điển và túi đeo chéo gọn nhẹ.',
-  },
+// 11 Locations as requested
+export const LOCATIONS: string[] = [
+  'Đại Nội Huế',
+  'Phố cổ Hội An',
+  'Văn Miếu – Quốc Tử Giám',
+  'Hồ Hoàn Kiếm',
+  'Hà Nội',
+  'Huế',
+  'Đà Nẵng',
+  'TP. Hồ Chí Minh',
+  'Ninh Bình',
+  'Tràng An',
+  'Đường sách / Bảo tàng Mỹ thuật',
+];
+
+// 5 Styles as requested
+export const STYLES: string[] = [
+  'Thanh lịch',
+  'Năng động',
+  'Tối giản',
+  'Hoài cổ (Vintage)',
+  'Đường phố (Streetwear)',
 ];
 
 export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
@@ -166,27 +177,9 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorName: 'Bạch Ngọc Trắng',
       colorHex: '#F2EDE4',
       accentHex: '#C5B59E',
-      badgeLabel: 'Cổ Điển Thuần Khiết',
+      badgeLabel: 'Truyền Thống',
       editorialNote: 'Phom quần suông xẻ tà kinh điển, giữ độ bồng bềnh nguyên bản khi chuyển động.',
-      dnaPreserved: 'Giữ nguyên phom quần lụa dải rút truyền thống tôn đường lượn tà áo',
-      dnaModernized: 'Cạp thun giấu kín tạo sự dễ chịu tuyệt đối cho lối sống năng động',
       patternType: 'stripes',
-    },
-    {
-      id: 'bottom-raw-denim',
-      name: 'Raw Denim Baggy Cạp Cao',
-      category: 'bottom',
-      categoryLabel: 'Phần Dưới · Bottom',
-      material: 'Denim thô dệt thoi 14oz nhuộm Indigo',
-      modernityScore: 88,
-      colorName: 'Indigo Xanh Đêm',
-      colorHex: '#1F2A38',
-      accentHex: '#7C93AC',
-      badgeLabel: 'Tương Phản Phá Cách',
-      editorialNote: 'Độ cứng cáp của vải jean Nhật đối lập hoàn hảo với độ rủ mềm mại của vạt lụa.',
-      dnaPreserved: 'Tôn vinh độ dài của vạt áo cổ qua cạp quần cao ôm vừa vặn',
-      dnaModernized: 'Chất liệu raw denim bụi bặm và đường may chỉ vàng mang mã gien đường phố',
-      patternType: 'grid',
     },
     {
       id: 'bottom-cargo-linen',
@@ -198,11 +191,23 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorName: 'Cát Sa Thạch',
       colorHex: '#DDD3C4',
       accentHex: '#9E886D',
-      badgeLabel: 'Giao Thoa Tinh Tế',
-      editorialNote: 'Đường ly thẳng tắp kết hợp túi hộp chìm tối giản, dung hòa giữa trang trọng và hiện đại.',
-      dnaPreserved: 'Chất liệu sợi tự nhiên thoáng mát thân thiện với khí hậu nhiệt đới Việt Nam',
-      dnaModernized: 'Cấu trúc túi hộp utility phong cách quân đội tạo sự tiện ích đa năng',
+      badgeLabel: 'Cân Bằng',
+      editorialNote: 'Đường ly thẳng kết hợp túi hộp chìm tối giản, dung hòa giữa trang trọng và hiện đại.',
       patternType: 'geometric',
+    },
+    {
+      id: 'bottom-raw-denim',
+      name: 'Raw Denim Baggy Cạp Cao',
+      category: 'bottom',
+      categoryLabel: 'Phần Dưới · Bottom',
+      material: 'Denim thô dệt thoi 14oz nhuộm Indigo',
+      modernityScore: 88,
+      colorName: 'Indigo Xanh Đêm',
+      colorHex: '#1F2A38',
+      accentHex: '#7C93AC',
+      badgeLabel: 'Hiện Đại',
+      editorialNote: 'Độ cứng cáp của vải denim đối lập với độ rủ của tà áo, tạo dáng vẻ năng động.',
+      patternType: 'grid',
     },
   ],
   shoes: [
@@ -216,10 +221,8 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorName: 'Gỗ Nâu & Nhung Đỏ',
       colorHex: '#523428',
       accentHex: '#A34836',
-      badgeLabel: 'Ký Ức Làng Mộc',
-      editorialNote: 'Âm thanh lách cách của guốc mộc gợi nhớ những buổi dạo chơi làng quê thanh bình.',
-      dnaPreserved: 'Kỹ nghệ đẽo guốc truyền thống với lòng cong ôm chân tự nhiên',
-      dnaModernized: 'Phần đế được bọc cao su giảm chấn hạn chế trơn trượt trên vỉa hè đô thị',
+      badgeLabel: 'Truyền Thống',
+      editorialNote: 'Âm thanh mộc mạc của guốc gỗ gợi nhắc nhịp sống thanh bình xưa.',
       patternType: 'lotus',
     },
     {
@@ -227,15 +230,13 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       name: 'Chunky Loafer Da Bóng Đế Gồ',
       category: 'shoes',
       categoryLabel: 'Giày Guốc · Footwear',
-      material: 'Da bò đánh bóng thủ công & Đế cao su Commando 4.5cm',
+      material: 'Da bò đánh bóng thủ công & Đế cao su Commando',
       modernityScore: 78,
       colorName: 'Hắc Yến Bóng',
       colorHex: '#181615',
       accentHex: '#57524C',
-      badgeLabel: 'Tuyên Ngôn Hiện Đại',
-      editorialNote: 'Sự dứt khoát của đế gồ phương Tây đem lại tư thế đứng vững chãi, kiêu hãnh.',
-      dnaPreserved: 'Mũi giày bo tròn hài hòa với dáng cong nhẹ nhàng của tà áo',
-      dnaModernized: 'Đế chunky hầm hố phá vỡ sự yểu điệu, định hình phong thái mạnh mẽ phi giới tính',
+      badgeLabel: 'Hiện Đại',
+      editorialNote: 'Đế gồ dày đem lại tư thế đứng vững chãi, tạo điểm nhấn dứt khoát cho trang phục.',
       patternType: 'geometric',
     },
     {
@@ -248,97 +249,188 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorName: 'Kem & Đất Nung',
       colorHex: '#E8DED1',
       accentHex: '#B25D42',
-      badgeLabel: 'Nhịp Sống Đô Thị',
-      editorialNote: 'Đôi sneaker tối giản mang tính ứng dụng tối đa, sẵn sàng sải bước từ sáng đến đêm.',
-      dnaPreserved: 'Bảng màu đất nung và kem hài hòa tuyệt đối với sắc thái thổ nhưỡng bản địa',
-      dnaModernized: 'Đệm khí eva hiện đại phục vụ di chuyển nhanh trong các lễ hội đông đúc',
+      badgeLabel: 'Đường Phố',
+      editorialNote: 'Sneaker tối giản mang tính ứng dụng cao, thoải mái khi di chuyển trong ngày dài.',
       patternType: 'waves',
     },
   ],
-  accessory: [
+  bag: [
     {
-      id: 'acc-gam-bag',
-      name: 'Túi Gấm Quai Tròn Cổ Điển',
-      category: 'accessory',
-      categoryLabel: 'Phụ Kiện · Accessory',
-      material: 'Gấm dệt chỉ vàng hoa sen & Quai gỗ mun khắc chìm',
+      id: 'bag-gam-vintage',
+      name: 'Túi Gấm Quai Gỗ Cổ Điển',
+      category: 'bag',
+      categoryLabel: 'Túi Xách · Bag',
+      material: 'Gấm Thượng Uyển dệt hoa sen & Quai gỗ mun khắc',
       modernityScore: 20,
       colorName: 'Hoàng Kim & Gấm',
-      colorHex: '#947543',
-      accentHex: '#DEBA78',
-      badgeLabel: 'Nét Cung Đình',
-      editorialNote: 'Vân gấm lấp lánh dưới ánh sáng tự nhiên, tôn vinh kỹ nghệ dệt tay truyền đời.',
-      dnaPreserved: 'Họa tiết hoa sen ngũ phúc và kỹ thuật dệt nổi hoa văn hoàng tộc',
-      dnaModernized: 'Dung tích được tinh chỉnh để vừa vặn điện thoại thông minh và sổ tay',
+      colorHex: '#8C6C38',
+      accentHex: '#D4AF37',
+      badgeLabel: 'Truyền Thống',
+      editorialNote: 'Vân gấm dệt chỉ vàng lấp lánh nhẹ nhàng, tôn vinh kỹ nghệ dệt thoi thủ công.',
       patternType: 'lotus',
     },
     {
-      id: 'acc-techwear-crossbody',
+      id: 'bag-tote-linen',
+      name: 'Túi Tote Vải Lanh Thô Tối Giản',
+      category: 'bag',
+      categoryLabel: 'Túi Xách · Bag',
+      material: 'Vải lanh dệt sợi tự nhiên màu be nhạt',
+      modernityScore: 55,
+      colorName: 'Be Mộc',
+      colorHex: '#D6C8B4',
+      accentHex: '#9E886D',
+      badgeLabel: 'Tối Giản',
+      editorialNote: 'Túi tote phom chữ nhật mộc mạc, tiện dụng cho các buổi dạo phố và cà phê.',
+      patternType: 'stripes',
+    },
+    {
+      id: 'bag-techwear-crossbody',
       name: 'Túi Đeo Chéo Techwear Fidlock',
-      category: 'accessory',
-      categoryLabel: 'Phụ Kiện · Accessory',
-      material: 'Vải dù kháng nước Cordura 500D & Khóa nam châm Đức',
+      category: 'bag',
+      categoryLabel: 'Túi Xách · Bag',
+      material: 'Vải dù Cordura kháng nước & Khóa nam châm kim loại',
       modernityScore: 95,
       colorName: 'Than Chì Nhám',
       colorHex: '#252528',
       accentHex: '#64748B',
-      badgeLabel: 'Tiện Ích Tương Lai',
-      editorialNote: 'Dây đai vắt chéo qua thân áo ngũ thân tạo nên bố cục bất đối xứng đầy táo bạo.',
-      dnaPreserved: 'Độ nghiêng của quai đeo gợi nhắc cách các bậc tiền nhân đeo tay nải ngày xưa',
-      dnaModernized: 'Hệ thống móc treo mô-đun và chốt khóa từ tính hiện đại chuẩn streetwear',
+      badgeLabel: 'Đương Đại',
+      editorialNote: 'Quai đeo vắt chéo thân áo tạo nhịp cắt bất đối xứng cá tính cho tổng thể.',
       patternType: 'grid',
     },
+  ],
+  accent: [
     {
-      id: 'acc-quai-thao-mini',
-      name: 'Nón Quai Thao Mini Đính Bạc Thái',
-      category: 'accessory',
-      categoryLabel: 'Phụ Kiện · Accessory',
-      material: 'Lá gồi đan tay, vành quấn lụa tơ, chuỗi bạc hoa mai',
+      id: 'accent-silver-jewelry',
+      name: 'Chuỗi Bạc Thái Chạm Hoa Sen',
+      category: 'accent',
+      categoryLabel: 'Điểm Nhấn · Accent',
+      material: 'Bạc 925 đánh mờ khắc hoa văn sen',
+      modernityScore: 30,
+      colorName: 'Bạc Mờ',
+      colorHex: '#B8B3AC',
+      accentHex: '#7C756B',
+      badgeLabel: 'Thanh Nhã',
+      editorialNote: 'Điểm sáng kim loại thanh mảnh tôn vinh cổ áo và thềm ngực cổ phục.',
+      patternType: 'lotus',
+    },
+    {
+      id: 'accent-quai-thao-mini',
+      name: 'Nón Quai Thao Mini Đính Bạc',
+      category: 'accent',
+      categoryLabel: 'Điểm Nhấn · Accent',
+      material: 'Lá gồi đan tay, viền lụa tơ, chuỗi bạc hoa mai',
       modernityScore: 65,
       colorName: 'Lá Khô & Ánh Bạc',
       colorHex: '#C9BC9F',
       accentHex: '#848C90',
-      badgeLabel: 'Tái Cấu Trúc Biểu Tượng',
-      editorialNote: 'Thu nhỏ kích thước nón quai thao Bắc Bộ thành món trang sức đeo hông hoặc cầm tay.',
-      dnaPreserved: 'Kỹ nghệ đan lát thủ công tinh vi của các nghệ nhân làng nón Chuông',
-      dnaModernized: 'Đột phá về công năng khi chuyển từ mũ đội đầu sang phụ kiện thời trang tạo điểm nhấn',
+      badgeLabel: 'Điểm Nhấn',
+      editorialNote: 'Thu nhỏ kích thước nón quai thao thành phụ kiện cài hông hoặc cầm tay độc đáo.',
       patternType: 'stripes',
+    },
+    {
+      id: 'accent-y2k-shades',
+      name: 'Kính Mát Gọng Bạc Slim Y2K',
+      category: 'accent',
+      categoryLabel: 'Điểm Nhấn · Accent',
+      material: 'Hợp kim titan mạ bạc bóng & Tròng kính trà',
+      modernityScore: 95,
+      colorName: 'Titan Bạc & Trà',
+      colorHex: '#3E3835',
+      accentHex: '#A69F99',
+      badgeLabel: 'Tương Lai',
+      editorialNote: 'Gọng kính slim mắt hẹp sắc sảo tạo độ tương phản thị giác thú vị với nét cổ phong.',
+      patternType: 'geometric',
     },
   ],
 };
 
-export const PRESET_LOOKS = [
-  {
-    title: 'Phố Đêm Underground',
-    context: 'rap-concert' as ContextId,
-    style: 'streetwear' as StyleId,
-    core: 'ao-ngu-than' as CoreVietPhucId,
-    target: 85,
-    bottomIdx: 1, // Raw Denim
-    shoesIdx: 1, // Chunky Loafer
-    accIdx: 1, // Techwear Crossbody
-    pref: 'Ưu tiên cảm giác phóng khoáng, đối lập chất liệu denim bụi bặm với gấm sa ngũ thân.',
-  },
-  {
-    title: 'Cà Phê Trầm Lắng',
-    context: 'coffee' as ContextId,
-    style: 'minimalist' as StyleId,
-    core: 'ao-dai' as CoreVietPhucId,
-    target: 40,
-    bottomIdx: 2, // Cargo Linen
-    shoesIdx: 0, // Guốc Mộc
-    accIdx: 0, // Túi Gấm
-    pref: 'Tông màu cát tự nhiên, mộc mạc, chất vải thoáng khí ngồi tán gẫu phố cũ.',
-  },
-  {
-    title: 'Du Xuân Tương Hợp',
-    context: 'tet' as ContextId,
-    style: 'neo-classic' as StyleId,
-    core: 'ao-tac' as CoreVietPhucId,
-    target: 30,
-    bottomIdx: 0, // Quần Lụa Ống Rộng
-    shoesIdx: 0, // Guốc Mộc
-    accIdx: 2, // Nón Quai Thao Mini
-    pref: 'Giữ trọn tính lễ nghi với tay thụ thướt tha, phối phụ kiện đính bạc làm điểm sáng.',
-  },
-];
+// Local Concept Generator based on Step 1 setup inputs
+export function generateConcept(setup: SetupData): ConceptData {
+  const core = CORE_ITEMS[setup.coreGarment] || CORE_ITEMS['ao-ngu-than'];
+
+  // Formulate a distinct, evocative concept title
+  let title = '';
+  if (setup.style === 'Streetwear' || setup.style === 'Đường phố (Streetwear)') {
+    title = `Bản Hòa Âm Đường Phố · ${core.name}`;
+  } else if (setup.style === 'Hoài cổ (Vintage)') {
+    title = `Ký Ức Thời Gian · ${core.name}`;
+  } else if (setup.style === 'Tối giản') {
+    title = `Nét Tĩnh Lặng · ${core.name}`;
+  } else if (setup.style === 'Năng động') {
+    title = `Nhịp Sống Trẻ · ${core.name}`;
+  } else {
+    title = `Thanh Lịch Di Sản · ${core.name}`;
+  }
+
+  const rationale = `Ý tưởng kết hợp ${core.name} vào dịp ${setup.occasion.toLowerCase()} tại ${setup.location}, theo phong cách ${setup.style.toLowerCase()}. Bản phối ưu tiên tôn vinh phom dáng di sản gốc kết hợp với các phụ kiện hỗ trợ linh hoạt.`;
+
+  // Palette: Take 2 from core and 1 neutral/location accent
+  const palette = [
+    core.palette[0] || { name: 'Sắc Thắm Di Sản', hex: '#8C3B24' },
+    core.palette[1] || { name: 'Mộc Hương', hex: '#D1BEA8' },
+    { name: 'Chàm Đêm', hex: '#26384C' },
+  ];
+
+  return {
+    title,
+    rationale,
+    palette,
+    description: core.editorialDescription,
+  };
+}
+
+// Combinations search for Target Remix
+export function findBestSupportCombination(
+  targetRemix: number,
+  includeAccent: boolean
+): {
+  bottom: SupportOption;
+  shoes: SupportOption;
+  bag: SupportOption;
+  accent: SupportOption | null;
+} {
+  const bottoms = SUPPORT_ITEMS.bottom;
+  const shoes = SUPPORT_ITEMS.shoes;
+  const bags = SUPPORT_ITEMS.bag;
+  const accents = SUPPORT_ITEMS.accent;
+
+  let bestDiff = Infinity;
+  let best = {
+    bottom: bottoms[0],
+    shoes: shoes[0],
+    bag: bags[0],
+    accent: includeAccent ? accents[0] : null,
+  };
+
+  if (includeAccent) {
+    for (const b of bottoms) {
+      for (const s of shoes) {
+        for (const g of bags) {
+          for (const a of accents) {
+            const avg = (b.modernityScore + s.modernityScore + g.modernityScore + a.modernityScore) / 4;
+            const diff = Math.abs(avg - targetRemix);
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              best = { bottom: b, shoes: s, bag: g, accent: a };
+            }
+          }
+        }
+      }
+    }
+  } else {
+    for (const b of bottoms) {
+      for (const s of shoes) {
+        for (const g of bags) {
+          const avg = (b.modernityScore + s.modernityScore + g.modernityScore) / 3;
+          const diff = Math.abs(avg - targetRemix);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            best = { bottom: b, shoes: s, bag: g, accent: null };
+          }
+        }
+      }
+    }
+  }
+
+  return best;
+}

@@ -1,82 +1,128 @@
-import { CoreItem, SupportOption, ContextId, StyleId } from '../types';
-import { CONTEXT_OPTIONS, STYLE_OPTIONS } from '../data/mockFashionData';
+import {
+  CoreItem,
+  ActiveSupportItems,
+  GuardrailResult,
+} from '../types';
 
-export interface CalculatedDna {
-  actualRemix: number;
-  preservedItems: string[];
-  modernizedItems: string[];
-  curatorVerdict: string;
-  synergyLevel: 'Hài Hòa Di Sản' | 'Giao Thoa Cân Bằng' | 'Đột Phá Đương Đại';
-  deviationText: string;
+/**
+ * Calculates Actual Remix as the average modernityScore of active, non-null support items.
+ * Core garment is strictly excluded.
+ * Null optional slots (e.g. accent === null) must NOT count as score 0.
+ */
+export function computeActualRemix(items: ActiveSupportItems): number {
+  const activeScores: number[] = [];
+
+  if (items.bottom) activeScores.push(items.bottom.modernityScore);
+  if (items.shoes) activeScores.push(items.shoes.modernityScore);
+  if (items.bag) activeScores.push(items.bag.modernityScore);
+  if (items.accent) activeScores.push(items.accent.modernityScore);
+
+  if (activeScores.length === 0) return 0;
+
+  const total = activeScores.reduce((acc, score) => acc + score, 0);
+  return Math.round(total / activeScores.length);
 }
 
-export function computeCulturalDna(
-  core: CoreItem,
-  bottom: SupportOption,
-  shoes: SupportOption,
-  accessory: SupportOption,
-  contextId: ContextId,
-  styleId: StyleId,
-  targetRemix: number
-): CalculatedDna {
-  // Support modernity weighted average
-  const supportAvg = (bottom.modernityScore + shoes.modernityScore + accessory.modernityScore) / 3;
-  // Core weight 30%, Support items weight 70%
-  const actualRemix = Math.round(core.baseModernity * 0.3 + supportAvg * 0.7);
+/**
+ * Local keyword/rule evaluator for Cultural Guardrail.
+ * Guardrail does NOT depend on Actual Remix being high.
+ * It strictly inspects user refinement requests against protected core structures.
+ */
+export function evaluateGuardrail(
+  refinementText: string,
+  core: CoreItem
+): GuardrailResult {
+  const text = (refinementText || '').toLowerCase().trim();
 
-  const contextMeta = CONTEXT_OPTIONS.find((c) => c.id === contextId) || CONTEXT_OPTIONS[0];
-  const styleMeta = STYLE_OPTIONS.find((s) => s.id === styleId) || STYLE_OPTIONS[0];
-
-  // Preserved Points
-  const preservedItems: string[] = [
-    `${core.heritageDna[0]} (${core.silhouette.split(',')[0].toLowerCase()})`,
-    `${core.heritageDna[1]} - đặc trưng nhận diện của ${core.name}`,
-    bottom.modernityScore < 40
-      ? bottom.dnaPreserved
-      : shoes.modernityScore < 40
-      ? shoes.dnaPreserved
-      : accessory.modernityScore < 40
-      ? accessory.dnaPreserved
-      : `Tinh thần phóng khoáng của vạt ${core.name} được giữ trọn vẹn, không biến dạng kết cấu gốc`,
-  ];
-
-  // Modernized Points
-  const modernizedItems: string[] = [
-    `Phần dưới diện "${bottom.name}": ${bottom.dnaModernized}`,
-    `Điểm chạm bước chân cùng "${shoes.name}": ${shoes.dnaModernized}`,
-    `Phụ kiện "${accessory.name}": ${accessory.dnaModernized}`,
-  ];
-
-  // Editorial Curatorial Verdict
-  let curatorVerdict = '';
-  if (actualRemix < 35) {
-    curatorVerdict = `Bản phối thiên về chiều sâu nguyên bản của ${core.name}. Sự điềm đạm của phom dáng cổ xưa được đặt êm ái vào bối cảnh ${contextMeta.label}, như một nốt trầm lắng đọng giữa nhịp sống vội vã.`;
-  } else if (actualRemix <= 70) {
-    curatorVerdict = `Điểm rơi giao thoa lý tưởng giữa khí chất cung đình và hơi thở đương đại. Cấu trúc ${core.name} làm mỏ neo di sản vững chãi để các món phụ kiện ${styleMeta.label} tự do cất lên tiếng nói phá cách.`;
-  } else {
-    curatorVerdict = `Một tuyên ngôn thị giác bùng nổ cho ${contextMeta.label}. Cú va chạm tương phản dữ dội giữa cổ phục Việt và tinh thần đường phố cấp tiến tạo nên một diện mạo độc bản, bất quy tắc mà đầy thuyết phục.`;
+  if (!text) {
+    return {
+      status: 'green',
+      message: 'Cấu trúc di sản cốt lõi được bảo toàn nguyên vẹn.',
+    };
   }
 
-  let synergyLevel: 'Hài Hòa Di Sản' | 'Giao Thoa Cân Bằng' | 'Đột Phá Đương Đại' = 'Giao Thoa Cân Bằng';
-  if (actualRemix < 40) synergyLevel = 'Hài Hòa Di Sản';
-  else if (actualRemix > 75) synergyLevel = 'Đột Phá Đương Đại';
+  // Keywords that directly conflict with a protected structural rule
+  const orangeKeywords = [
+    'xóa bỏ cổ',
+    'bỏ cổ lập lĩnh',
+    'cắt bỏ tà',
+    'cắt bỏ vạt',
+    'khoét ngực',
+    'hở bạo',
+    'xuyên thấu hoàn toàn',
+    'biến dạng phom',
+    'bỏ ngũ thân',
+    'may bó sát ngực',
+  ];
 
-  const diff = actualRemix - targetRemix;
-  let deviationText = '';
-  if (Math.abs(diff) <= 8) {
-    deviationText = `Tuyệt đối ăn khớp với mục tiêu (${targetRemix}%)`;
-  } else if (diff > 0) {
-    deviationText = `Cao hơn mục tiêu +${diff}% (Đậm tính đương đại hơn)`;
-  } else {
-    deviationText = `Thấp hơn mục tiêu ${diff}% (Thiên về nét cổ phong hơn)`;
+  for (const kw of orangeKeywords) {
+    if (text.includes(kw)) {
+      return {
+        status: 'orange',
+        message: `Yêu cầu xung đột trực tiếp với quy chuẩn nhận diện cốt lõi của ${core.name}.`,
+      };
+    }
+  }
+
+  // Keywords that may affect identifying structure
+  const yellowKeywords = [
+    'cắt ngắn',
+    'xẻ cao hơn',
+    'bỏ khuy',
+    'bỏ cúc',
+    'xẻ ngực',
+    'khoét sâu',
+    'xuyên thấu',
+    'thay đổi phom',
+    'cắt bớt',
+    'ôm sát',
+  ];
+
+  for (const kw of yellowKeywords) {
+    if (text.includes(kw)) {
+      return {
+        status: 'yellow',
+        message: `Yêu cầu này có thể thay đổi cấu trúc core của ${core.name}; cần kiểm chứng trước khi áp dụng.`,
+      };
+    }
+  }
+
+  // Safe styling adjustments (color, accessory, materials, footwear, layers)
+  return {
+    status: 'green',
+    message: 'Cấu trúc di sản cốt lõi được bảo toàn; các tinh chỉnh bổ trợ phù hợp.',
+  };
+}
+
+export interface CompactDna {
+  preservedPoints: string[];
+  modernPoints: string[];
+  actualRemix: number;
+}
+
+export function computeCompactDna(
+  core: CoreItem,
+  items: ActiveSupportItems,
+  actualRemix: number
+): CompactDna {
+  const preservedPoints = [
+    core.heritageDna[0] || `Cấu trúc phom dáng ${core.name} nguyên bản`,
+    core.heritageDna[1] || `Chi tiết cổ áo và đường xẻ vạt đặc trưng`,
+  ];
+
+  const modernPoints: string[] = [
+    `${items.bottom.name} (${items.bottom.material.split('&')[0].trim()})`,
+    `${items.shoes.name}`,
+    `${items.bag.name}`,
+  ];
+
+  if (items.accent) {
+    modernPoints.push(`${items.accent.name}`);
   }
 
   return {
+    preservedPoints,
+    modernPoints,
     actualRemix,
-    preservedItems,
-    modernizedItems,
-    curatorVerdict,
-    synergyLevel,
-    deviationText,
   };
 }
