@@ -8,7 +8,7 @@ import {
   GuardrailResult,
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
-import { EditorialMockup } from './EditorialMockup';
+import { MannequinCanvas } from './MannequinCanvas';
 import { WardrobeSlot } from './WardrobeSlot';
 import { computeCompactDna } from '../utils/fashionCalculations';
 import {
@@ -110,9 +110,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
       {/* Main Two-Column Layout (~60% Visual Pane / ~40% Controls Pane) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        {/* Left Side: Visual Flat-lay Pane (~60% -> lg:col-span-7) */}
+        {/* Left Side: Visual 2D Mannequin Pane (~60% -> lg:col-span-7) */}
         <div className="lg:col-span-7 xl:col-span-7 w-full order-1 lg:order-1">
-          <EditorialMockup
+          <MannequinCanvas
             core={core}
             items={supportItems}
             onOpenCoreDetail={onOpenCoreDetail}
