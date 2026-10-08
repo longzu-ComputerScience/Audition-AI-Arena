@@ -46,23 +46,23 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
       ref={popoverRef}
       role="listbox"
       aria-label={`Danh sách tùy chọn cho ${title}`}
-      className="absolute right-0 left-0 sm:left-auto sm:w-80 top-full mt-2 z-30 bg-[#FFFDF9] border border-[#B7410E] rounded-sm p-3.5 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+      className="absolute right-0 left-0 sm:left-auto sm:w-80 top-full mt-2 z-30 bg-[#FFFDF9] border border-[#DDD0C0] rounded-xl p-3 shadow-lg animate-in fade-in zoom-in-95 duration-150"
     >
-      <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2 mb-2.5">
-        <span className="text-xs font-mono font-semibold uppercase text-[#B7410E]">
+      <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2 mb-2">
+        <span className="text-xs font-mono font-semibold uppercase text-[#B3261E]">
           {title} ({options.length} lựa chọn)
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="p-1 text-[#7A6E63] hover:text-[#241E1A] rounded-xs cursor-pointer"
+          className="p-1 text-[#7A6E63] hover:text-[#241E1A] rounded-md cursor-pointer"
           aria-label="Đóng bảng chọn"
         >
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="space-y-1.5 max-h-64 overflow-y-auto">
+      <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
         {options.map((opt) => {
           const isSelected = opt.id === selectedId;
           return (
@@ -73,10 +73,10 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
                 onSelect(opt);
                 onClose();
               }}
-              className={`w-full text-left p-2.5 rounded-xs border transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+              className={`w-full text-left p-2.5 rounded-lg border transition-colors flex items-center justify-between gap-3 cursor-pointer ${
                 isSelected
-                  ? 'bg-[#F9F5EC] border-[#B7410E] text-[#241E1A]'
-                  : 'bg-[#FAF7F2] hover:bg-[#F2EAE0] border-[#EAE3D6] text-[#4E433C]'
+                  ? 'bg-[#FAF3EB] border-[#B3261E] text-[#241E1A] shadow-2xs font-medium'
+                  : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E8DEC9] text-[#4E433C]'
               }`}
               role="option"
               aria-selected={isSelected}
@@ -97,10 +97,10 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[11px] font-mono tabular-nums font-semibold text-[#B7410E]">
+                <span className="text-[11px] font-mono tabular-nums font-semibold text-[#B3261E]">
                   {opt.modernityScore}% Hiện đại
                 </span>
-                {isSelected && <Check className="w-4 h-4 text-[#B7410E]" />}
+                {isSelected && <Check className="w-4 h-4 text-[#B3261E]" />}
               </div>
             </button>
           );

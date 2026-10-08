@@ -14,21 +14,14 @@ import { MannequinCanvas } from './MannequinCanvas';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
 import { AIStylistPanel } from './AIStylistPanel';
-import { computeCompactDna } from '../utils/fashionCalculations';
 import {
   Sliders,
-  History,
   Sparkles,
-  Percent,
-  ShieldCheck,
   AlertTriangle,
-  XCircle,
-  CheckCircle2,
   Lock,
   ArrowLeft,
-  ChevronDown,
-  ChevronUp,
   Info,
+  BookOpen,
 } from 'lucide-react';
 
 interface RemixStudioProps {
@@ -73,9 +66,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [aiSnapshot, setAiSnapshot] = useState<OutfitSnapshot | null>(null);
 
-  // State for expanding/collapsing deep heritage check items in Cultural Guardrail
-  const [showFullGuardrailDetails, setShowFullGuardrailDetails] = useState<boolean>(true);
-
   const handleOpenAIModal = () => {
     if (!aiStatus.isAvailable) return;
     // Capture immutable snapshot of current styling selections
@@ -87,8 +77,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
     });
     setIsAIModalOpen(true);
   };
-
-  const compactDna = computeCompactDna(core, supportItems, actualRemix);
 
   return (
     <motion.section
@@ -104,14 +92,14 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
           <button
             type="button"
             onClick={onBackToConcept}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#5A4F46] hover:text-[#241E1A] bg-[#FFFDF9] border border-[#D5C7B4] rounded-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#5A4F46] hover:text-[#241E1A] bg-[#FFFDF9] border border-[#DDD0C0] rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Đổi Concept</span>
           </button>
 
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#B7410E] block">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#B3261E] block">
               Remix Studio · Bước 03
             </span>
             <h1 className="text-xl sm:text-2xl font-editorial font-bold text-[#241E1A]">
@@ -122,9 +110,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
         {/* Status indicator */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#E3D9CC] px-3 py-1.5 rounded-xs">
+          <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#E5DEC9] px-3 py-1.5 rounded-lg">
             <span className="text-[11px] font-mono text-[#8C7E72]">Remix thực tế:</span>
-            <span className="text-sm font-editorial font-bold text-[#B7410E] tabular-nums">
+            <span className="text-sm font-editorial font-bold text-[#B3261E] tabular-nums">
               {actualRemix}%
             </span>
           </div>
@@ -143,9 +131,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
         </div>
 
         {/* Right Side: Wardrobe & Styling Controls (~40% -> lg:col-span-5) */}
-        <div className="lg:col-span-5 xl:col-span-5 w-full space-y-6 order-2 lg:order-2">
-          {/* 1. Wardrobe Slots */}
-          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3.5">
+        <div className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
+          {/* 1. Tủ Đồ Phối Kèm */}
+          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3.5">
             <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
                 Tủ Đồ Phối Kèm
@@ -206,18 +194,31 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             />
           </section>
 
-          {/* 2. Target Remix Dial */}
-          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3">
+          {/* 2. Prominent AI Stylist Consultation Panel */}
+          <AIStylistPanel
+            core={core}
+            supportItems={supportItems}
+            setupData={setupData}
+            targetRemix={targetRemix}
+            actualRemix={actualRemix}
+            aiStatus={aiStatus}
+            onSelectSupportItem={onSelectSupportItem}
+            onApplyRefinementText={onApplyRefinement}
+            currentRefinementText={refinementText}
+          />
+
+          {/* 3. Target Remix Dial */}
+          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
             <div className="flex items-baseline justify-between">
               <label
                 htmlFor="remix-dial-slider"
                 className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
               >
-                <Sliders className="w-3.5 h-3.5 text-[#B7410E]" />
+                <Sliders className="w-3.5 h-3.5 text-[#B3261E]" />
                 <span>Mục Tiêu Remix Dial</span>
               </label>
               <div className="flex items-baseline gap-1">
-                <span className="font-editorial text-2xl font-bold text-[#B7410E] tabular-nums">
+                <span className="font-editorial text-2xl font-bold text-[#B3261E] tabular-nums">
                   {targetRemix}%
                 </span>
                 <span className="text-[10px] font-mono text-[#8C7E72] uppercase">
@@ -234,7 +235,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
               step="1"
               value={targetRemix}
               onChange={(e) => onTargetRemixChange(Number(e.target.value))}
-              className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B7410E]"
+              className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B3261E]"
             />
 
             <div className="flex justify-between text-[10px] font-mono text-[#8C7E72]">
@@ -244,195 +245,78 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </div>
           </section>
 
-          {/* 3. Prominent AI Stylist Consultation Panel */}
-          <AIStylistPanel
-            core={core}
-            supportItems={supportItems}
-            setupData={setupData}
-            targetRemix={targetRemix}
-            actualRemix={actualRemix}
-            aiStatus={aiStatus}
-            onSelectSupportItem={onSelectSupportItem}
-            onApplyRefinementText={onApplyRefinement}
-            currentRefinementText={refinementText}
-          />
+          {/* 4. Góc Nhìn Di Sản (Compact Editorial Card replacing Cultural Guardrail) */}
+          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#B3261E]" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
+                  Góc Nhìn Di Sản
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono text-[#8C7E72]">
+                {core.archiveCode}
+              </span>
+            </div>
 
-          {/* 4. Upgraded Cultural Guardrail — Transparent & Meaningful Feedback */}
-          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3.5">
-            <div className="flex items-start justify-between gap-3 border-b border-[#EFE8DC] pb-3">
-              <div className="flex items-start gap-2.5">
-                {guardrailResult.status === 'green' && (
-                  <ShieldCheck className="w-5 h-5 text-[#2E7D32] shrink-0 mt-0.5" />
-                )}
-                {guardrailResult.status === 'yellow' && (
-                  <AlertTriangle className="w-5 h-5 text-[#E65100] shrink-0 mt-0.5" />
-                )}
-                {guardrailResult.status === 'orange' && (
-                  <AlertTriangle className="w-5 h-5 text-[#D84315] shrink-0 mt-0.5" />
-                )}
+            {/* A. Short heritage introduction (2-3 short lines from trusted metadata) */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-[#241E1A]">
+                  {core.vietnameseTitle || core.name}
+                </span>
+                <span className="text-[10px] font-mono text-[#B3261E] bg-[#FAF0EB] px-2 py-0.5 rounded-md border border-[#F2C2B5]">
+                  {core.era}
+                </span>
+              </div>
+              <p className="text-xs text-[#5A4F46] leading-relaxed">
+                {core.silhouette}
+              </p>
+            </div>
 
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
-                      Cultural Guardrail
-                    </h3>
-                    <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded-xs font-semibold uppercase ${
-                        guardrailResult.status === 'green'
-                          ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
-                          : guardrailResult.status === 'yellow'
-                          ? 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
-                          : 'bg-[#FBE9E7] text-[#D84315] border border-[#FFCCBC]'
-                      }`}
-                    >
-                      {guardrailResult.status === 'green'
-                        ? 'Bảo Tồn Chuẩn Mực'
-                        : guardrailResult.status === 'yellow'
-                        ? 'Cần Lưu Ý Cân Nhắc'
-                        : 'Xung Đột Cốt Lõi Di Sản'}
-                    </span>
-                  </div>
-                  <p className="text-xs font-medium text-[#3D342C] mt-1 leading-snug">
+            {/* B. Practical style etiquette */}
+            {guardrailResult.etiquetteTip && (
+              <div className="bg-[#FAF7EE] border border-[#E5DEC9] rounded-lg p-2.5 flex items-start gap-2 text-xs text-[#5A4F46]">
+                <Info className="w-3.5 h-3.5 text-[#B3261E] shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <span className="font-semibold text-[#241E1A]">Chuẩn mực mặc đẹp:</span> {guardrailResult.etiquetteTip}
+                </p>
+              </div>
+            )}
+
+            {/* C. Conflict warning — conditional only (Yellow / Orange alerts) */}
+            {(guardrailResult.status === 'yellow' || guardrailResult.status === 'orange') && (
+              <div
+                className={`rounded-lg p-2.5 flex items-start gap-2 text-xs border ${
+                  guardrailResult.status === 'yellow'
+                    ? 'bg-[#FFF8E1] border-[#FFE082] text-[#8D6E63]'
+                    : 'bg-[#FBE9E7] border-[#FFAB91] text-[#BF360C]'
+                }`}
+              >
+                <AlertTriangle
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${
+                    guardrailResult.status === 'yellow' ? 'text-[#F57F17]' : 'text-[#D84315]'
+                  }`}
+                />
+                <div className="space-y-0.5 min-w-0">
+                  <span className="font-semibold block text-[11px] uppercase tracking-wider">
+                    {guardrailResult.status === 'yellow' ? 'Lưu ý điều chỉnh' : 'Xung đột di sản'}
+                  </span>
+                  <p className="text-[11px] leading-relaxed">
                     {guardrailResult.message}
                   </p>
                 </div>
               </div>
-
-              {guardrailResult.heritageChecks && (
-                <button
-                  type="button"
-                  onClick={() => setShowFullGuardrailDetails((prev) => !prev)}
-                  className="text-[11px] text-[#7A4B3A] hover:text-[#B3261E] font-medium flex items-center gap-1 cursor-pointer shrink-0 mt-0.5"
-                >
-                  <span>{showFullGuardrailDetails ? 'Thu gọn' : 'Chi tiết'}</span>
-                  {showFullGuardrailDetails ? (
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Transparent Detailed Rationale */}
-            {guardrailResult.detailedAnalysis && (
-              <div className="bg-[#FAF7F2] border-l-2 border-[#B7410E] pl-3 py-2 text-xs text-[#524538] leading-relaxed font-serif">
-                {guardrailResult.detailedAnalysis}
-              </div>
-            )}
-
-            {/* Heritage Checklist Breakdown */}
-            {showFullGuardrailDetails && guardrailResult.heritageChecks && guardrailResult.heritageChecks.length > 0 && (
-              <div className="space-y-2 pt-1">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C7E72] block">
-                  Tiêu chí thẩm định di sản
-                </span>
-                <div className="space-y-1.5">
-                  {guardrailResult.heritageChecks.map((check) => (
-                    <div
-                      key={check.id}
-                      className="bg-white border border-[#EBE3D7] rounded-xs p-2.5 flex items-start gap-2.5 text-xs"
-                    >
-                      {check.status === 'passed' && (
-                        <CheckCircle2 className="w-4 h-4 text-[#2E7D32] shrink-0 mt-0.5" />
-                      )}
-                      {check.status === 'warning' && (
-                        <AlertTriangle className="w-4 h-4 text-[#E65100] shrink-0 mt-0.5" />
-                      )}
-                      {check.status === 'violation' && (
-                        <XCircle className="w-4 h-4 text-[#D84315] shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-[#241E1A]">{check.label}</span>
-                          <span
-                            className={`text-[9px] font-mono uppercase px-1.5 py-0.2 rounded-2xs ${
-                              check.status === 'passed'
-                                ? 'text-[#2E7D32] bg-[#E8F5E9]'
-                                : check.status === 'warning'
-                                ? 'text-[#E65100] bg-[#FFF3E0]'
-                                : 'text-[#D84315] bg-[#FBE9E7]'
-                            }`}
-                          >
-                            {check.status === 'passed' ? 'Đạt' : check.status === 'warning' ? 'Lưu ý' : 'Vi phạm'}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-[#635548] mt-0.5 leading-relaxed">
-                          {check.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Occasion Etiquette Tip */}
-            {guardrailResult.etiquetteTip && (
-              <div className="bg-[#FAF3E8] border border-[#EADBCA] rounded-xs p-2.5 flex items-start gap-2 text-xs text-[#634E3C]">
-                <Info className="w-3.5 h-3.5 text-[#B7410E] shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  <span className="font-semibold">Chuẩn mực mặc đẹp:</span> {guardrailResult.etiquetteTip}
-                </p>
-              </div>
             )}
           </section>
 
-          {/* 5. Compact Cultural DNA */}
-          <section
-            id="cultural-dna"
-            className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3.5"
-          >
-            <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
-              <h2 className="text-sm font-editorial font-bold text-[#241E1A]">
-                Mã Gen Di Sản
-              </h2>
-              <div className="flex items-center gap-1.5 bg-[#FAF7F2] border border-[#DDD0C0] px-2.5 py-1 rounded-xs">
-                <Percent className="w-3.5 h-3.5 text-[#B7410E]" />
-                <span className="text-xs font-semibold text-[#241E1A] tabular-nums">
-                  Mức Remix thực tế: <span className="text-[#B7410E]">{actualRemix}%</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Di sản giữ lại */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#241E1A]">
-                <History className="w-3.5 h-3.5 text-[#7A4B3A]" />
-                <span>Di sản giữ lại</span>
-              </div>
-              <ul className="space-y-1 pl-4 border-l-2 border-[#D5C7B4]">
-                {compactDna.preservedPoints.map((p, i) => (
-                  <li key={i} className="text-xs text-[#5A4F46] leading-relaxed">
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Chi tiết hiện đại */}
-            <div className="space-y-1 pt-2 border-t border-[#EFE8DC]">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#B7410E]">
-                <Sparkles className="w-3.5 h-3.5 text-[#B7410E]" />
-                <span>Chi tiết hiện đại</span>
-              </div>
-              <ul className="space-y-1 pl-4 border-l-2 border-[#B7410E]">
-                {compactDna.modernPoints.map((p, i) => (
-                  <li key={i} className="text-xs text-[#5A4F46] leading-relaxed">
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          {/* 6. Final AI Image Generation Action (Connected to shared AI availability) */}
+          {/* 5. Final AI Image Generation Action (Connected to shared AI availability) */}
           <div className="pt-1 space-y-2">
             <button
               type="button"
               disabled={!aiStatus.isAvailable}
               onClick={handleOpenAIModal}
-              className={`w-full py-3.5 px-4 rounded-xs font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 transition-colors shadow-xs ${
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 transition-colors shadow-xs ${
                 aiStatus.isAvailable
                   ? 'bg-[#B3261E] hover:bg-[#8F1E18] text-white cursor-pointer'
                   : 'bg-[#9E9084] text-[#EFEBE4] cursor-not-allowed opacity-80'

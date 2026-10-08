@@ -130,17 +130,17 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
   };
 
   return (
-    <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-4">
+    <section className="bg-[#FDFBF7] border border-[#E8DCCB] ring-1 ring-[#B3261E]/10 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
       {/* Panel Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EFE8DC] pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FAF0EB] border border-[#F2C2B5] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#FAF0EB] border border-[#F2C2B5] flex items-center justify-center shrink-0 shadow-2xs">
             <Sparkles className="w-4 h-4 text-[#B3261E]" />
           </div>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A] flex items-center gap-2">
               <span>Trợ Lý AI Stylist</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-xs font-normal normal-case bg-[#F5ECE0] text-[#7A4B3A]">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-normal normal-case bg-[#F5ECE0] text-[#8C3428] border border-[#ECDCCB]">
                 Gemini 3.8
               </span>
             </h2>
@@ -153,12 +153,12 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
         {/* AI Status Pill */}
         <div className="flex items-center gap-1.5">
           {aiStatus.isAvailable ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2E7D32] bg-[#E8F5E9] border border-[#C8E6C9] px-2 py-0.5 rounded-xs">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#2E7D32] bg-[#E8F5E9] border border-[#C8E6C9] px-2.5 py-1 rounded-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32] animate-pulse" />
               Sẵn sàng tư vấn
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#8C7E72] bg-[#EFEBE4] border border-[#DDD5C9] px-2 py-0.5 rounded-xs">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#8C7E72] bg-[#EFEBE4] border border-[#DDD5C9] px-2.5 py-1 rounded-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[#A89F91]" />
               Chưa có API Key
             </span>
@@ -168,8 +168,8 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
 
       {/* When API key is not configured */}
       {!aiStatus.isAvailable && (
-        <div className="bg-[#FAF5ED] border border-[#E3D5C0] rounded-xs p-3.5 text-xs text-[#5C4D3E] flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-[#B7410E] shrink-0 mt-0.5" />
+        <div className="bg-[#FAF5ED] border border-[#E5DAC6] rounded-lg p-3.5 text-xs text-[#5C4D3E] flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-[#B3261E] shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold text-[#3D2E20]">
               Tính năng AI Stylist đang ở chế độ xem trước tĩnh
@@ -196,7 +196,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                 setQuery(chip.prompt);
                 handleConsult(chip.prompt, chip.type);
               }}
-              className="text-xs px-2.5 py-1.5 rounded-xs bg-[#FAF7F2] hover:bg-[#F2ECE1] text-[#3D342C] border border-[#DED4C5] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5 active:scale-98"
+              className="text-xs px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] hover:bg-[#F3ECE1] text-[#3D342C] border border-[#E5DEC9] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5 active:scale-98"
             >
               <span>{chip.label}</span>
             </button>
@@ -228,13 +228,13 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                 ? "Ví dụ: 'Nên chọn giày nào để bớt đứng tuổi?', 'Phối thêm phụ kiện ánh bạc'..."
                 : "Cần GEMINI_API_KEY để trò chuyện trực tiếp..."
             }
-            className="flex-1 bg-[#FAF7F2] border border-[#D5C7B4] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E] rounded-xs px-3 py-2.5 text-xs text-[#241E1A] outline-none disabled:bg-[#F2EDE4] disabled:text-[#8C7E72] disabled:cursor-not-allowed transition-colors"
+            className="flex-1 bg-white border border-[#DDD0C0] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 rounded-lg px-3.5 py-2.5 text-xs text-[#241E1A] outline-none disabled:bg-[#F2EDE4] disabled:text-[#8C7E72] disabled:cursor-not-allowed transition-colors"
           />
 
           <button
             type="submit"
             disabled={!aiStatus.isAvailable || isLoading || !query.trim()}
-            className="px-4 py-2.5 bg-[#B3261E] hover:bg-[#8F1E18] disabled:bg-[#C8BCAC] text-white text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0 disabled:cursor-not-allowed flex items-center gap-1.5"
+            className="px-4 py-2.5 bg-[#B3261E] hover:bg-[#962019] disabled:bg-[#C8BCAC] text-white text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shrink-0 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-2xs"
           >
             {isLoading ? (
               <>
@@ -253,7 +253,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
 
       {/* Loading state indicator */}
       {isLoading && (
-        <div className="bg-[#FAF7F2] border border-[#E8DFC8] rounded-xs p-4 flex items-center gap-3 text-xs text-[#7A4B3A]">
+        <div className="bg-[#FAF7EE] border border-[#E8DFC8] rounded-lg p-3.5 flex items-center gap-3 text-xs text-[#7A4B3A]">
           <Loader2 className="w-4 h-4 text-[#B3261E] animate-spin shrink-0" />
           <div className="space-y-0.5">
             <p className="font-semibold text-[#241E1A]">AI Stylist đang phân tích bản phối...</p>
@@ -271,7 +271,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="bg-[#FAF7F2] border border-[#D8CABE] rounded-xs p-4 sm:p-5 space-y-4 shadow-2xs"
+            className="bg-[#FAF7EE] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 space-y-4 shadow-2xs"
           >
             {/* Review Section */}
             <div className="space-y-1.5 border-b border-[#E8DEC8] pb-3.5">
@@ -279,7 +279,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                 <Sparkles className="w-3.5 h-3.5 text-[#B3261E]" />
                 <span>Nhận Định Tạo Mẫu</span>
               </div>
-              <p className="text-xs text-[#2E251E] leading-relaxed italic bg-white/70 border-l-2 border-[#B3261E] pl-3 py-1.5 rounded-r-xs font-serif">
+              <p className="text-xs text-[#2E251E] leading-relaxed italic bg-white/80 border-l-2 border-[#B3261E] pl-3 py-2 rounded-r-md font-serif">
                 "{adviceResult.review}"
               </p>
             </div>
@@ -321,11 +321,11 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                     return (
                       <div
                         key={idx}
-                        className="bg-white border border-[#E3D9CC] rounded-xs p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                        className="bg-white border border-[#E5DEC9] rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                       >
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-2xs bg-[#F2ECE1] text-[#7A4B3A]">
+                            <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-[#F2ECE1] text-[#7A4B3A]">
                               {sug.category}
                             </span>
                             <span className="text-xs font-semibold text-[#241E1A]">
@@ -341,7 +341,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                           type="button"
                           disabled={isAlreadyApplied}
                           onClick={() => handleApplySuggestion(sug)}
-                          className={`text-xs px-3 py-1.5 rounded-xs font-medium uppercase tracking-wider shrink-0 transition-colors flex items-center gap-1.5 cursor-pointer ${
+                          className={`text-xs px-3 py-1.5 rounded-lg font-medium uppercase tracking-wider shrink-0 transition-colors flex items-center gap-1.5 cursor-pointer ${
                             isAlreadyApplied
                               ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9] cursor-default'
                               : 'bg-[#241E1A] hover:bg-[#B3261E] text-white'
@@ -368,7 +368,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
 
             {/* Cultural Heritage Highlight */}
             {adviceResult.culturalHighlight && (
-              <div className="bg-[#FAF3E8] border border-[#E5DAC6] rounded-xs p-3 space-y-1">
+              <div className="bg-[#FAF3E8] border border-[#E5DAC6] rounded-lg p-3 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-[#7A4B3A]">
                   <Compass className="w-3.5 h-3.5 text-[#7A4B3A]" />
                   <span>Điểm Sáng Di Sản</span>
@@ -384,7 +384,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
 
       {/* Error state if consultation fails */}
       {adviceResult && !adviceResult.success && !isLoading && (
-        <div className="bg-[#FDF2F0] border border-[#F5C2BA] rounded-xs p-3.5 text-xs text-[#A82A24] space-y-1">
+        <div className="bg-[#FDF2F0] border border-[#F5C2BA] rounded-lg p-3.5 text-xs text-[#A82A24] space-y-1">
           <div className="flex items-center gap-2 font-semibold">
             <AlertCircle className="w-4 h-4 text-[#B3261E]" />
             <span>Không thể hoàn thành tư vấn AI</span>

@@ -28,12 +28,12 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10"
+      className="max-w-4xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6"
     >
       {/* Editorial Header */}
-      <div className="space-y-2 border-b border-[#EAE3D6] pb-5">
+      <div className="space-y-1.5 border-b border-[#EAE3D6] pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <span className="text-xs sm:text-sm font-medium tracking-wide text-[#B3261E]">
+          <span className="text-xs font-semibold tracking-wide text-[#B3261E]">
             Studio Giám Tuyển · Bước 02
           </span>
           <span className="text-xs text-[#7A6E63] font-medium">
@@ -41,19 +41,19 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
           </span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2B231D] tracking-tight leading-snug">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#2B231D] tracking-tight leading-snug">
           Định Hình Phong Cách & Bản Ý Niệm
         </h1>
 
-        <p className="text-sm sm:text-base text-[#5A4F46] leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#5A4F46] leading-relaxed">
           Tùy biến tinh thần thẩm mỹ và sắc độ chủ đạo để khởi tạo bản phối di sản phù hợp nhất với bạn.
         </p>
       </div>
 
       {/* 1. ĐỊNH HƯỚNG PHONG CÁCH (Selectable Cards/Chips - No Dropdown) */}
-      <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-6 sm:p-7 shadow-xs space-y-4">
-        <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2.5">
-          <h2 className="text-base sm:text-lg font-bold text-[#2B231D]">
+      <div className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
+          <h2 className="text-sm sm:text-base font-bold text-[#2B231D]">
             1. Định hướng phong cách
           </h2>
           <span className="text-xs text-[#7A6E63]">
@@ -61,7 +61,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {STYLES.map((st) => {
             const isSelected = setupData.style === st;
             return (
@@ -69,10 +69,10 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
                 key={st}
                 type="button"
                 onClick={() => onChangeSetup({ style: st })}
-                className={`p-3 rounded-xs border text-left transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[64px] ${
+                className={`p-2.5 rounded-lg border text-left transition-all duration-150 cursor-pointer flex flex-col justify-between min-h-[52px] ${
                   isSelected
                     ? 'bg-[#FFFDF9] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#B3261E] shadow-2xs font-semibold'
-                    : 'bg-[#FAF7EE] hover:bg-[#FFFDF9] border-[#DDD0C0] hover:border-[#B3261E]/40 text-[#2B231D] font-medium'
+                    : 'bg-[#FAF7EE] hover:bg-[#FFFDF9] border-[#E0D5C5] hover:border-[#B3261E]/40 text-[#2B231D] font-medium'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
@@ -92,9 +92,9 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
       </div>
 
       {/* 2. MÀU SẮC CHỦ ĐẠO (Selectable Swatches/Chips - No Dropdown) */}
-      <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-6 sm:p-7 shadow-xs space-y-4">
-        <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2.5">
-          <h2 className="text-base sm:text-lg font-bold text-[#2B231D]">
+      <div className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
+          <h2 className="text-sm sm:text-base font-bold text-[#2B231D]">
             2. Màu sắc chủ đạo
           </h2>
           <span className="text-xs text-[#7A6E63]">
@@ -102,7 +102,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {PREFERRED_COLOR_OPTIONS.map((col) => {
             const isSelected = setupData.preferredColor === col;
             const isAuto = col === 'Để hệ thống gợi ý';
@@ -113,31 +113,31 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
                 key={col}
                 type="button"
                 onClick={() => onChangeSetup({ preferredColor: col })}
-                className={`p-2.5 rounded-xs border text-left transition-all duration-150 cursor-pointer flex items-center justify-between gap-2.5 ${
+                className={`p-2 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 ${
                   isSelected
                     ? 'bg-[#FFFDF9] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#B3261E] shadow-2xs font-semibold'
-                    : 'bg-[#FAF7EE] hover:bg-[#FFFDF9] border-[#DDD0C0] hover:border-[#B3261E]/40 text-[#2B231D] font-medium'
+                    : 'bg-[#FAF7EE] hover:bg-[#FFFDF9] border-[#E0D5C5] hover:border-[#B3261E]/40 text-[#2B231D] font-medium'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   {isAuto ? (
-                    <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#B3261E] to-[#1D4E89] shrink-0 border border-black/10 flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#B3261E] to-[#1D4E89] shrink-0 border border-black/10 flex items-center justify-center">
                       <Sparkles className="w-2.5 h-2.5 text-white" />
                     </span>
                   ) : (
                     <span
-                      className="w-5 h-5 rounded-full shrink-0 border border-black/15 shadow-2xs"
+                      className="w-4 h-4 rounded-full shrink-0 border border-black/15 shadow-2xs"
                       style={{ backgroundColor: colorHex || '#DDD0C0' }}
                     />
                   )}
-                  <span className="text-xs sm:text-sm truncate">
+                  <span className="text-xs truncate">
                     {col}
                   </span>
                 </div>
 
                 {isSelected && (
-                  <span className="w-4 h-4 rounded-full bg-[#B3261E] text-white flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#B3261E] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2 h-2 stroke-[3]" />
                   </span>
                 )}
               </button>
@@ -145,7 +145,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
           })}
         </div>
 
-        <div className="flex items-start gap-1.5 pt-1 text-[11px] text-[#7A6E63]">
+        <div className="flex items-start gap-1.5 pt-0.5 text-[11px] text-[#7A6E63]">
           <Info className="w-3.5 h-3.5 shrink-0 text-[#B3261E] mt-0.5" />
           <span>
             Tông màu ưu tiên dùng để định hướng bảng màu ý niệm phối đồ; không tự động thay đổi màu nguyên bản của trang phục.
@@ -154,8 +154,8 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
       </div>
 
       {/* 3. CONCEPT REVEAL (Immediately reflects selected Style and Color) */}
-      <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="border-b border-[#EAE3D6] pb-4 space-y-2">
+      <div className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-4">
+        <div className="border-b border-[#EAE3D6] pb-2.5 space-y-1.5">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#B3261E]">
               3. Bản Ý Niệm Phối Đồ · Concept Reveal
@@ -165,19 +165,19 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#2B231D] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#2B231D] tracking-tight">
             {concept.title}
           </h2>
 
-          <p className="text-sm sm:text-base text-[#4E433C] leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#4E433C] leading-relaxed">
             {concept.rationale}
           </p>
         </div>
 
         {/* Three-Color Palette */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs sm:text-sm font-semibold text-[#2B231D] tracking-wide">
+            <h3 className="text-xs font-semibold text-[#2B231D] tracking-wide">
               Bảng màu chủ đạo (3 sắc độ hòa hợp)
             </h3>
             <span className="text-[11px] text-[#7A6E63]">
@@ -185,14 +185,14 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {concept.palette.map((color, idx) => (
               <div
                 key={`${color.hex}-${idx}`}
-                className="bg-[#FAF7EE] border border-[#E3D9CC] p-3 rounded-xs flex items-center gap-3"
+                className="bg-[#FAF7EE] border border-[#E5DEC9] p-2.5 rounded-lg flex items-center gap-2.5"
               >
                 <span
-                  className="w-6 h-6 rounded-full border border-black/10 shrink-0 shadow-2xs"
+                  className="w-5 h-5 rounded-full border border-black/10 shrink-0 shadow-2xs"
                   style={{ backgroundColor: color.hex }}
                 />
                 <div className="min-w-0 flex-1">
@@ -209,9 +209,9 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
         </div>
 
         {/* Cultural Snippet based on the selected Core Garment */}
-        <div className="border-t border-[#EAE3D6] pt-5 space-y-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#FAF7EE] border border-[#DDD0C0] p-2 shrink-0 flex items-center justify-center">
+        <div className="border-t border-[#EAE3D6] pt-3.5 space-y-2.5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#FAF7EE] border border-[#DDD0C0] p-1.5 shrink-0 flex items-center justify-center">
               <PatternMotif
                 type={core.patternType}
                 color="#B3261E"
@@ -222,7 +222,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
               <span className="text-xs font-semibold text-[#B3261E]">
                 {core.era}
               </span>
-              <h4 className="text-lg sm:text-xl font-bold text-[#2B231D]">
+              <h4 className="text-base sm:text-lg font-bold text-[#2B231D]">
                 {core.vietnameseTitle}
               </h4>
               <p className="text-xs text-[#7A6E63]">
@@ -231,11 +231,11 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-[#5A4F46] leading-relaxed">
+          <p className="text-xs text-[#5A4F46] leading-relaxed">
             {core.editorialDescription}
           </p>
 
-          <div className="p-3 bg-[#FAF7EE] rounded-xs border border-[#EAE3D6] text-xs text-[#5A4F46] space-y-1">
+          <div className="p-2.5 bg-[#FAF7EE] rounded-lg border border-[#EAE3D6] text-xs text-[#5A4F46] space-y-0.5">
             <div className="font-semibold text-[#2B231D]">
               Đặc trưng phom dáng di sản:
             </div>
@@ -247,11 +247,11 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-1">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#5A4F46] hover:text-[#2B231D] border border-[#DDD0C0] hover:border-[#B3261E]/50 bg-[#FFFDF9] rounded-xs transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#5A4F46] hover:text-[#2B231D] border border-[#DDD0C0] hover:border-[#B3261E]/50 bg-[#FFFDF9] rounded-lg transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại Khám phá</span>
@@ -260,7 +260,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
         <button
           type="button"
           onClick={onProceed}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#B3261E] hover:bg-[#9A1F18] text-white text-xs sm:text-sm font-semibold rounded-xs shadow-xs transition-all duration-200 cursor-pointer active:scale-98"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#B3261E] hover:bg-[#9A1F18] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs transition-all duration-200 cursor-pointer active:scale-98"
         >
           <span>Vào Remix Studio</span>
           <ArrowRight className="w-4 h-4" />

@@ -32,7 +32,7 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
   // If slot is empty (for optional Accent)
   if (!item) {
     return (
-      <div className="relative border border-dashed border-[#D5C7B4] hover:border-[#B7410E] bg-[#FFFDF9]/60 hover:bg-[#FFFDF9] rounded-sm p-4 transition-all">
+      <div className="relative border border-dashed border-[#DDD0C0] hover:border-[#B3261E]/60 bg-[#FAF7EE]/60 hover:bg-[#FFFDF9] rounded-xl p-3.5 transition-all">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] font-mono uppercase text-[#8C7E72] block">
@@ -46,7 +46,7 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
           <button
             type="button"
             onClick={onAddSlot}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#B7410E] text-[#5A4F46] hover:text-white border border-[#D5C7B4] hover:border-[#B7410E] rounded-xs text-xs font-semibold transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7EE] hover:bg-[#B3261E] text-[#5A4F46] hover:text-white border border-[#DDD0C0] hover:border-[#B3261E] rounded-lg text-xs font-semibold transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Thêm phụ kiện</span>
@@ -57,14 +57,14 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
   }
 
   return (
-    <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-3.5 shadow-2xs transition-all duration-200">
+    <div className="relative bg-[#FFFDF9] border border-[#E8DEC9] rounded-xl p-3 shadow-2xs transition-all duration-200">
       {/* Header Row */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2 mb-2.5">
+      <div className="flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2 mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-[#5A4F46]">
             {label}
           </span>
-          <span className="text-[10px] font-mono text-[#8C7E72] bg-[#FAF7F2] px-1.5 py-0.5 rounded-xs border border-[#E5DDD0]">
+          <span className="text-[10px] font-mono text-[#8C7E72] bg-[#FAF7EE] px-1.5 py-0.5 rounded-md border border-[#E5DDD0]">
             {item.badgeLabel}
           </span>
         </div>
@@ -74,7 +74,7 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
             <button
               type="button"
               onClick={onRemoveSlot}
-              className="p-1 text-[#8C7E72] hover:text-[#B7410E] rounded-xs cursor-pointer transition-colors"
+              className="p-1 text-[#8C7E72] hover:text-[#B3261E] rounded-md cursor-pointer transition-colors"
               title="Gỡ bỏ phụ kiện này"
               aria-label="Gỡ bỏ phụ kiện"
             >
@@ -85,7 +85,7 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
           <button
             type="button"
             onClick={onToggleOpen}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#4E433C] hover:text-[#241E1A] bg-[#FAF7F2] hover:bg-[#F2EAE0] border border-[#DDD0C0] rounded-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#4E433C] hover:text-[#241E1A] bg-[#FAF7EE] hover:bg-[#F2EAE0] border border-[#DDD0C0] rounded-lg transition-colors cursor-pointer"
             aria-expanded={isOpen}
           >
             <span>Thay đổi</span>
@@ -105,11 +105,11 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
             onToggleOpen();
           }
         }}
-        className="flex items-center gap-3.5 cursor-pointer group"
+        className="flex items-center gap-3 cursor-pointer group"
       >
         {/* Placeholder Visual Thumbnail */}
         <div
-          className="w-14 h-14 rounded-xs border border-[#DFD5C5] overflow-hidden shrink-0 flex items-center justify-center p-2 relative transition-all group-hover:border-[#B7410E]"
+          className="w-13 h-13 rounded-lg border border-[#E2D8C8] overflow-hidden shrink-0 flex items-center justify-center p-2 relative transition-all group-hover:border-[#B3261E]/50"
           style={{
             background: `linear-gradient(135deg, ${item.colorHex}22 0%, ${item.colorHex}55 60%, ${item.accentHex}50 100%)`,
           }}
@@ -128,10 +128,10 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
         {/* Metadata */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <h4 className="text-sm font-editorial font-bold text-[#241E1A] truncate group-hover:text-[#B7410E] transition-colors">
+            <h4 className="text-sm font-editorial font-bold text-[#241E1A] truncate group-hover:text-[#B3261E] transition-colors">
               {item.name}
             </h4>
-            <span className="text-[11px] font-mono tabular-nums text-[#B7410E] font-semibold shrink-0">
+            <span className="text-[11px] font-mono tabular-nums text-[#B3261E] font-semibold shrink-0">
               {item.modernityScore}%
             </span>
           </div>
