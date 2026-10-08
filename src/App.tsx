@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import {
   SetupData,
@@ -6,6 +6,7 @@ import {
   SupportOption,
   SupportCategoryId,
   GuardrailResult,
+  AIStatusInfo,
 } from './types';
 import {
   CORE_ITEMS,
@@ -17,6 +18,7 @@ import {
   computeActualRemix,
   evaluateGuardrail,
 } from './utils/fashionCalculations';
+import { fetchAIStatus } from './services/aiStylistApi';
 import { Header } from './components/Header';
 import { DiscoveryScreen } from './components/DiscoveryScreen';
 import { ConceptReveal } from './components/ConceptReveal';
@@ -51,6 +53,20 @@ export default function App() {
   // Target Remix: slider 0–100
   const [targetRemix, setTargetRemix] = useState<number>(45);
 
+  // Shared AI Availability status across Stylist and Image Generator
+  const [aiStatus, setAiStatus] = useState<AIStatusInfo>({
+    isAvailable: false,
+    hasApiKey: false,
+    loading: true,
+  });
+
+  // Fetch AI status on mount
+  useEffect(() => {
+    fetchAIStatus().then((status) => {
+      setAiStatus(status);
+    });
+  }, []);
+
   // Refinement text & Cultural Guardrail
   const [refinementText, setRefinementText] = useState<string>('');
   const [guardrailResult, setGuardrailResult] = useState<GuardrailResult>({
@@ -73,11 +89,21 @@ export default function App() {
   }, [setupData]);
 
   // Derived: Actual Remix MUST be a derived value, not stored in state!
-  // actualRemix = average(modernityScore of active, non-null support items)
-  // Core garment is excluded. Null optional slot (accent === null) does not count as score 0.
   const actualRemix = useMemo(() => {
     return computeActualRemix(activeSupportItems);
   }, [activeSupportItems]);
+
+  // Keep Cultural Guardrail synchronized with current styling snapshot
+  useEffect(() => {
+    const result = evaluateGuardrail(
+      refinementText,
+      currentCore,
+      activeSupportItems,
+      setupData,
+      actualRemix
+    );
+    setGuardrailResult(result);
+  }, [refinementText, currentCore, activeSupportItems, setupData, actualRemix]);
 
   // Handle changing setup fields in Step 1 and Step 2
   const handleChangeSetup = (data: Partial<SetupData>) => {
@@ -191,6 +217,7 @@ export default function App() {
               actualRemix={actualRemix}
               refinementText={refinementText}
               guardrailResult={guardrailResult}
+              aiStatus={aiStatus}
               onTargetRemixChange={handleTargetRemixChange}
               onSelectSupportItem={handleSelectSupportItem}
               onAddAccent={handleAddAccent}

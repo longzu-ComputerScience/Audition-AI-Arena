@@ -7,11 +7,13 @@ import {
   SupportCategoryId,
   GuardrailResult,
   SetupData,
+  AIStatusInfo,
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
 import { MannequinCanvas } from './MannequinCanvas';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
+import { AIStylistPanel } from './AIStylistPanel';
 import { computeCompactDna } from '../utils/fashionCalculations';
 import {
   Sliders,
@@ -20,9 +22,13 @@ import {
   Percent,
   ShieldCheck,
   AlertTriangle,
+  XCircle,
+  CheckCircle2,
   Lock,
   ArrowLeft,
-  Send,
+  ChevronDown,
+  ChevronUp,
+  Info,
 } from 'lucide-react';
 
 interface RemixStudioProps {
@@ -33,6 +39,7 @@ interface RemixStudioProps {
   actualRemix: number;
   refinementText: string;
   guardrailResult: GuardrailResult;
+  aiStatus: AIStatusInfo;
   onTargetRemixChange: (value: number) => void;
   onSelectSupportItem: (category: SupportCategoryId, item: SupportOption) => void;
   onAddAccent: () => void;
@@ -50,6 +57,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   actualRemix,
   refinementText,
   guardrailResult,
+  aiStatus,
   onTargetRemixChange,
   onSelectSupportItem,
   onAddAccent,
@@ -61,14 +69,15 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   // Only one selector open at a time
   const [openSlot, setOpenSlot] = useState<SupportCategoryId | null>(null);
 
-  // Local state for refinement text input until user clicks "Áp dụng"
-  const [draftRefinement, setDraftRefinement] = useState<string>(refinementText);
-
   // State for AI image generation modal snapshot
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [aiSnapshot, setAiSnapshot] = useState<OutfitSnapshot | null>(null);
 
+  // State for expanding/collapsing deep heritage check items in Cultural Guardrail
+  const [showFullGuardrailDetails, setShowFullGuardrailDetails] = useState<boolean>(true);
+
   const handleOpenAIModal = () => {
+    if (!aiStatus.isAvailable) return;
     // Capture immutable snapshot of current styling selections
     setAiSnapshot({
       core,
@@ -80,11 +89,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   };
 
   const compactDna = computeCompactDna(core, supportItems, actualRemix);
-
-  const handleApply = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    onApplyRefinement(draftRefinement);
-  };
 
   return (
     <motion.section
@@ -202,116 +206,179 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             />
           </section>
 
-          {/* 2. Target Remix Dial & Refinement Textbox */}
-          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-4">
-            {/* Target Remix Slider */}
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <label
-                  htmlFor="remix-dial-slider"
-                  className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
-                >
-                  <Sliders className="w-3.5 h-3.5 text-[#B7410E]" />
-                  <span>Mục Tiêu Remix Dial</span>
-                </label>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-editorial text-2xl font-bold text-[#B7410E] tabular-nums">
-                    {targetRemix}%
-                  </span>
-                  <span className="text-[10px] font-mono text-[#8C7E72] uppercase">
-                    Mục tiêu
-                  </span>
-                </div>
-              </div>
-
-              <input
-                id="remix-dial-slider"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={targetRemix}
-                onChange={(e) => onTargetRemixChange(Number(e.target.value))}
-                className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B7410E]"
-              />
-
-              <div className="flex justify-between text-[10px] font-mono text-[#8C7E72]">
-                <span>0% Thuần Cổ Điển</span>
-                <span>50% Cân Bằng</span>
-                <span>100% Siêu Hiện Đại</span>
+          {/* 2. Target Remix Dial */}
+          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3">
+            <div className="flex items-baseline justify-between">
+              <label
+                htmlFor="remix-dial-slider"
+                className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
+              >
+                <Sliders className="w-3.5 h-3.5 text-[#B7410E]" />
+                <span>Mục Tiêu Remix Dial</span>
+              </label>
+              <div className="flex items-baseline gap-1">
+                <span className="font-editorial text-2xl font-bold text-[#B7410E] tabular-nums">
+                  {targetRemix}%
+                </span>
+                <span className="text-[10px] font-mono text-[#8C7E72] uppercase">
+                  Mục tiêu
+                </span>
               </div>
             </div>
 
-            {/* Refinement Textbox - Runs only when user clicks "Áp dụng" */}
-            <div className="pt-3 border-t border-[#EFE8DC] space-y-2">
-              <label
-                htmlFor="refinement-input"
-                className="block text-xs font-semibold text-[#241E1A]"
-              >
-                Ghi chú tinh chỉnh phong cách
-              </label>
+            <input
+              id="remix-dial-slider"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={targetRemix}
+              onChange={(e) => onTargetRemixChange(Number(e.target.value))}
+              className="w-full h-2 bg-[#E7DDD0] rounded-lg appearance-none cursor-pointer accent-[#B7410E]"
+            />
 
-              <form onSubmit={handleApply} className="flex gap-2">
-                <input
-                  id="refinement-input"
-                  type="text"
-                  value={draftRefinement}
-                  onChange={(e) => setDraftRefinement(e.target.value)}
-                  placeholder="Ví dụ: Phối phụ kiện ánh bạc, giữ nguyên cổ áo..."
-                  className="flex-1 bg-[#FAF7F2] border border-[#D5C7B4] focus:border-[#B7410E] focus:ring-1 focus:ring-[#B7410E] rounded-xs px-3 py-2 text-xs text-[#241E1A] outline-none"
-                />
-                <button
-                  type="submit"
-                  className="px-3.5 py-2 bg-[#241E1A] hover:bg-[#B7410E] text-white text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0"
-                >
-                  Áp dụng
-                </button>
-              </form>
+            <div className="flex justify-between text-[10px] font-mono text-[#8C7E72]">
+              <span>0% Thuần Cổ Điển</span>
+              <span>50% Cân Bằng</span>
+              <span>100% Siêu Hiện Đại</span>
             </div>
           </section>
 
-          {/* 3. Cultural Guardrail Status */}
-          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 shadow-2xs">
-            <div className="flex items-start gap-3">
-              {guardrailResult.status === 'green' && (
-                <ShieldCheck className="w-5 h-5 text-[#2E7D32] shrink-0 mt-0.5" />
-              )}
-              {guardrailResult.status === 'yellow' && (
-                <AlertTriangle className="w-5 h-5 text-[#E65100] shrink-0 mt-0.5" />
-              )}
-              {guardrailResult.status === 'orange' && (
-                <AlertTriangle className="w-5 h-5 text-[#D84315] shrink-0 mt-0.5" />
-              )}
+          {/* 3. Prominent AI Stylist Consultation Panel */}
+          <AIStylistPanel
+            core={core}
+            supportItems={supportItems}
+            setupData={setupData}
+            targetRemix={targetRemix}
+            actualRemix={actualRemix}
+            aiStatus={aiStatus}
+            onSelectSupportItem={onSelectSupportItem}
+            onApplyRefinementText={onApplyRefinement}
+            currentRefinementText={refinementText}
+          />
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
-                    Cultural Guardrail
-                  </span>
-                  <span
-                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded-xs font-medium uppercase ${
-                      guardrailResult.status === 'green'
-                        ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+          {/* 4. Upgraded Cultural Guardrail — Transparent & Meaningful Feedback */}
+          <section className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3.5">
+            <div className="flex items-start justify-between gap-3 border-b border-[#EFE8DC] pb-3">
+              <div className="flex items-start gap-2.5">
+                {guardrailResult.status === 'green' && (
+                  <ShieldCheck className="w-5 h-5 text-[#2E7D32] shrink-0 mt-0.5" />
+                )}
+                {guardrailResult.status === 'yellow' && (
+                  <AlertTriangle className="w-5 h-5 text-[#E65100] shrink-0 mt-0.5" />
+                )}
+                {guardrailResult.status === 'orange' && (
+                  <AlertTriangle className="w-5 h-5 text-[#D84315] shrink-0 mt-0.5" />
+                )}
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
+                      Cultural Guardrail
+                    </h3>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-xs font-semibold uppercase ${
+                        guardrailResult.status === 'green'
+                          ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+                          : guardrailResult.status === 'yellow'
+                          ? 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
+                          : 'bg-[#FBE9E7] text-[#D84315] border border-[#FFCCBC]'
+                      }`}
+                    >
+                      {guardrailResult.status === 'green'
+                        ? 'Bảo Tồn Chuẩn Mực'
                         : guardrailResult.status === 'yellow'
-                        ? 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
-                        : 'bg-[#FBE9E7] text-[#D84315] border border-[#FFCCBC]'
-                    }`}
-                  >
-                    {guardrailResult.status === 'green'
-                      ? 'Bảo Tồn Chuẩn'
-                      : guardrailResult.status === 'yellow'
-                      ? 'Cần Kiểm Chứng'
-                      : 'Xung Đột Cốt Lõi'}
-                  </span>
+                        ? 'Cần Lưu Ý Cân Nhắc'
+                        : 'Xung Đột Cốt Lõi Di Sản'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-[#3D342C] mt-1 leading-snug">
+                    {guardrailResult.message}
+                  </p>
                 </div>
-                <p className="text-xs text-[#5A4F46] mt-1 leading-relaxed">
-                  {guardrailResult.message}
+              </div>
+
+              {guardrailResult.heritageChecks && (
+                <button
+                  type="button"
+                  onClick={() => setShowFullGuardrailDetails((prev) => !prev)}
+                  className="text-[11px] text-[#7A4B3A] hover:text-[#B3261E] font-medium flex items-center gap-1 cursor-pointer shrink-0 mt-0.5"
+                >
+                  <span>{showFullGuardrailDetails ? 'Thu gọn' : 'Chi tiết'}</span>
+                  {showFullGuardrailDetails ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Transparent Detailed Rationale */}
+            {guardrailResult.detailedAnalysis && (
+              <div className="bg-[#FAF7F2] border-l-2 border-[#B7410E] pl-3 py-2 text-xs text-[#524538] leading-relaxed font-serif">
+                {guardrailResult.detailedAnalysis}
+              </div>
+            )}
+
+            {/* Heritage Checklist Breakdown */}
+            {showFullGuardrailDetails && guardrailResult.heritageChecks && guardrailResult.heritageChecks.length > 0 && (
+              <div className="space-y-2 pt-1">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C7E72] block">
+                  Tiêu chí thẩm định di sản
+                </span>
+                <div className="space-y-1.5">
+                  {guardrailResult.heritageChecks.map((check) => (
+                    <div
+                      key={check.id}
+                      className="bg-white border border-[#EBE3D7] rounded-xs p-2.5 flex items-start gap-2.5 text-xs"
+                    >
+                      {check.status === 'passed' && (
+                        <CheckCircle2 className="w-4 h-4 text-[#2E7D32] shrink-0 mt-0.5" />
+                      )}
+                      {check.status === 'warning' && (
+                        <AlertTriangle className="w-4 h-4 text-[#E65100] shrink-0 mt-0.5" />
+                      )}
+                      {check.status === 'violation' && (
+                        <XCircle className="w-4 h-4 text-[#D84315] shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-[#241E1A]">{check.label}</span>
+                          <span
+                            className={`text-[9px] font-mono uppercase px-1.5 py-0.2 rounded-2xs ${
+                              check.status === 'passed'
+                                ? 'text-[#2E7D32] bg-[#E8F5E9]'
+                                : check.status === 'warning'
+                                ? 'text-[#E65100] bg-[#FFF3E0]'
+                                : 'text-[#D84315] bg-[#FBE9E7]'
+                            }`}
+                          >
+                            {check.status === 'passed' ? 'Đạt' : check.status === 'warning' ? 'Lưu ý' : 'Vi phạm'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#635548] mt-0.5 leading-relaxed">
+                          {check.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Occasion Etiquette Tip */}
+            {guardrailResult.etiquetteTip && (
+              <div className="bg-[#FAF3E8] border border-[#EADBCA] rounded-xs p-2.5 flex items-start gap-2 text-xs text-[#634E3C]">
+                <Info className="w-3.5 h-3.5 text-[#B7410E] shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  <span className="font-semibold">Chuẩn mực mặc đẹp:</span> {guardrailResult.etiquetteTip}
                 </p>
               </div>
-            </div>
+            )}
           </section>
 
-          {/* 4. Compact Cultural DNA */}
+          {/* 5. Compact Cultural DNA */}
           <section
             id="cultural-dna"
             className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-2xs space-y-3.5"
@@ -359,19 +426,35 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </div>
           </section>
 
-          {/* 5. Final AI Action (Active) */}
+          {/* 6. Final AI Image Generation Action (Connected to shared AI availability) */}
           <div className="pt-1 space-y-2">
             <button
               type="button"
+              disabled={!aiStatus.isAvailable}
               onClick={handleOpenAIModal}
-              className="w-full py-3.5 px-4 rounded-xs bg-[#B3261E] hover:bg-[#8F1E18] text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 cursor-pointer shadow-xs transition-colors"
+              className={`w-full py-3.5 px-4 rounded-xs font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2.5 transition-colors shadow-xs ${
+                aiStatus.isAvailable
+                  ? 'bg-[#B3261E] hover:bg-[#8F1E18] text-white cursor-pointer'
+                  : 'bg-[#9E9084] text-[#EFEBE4] cursor-not-allowed opacity-80'
+              }`}
             >
-              <Sparkles className="w-4 h-4 text-white" />
-              <span>Tạo bản minh họa AI</span>
+              {aiStatus.isAvailable ? (
+                <>
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span>Tạo bản minh họa AI</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 text-[#EFEBE4]" />
+                  <span>Tạo bản minh họa AI (Cần API Key)</span>
+                </>
+              )}
             </button>
 
             <p className="text-[11px] text-center text-[#7A6E63] font-serif italic">
-              Minh họa phối đồ cá nhân hóa dựa trên mô hình Gemini thế hệ mới.
+              {aiStatus.isAvailable
+                ? 'Minh họa phối đồ chân dung cá nhân hóa dựa trên mô hình Gemini thế hệ mới.'
+                : 'Chưa cấu hình GEMINI_API_KEY trong biến môi trường máy chủ. Vui lòng thêm API Key vào Secrets để mở khóa tính năng này.'}
             </p>
           </div>
         </div>

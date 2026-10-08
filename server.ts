@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { validateAndResolveOutfit } from './src/server/promptBuilder';
 import { generateOutfitEditorialImage } from './src/server/imageService';
+import { generateStylistAdvice } from './src/server/stylistService';
 
 dotenv.config();
 
@@ -18,9 +19,62 @@ async function startServer() {
 
   app.use(express.json({ limit: '1mb' }));
 
+  // AI Availability Status Endpoint
+  app.get('/api/ai-status', (_req, res) => {
+    const hasApiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0);
+    res.json({
+      isAvailable: hasApiKey,
+      hasApiKey,
+      models: {
+        stylist: 'gemini-3.8-flash',
+        image: 'gemini-3.1-flash-lite-image',
+      },
+      message: hasApiKey
+        ? 'Hệ thống Trí tuệ nhân tạo Gemini sẵn sàng hỗ trợ bạn.'
+        : 'Chưa cấu hình GEMINI_API_KEY trong biến môi trường máy chủ. Các tính năng AI đang ở chế độ xem trước tĩnh.',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // API endpoint for AI Stylist consultation
+  app.post('/api/ai-stylist', async (req, res) => {
+    try {
+      const hasApiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0);
+      if (!hasApiKey) {
+        return res.status(403).json({
+          success: false,
+          error:
+            'Chưa cấu hình GEMINI_API_KEY trong biến môi trường máy chủ. Vui lòng cấu hình API Key trong Secrets của AI Studio để mở khóa Trợ lý AI Stylist.',
+          errorCode: 'MISSING_API_KEY',
+        });
+      }
+
+      const result = await generateStylistAdvice(req.body);
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('[Server Error /api/ai-stylist]:', errorMsg);
+      return res.status(500).json({
+        success: false,
+        error: 'Đã xảy ra lỗi máy chủ nội bộ khi xử lý tư vấn phong cách.',
+        errorCode: 'INTERNAL_SERVER_ERROR',
+      });
+    }
+  });
+
   // API endpoint for Outfit Editorial Image generation
   app.post('/api/generate-outfit-image', async (req, res) => {
     try {
+      const hasApiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0);
+      if (!hasApiKey) {
+        return res.status(403).json({
+          success: false,
+          error:
+            'Chưa cấu hình GEMINI_API_KEY trong biến môi trường máy chủ. Vui lòng cấu hình API Key trong Secrets của AI Studio để tạo ảnh minh họa AI.',
+          errorCode: 'MISSING_API_KEY',
+        });
+      }
+
       const validation = validateAndResolveOutfit(req.body);
       if (!validation.valid) {
         return res.status(400).json({
@@ -45,9 +99,11 @@ async function startServer() {
 
   // Health check endpoint
   app.get('/api/health', (_req, res) => {
+    const hasApiKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0);
     res.json({
       status: 'ok',
-      hasApiKey: !!process.env.GEMINI_API_KEY,
+      isAvailable: hasApiKey,
+      hasApiKey,
       timestamp: new Date().toISOString(),
     });
   });

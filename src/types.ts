@@ -62,7 +62,51 @@ export interface ConceptData {
 
 export type GuardrailStatus = 'green' | 'yellow' | 'orange';
 
+export interface HeritageCheckItem {
+  id: string;
+  label: string;
+  status: 'passed' | 'warning' | 'violation';
+  description: string;
+}
+
 export interface GuardrailResult {
   status: GuardrailStatus;
   message: string;
+  detailedAnalysis?: string;
+  heritageChecks?: HeritageCheckItem[];
+  etiquetteTip?: string;
+  recommendations?: string[];
 }
+
+export interface AIStatusInfo {
+  isAvailable: boolean;
+  hasApiKey: boolean;
+  loading: boolean;
+  models?: {
+    stylist: string;
+    image: string;
+  };
+  message?: string;
+}
+
+export interface StylistRecommendationItem {
+  category: SupportCategoryId;
+  itemId: string;
+  itemName: string;
+  reason: string;
+}
+
+export interface StylistAdviceResult {
+  success: boolean;
+  review: string;
+  recommendations: string[];
+  suggestedItems?: StylistRecommendationItem[];
+  culturalHighlight?: string;
+  guardrailFeedback?: {
+    status: GuardrailStatus;
+    reason: string;
+  };
+  error?: string;
+  errorCode?: string;
+}
+
