@@ -116,7 +116,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {/* Left trouser leg: straight tailored with side cargo pocket */}
             <path
               d="M120 260 L114 360 L115 470 L116 515 L145 515 L147 470 L148 360 L149 270 Z"
-              fill="#E5DC CE"
+              fill="#E5DCCE"
             />
             {/* Left trouser sharp pressed crease */}
             <line x1="130" y1="262" x2="131" y2="512" stroke="#B8A790" strokeWidth="1.3" />
@@ -658,9 +658,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   };
 
   return (
-    <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-6 shadow-xs overflow-hidden flex flex-col justify-between">
+    <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-xs overflow-hidden flex flex-col justify-between">
       {/* Header with Title and Palette Swatches */}
-      <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-3 mb-4">
+      <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-2.5 mb-3">
         <div className="flex items-center gap-2">
           <Pin className="w-3.5 h-3.5 rotate-45 text-[#B3261E]" />
           <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#2B231D]">
@@ -683,11 +683,11 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         </div>
       </div>
 
-      {/* Main 2D Mannequin Canvas */}
-      <div className="relative w-full flex items-center justify-center py-2 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 overflow-hidden">
+      {/* Main 2D Mannequin Canvas - Responsive to available viewport */}
+      <div className="relative w-full flex-1 flex items-center justify-center py-1 sm:py-2 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 overflow-hidden min-h-0">
         <svg
           viewBox="0 0 300 600"
-          className="w-full max-h-[520px] sm:max-h-[560px] h-auto mx-auto select-none drop-shadow-xs"
+          className="w-full max-w-[340px] h-auto max-h-[440px] sm:max-h-[500px] lg:max-h-[calc(100vh-230px)] xl:max-h-[min(560px,calc(100vh-230px))] mx-auto select-none drop-shadow-xs"
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >

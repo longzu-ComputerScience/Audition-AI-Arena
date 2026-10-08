@@ -110,8 +110,8 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
       {/* Main Two-Column Layout (~60% Visual Pane / ~40% Controls Pane) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        {/* Left Side: Visual 2D Mannequin Pane (~60% -> lg:col-span-7) */}
-        <div className="lg:col-span-7 xl:col-span-7 w-full order-1 lg:order-1">
+        {/* Left Side: Visual 2D Mannequin Pane (~60% -> lg:col-span-7, sticky on desktop) */}
+        <div className="lg:col-span-7 xl:col-span-7 w-full order-1 lg:order-1 lg:sticky lg:top-20 lg:self-start">
           <MannequinCanvas
             core={core}
             items={supportItems}
