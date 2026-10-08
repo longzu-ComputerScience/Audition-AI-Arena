@@ -371,6 +371,263 @@ export const COLOR_MAP: Record<string, { name: string; hex: string }> = {
   'Nâu trầm': { name: 'Nâu Trầm', hex: '#543D2B' },
 };
 
+// Curated Garment-Specific Palettes for "Để hệ thống gợi ý" (Rule A)
+const DEFAULT_GARMENT_PALETTES: Record<CoreVietPhucId, { name: string; hex: string }[]> = {
+  'ao-nhat-binh': [
+    { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+    { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+    { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+  ],
+  'ao-tac': [
+    { name: 'Nâu Hổ Phách', hex: '#633B26' },
+    { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+    { name: 'Than Chì', hex: '#2B2623' },
+  ],
+  'ao-dai': [
+    { name: 'Ngà Kem', hex: '#F4ECE1' },
+    { name: 'Hoàng Cúc', hex: '#D4A359' },
+    { name: 'Nâu Trầm', hex: '#4A3728' },
+  ],
+  'ao-tu-than': [
+    { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+    { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+    { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+  ],
+  'ao-ngu-than': [
+    { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+    { name: 'Chàm Cổ', hex: '#26384C' },
+    { name: 'Mộc Hương', hex: '#D1BEA8' },
+  ],
+};
+
+// Curated Garment-Aware Companions when user selects a specific preferredColor (Rule B)
+// Each [garment][preferredColor] yields 2 curated complementary heritage shades.
+const COLOR_HARMONY_MAP: Record<
+  CoreVietPhucId,
+  Record<string, [{ name: string; hex: string }, { name: string; hex: string }]>
+> = {
+  'ao-nhat-binh': {
+    'Đỏ son': [
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+    'Xanh lam': [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+    ],
+    'Xanh ngọc': [
+      { name: 'Vàng Hoàng Cúc', hex: '#D4AF37' },
+      { name: 'Đỏ Mẫu Đơn', hex: '#8C2D19' },
+    ],
+    'Trắng / kem': [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+    'Hồng dịu': [
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+    ],
+    'Đen': [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+    ],
+    'Vàng hoàng yến': [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+    'Tím Huế': [
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+    'Xanh rêu cổ kính': [
+      { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+    ],
+    'Nâu trầm': [
+      { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+      { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+    ],
+  },
+  'ao-tac': {
+    'Đỏ son': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    'Xanh lam': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Nâu Hổ Phách', hex: '#633B26' },
+    ],
+    'Xanh ngọc': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    'Trắng / kem': [
+      { name: 'Nâu Hổ Phách', hex: '#633B26' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    'Hồng dịu': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    'Đen': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Nâu Hổ Phách', hex: '#633B26' },
+    ],
+    'Vàng hoàng yến': [
+      { name: 'Than Chì', hex: '#2B2623' },
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+    ],
+    'Tím Huế': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+    'Xanh rêu cổ kính': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Nâu Hổ Phách', hex: '#633B26' },
+    ],
+    'Nâu trầm': [
+      { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+      { name: 'Than Chì', hex: '#2B2623' },
+    ],
+  },
+  'ao-dai': {
+    'Đỏ son': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+    ],
+    'Xanh lam': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+    ],
+    'Xanh ngọc': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Nâu Trầm', hex: '#4A3728' },
+    ],
+    'Trắng / kem': [
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+      { name: 'Nâu Trầm', hex: '#4A3728' },
+    ],
+    'Hồng dịu': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Nâu Trầm', hex: '#4A3728' },
+    ],
+    'Đen': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+    ],
+    'Vàng hoàng yến': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Nâu Trầm', hex: '#4A3728' },
+    ],
+    'Tím Huế': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Nâu Trầm', hex: '#4A3728' },
+    ],
+    'Xanh rêu cổ kính': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+    ],
+    'Nâu trầm': [
+      { name: 'Ngà Kem', hex: '#F4ECE1' },
+      { name: 'Hoàng Cúc', hex: '#D4A359' },
+    ],
+  },
+  'ao-tu-than': {
+    'Đỏ son': [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Xanh lam': [
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Xanh ngọc': [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Trắng / kem': [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+    ],
+    'Hồng dịu': [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Đen': [
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Vàng hoàng yến': [
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Tím Huế': [
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+      { name: 'Nâu Củ Nâu', hex: '#4E3629' },
+    ],
+    'Xanh rêu cổ kính': [
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+    'Nâu trầm': [
+      { name: 'Sen Hồng Nhạt', hex: '#C27D78' },
+      { name: 'Cát Sa Thạch', hex: '#DDD2C1' },
+    ],
+  },
+  'ao-ngu-than': {
+    'Đỏ son': [
+      { name: 'Chàm Cổ', hex: '#26384C' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Xanh lam': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Xanh ngọc': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Trắng / kem': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Chàm Cổ', hex: '#26384C' },
+    ],
+    'Hồng dịu': [
+      { name: 'Chàm Cổ', hex: '#26384C' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Đen': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Vàng hoàng yến': [
+      { name: 'Chàm Cổ', hex: '#26384C' },
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+    ],
+    'Tím Huế': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Xanh rêu cổ kính': [
+      { name: 'Đỏ Sa Thạch', hex: '#8C3B24' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+    'Nâu trầm': [
+      { name: 'Chàm Cổ', hex: '#26384C' },
+      { name: 'Mộc Hương', hex: '#D1BEA8' },
+    ],
+  },
+};
+
+// Global heritage fallback swatches to guarantee exactly 3 distinct swatches
+const GLOBAL_FALLBACK_SWATCHES = [
+  { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+  { name: 'Mộc Hương', hex: '#D1BEA8' },
+  { name: 'Đỏ Thắm Hoàng Gia', hex: '#8C2D19' },
+  { name: 'Than Chì', hex: '#2B2623' },
+  { name: 'Xanh Chàm Cổ', hex: '#1C3144' },
+  { name: 'Hoàng Cúc', hex: '#D4A359' },
+];
+
 // Local Concept Generator based on setup inputs
 export function generateConcept(setup: SetupData): ConceptData {
   const core = CORE_ITEMS[setup.coreGarment] || CORE_ITEMS['ao-ngu-than'];
@@ -405,44 +662,63 @@ export function generateConcept(setup: SetupData): ConceptData {
 
   const rationale = `Ý tưởng kết hợp ${core.name} cho dịp ${setup.occasion.toLowerCase()} tại ${setup.location}, mang định hướng ${setup.style.toLowerCase()}${colorNote}. Bản phối tôn vinh cấu trúc nguyên bản của di sản, đồng thời tạo nét phóng khoáng hài hòa cho nhịp sống hiện đại.`;
 
-  // 3-Color Palette: coherent & no duplicate swatches
+  // Deterministic 3-Color Palette Generation (Rules A, B, C)
   const palette: { name: string; hex: string }[] = [];
   const usedHexes = new Set<string>();
 
-  // If a preferred color is chosen (not "Để hệ thống gợi ý"), make it the first swatch
-  if (
-    setup.preferredColor &&
-    setup.preferredColor !== 'Để hệ thống gợi ý' &&
-    COLOR_MAP[setup.preferredColor]
-  ) {
-    const pref = COLOR_MAP[setup.preferredColor];
-    palette.push(pref);
-    usedHexes.add(pref.hex.toLowerCase());
-  }
+  const isAuto = !setup.preferredColor || setup.preferredColor === 'Để hệ thống gợi ý';
 
-  // Next, pick swatches from core garment's curated palette without duplicating hexes
-  for (const c of core.palette) {
-    if (palette.length >= 3) break;
-    if (!usedHexes.has(c.hex.toLowerCase())) {
-      palette.push(c);
-      usedHexes.add(c.hex.toLowerCase());
+  if (isAuto) {
+    // Rule A: Automatic Color -> garment-specific curated default palette
+    const garmentDefaults = DEFAULT_GARMENT_PALETTES[setup.coreGarment] || core.palette;
+    for (const swatch of garmentDefaults) {
+      if (palette.length >= 3) break;
+      const lower = swatch.hex.toLowerCase();
+      if (!usedHexes.has(lower)) {
+        palette.push({ name: swatch.name, hex: swatch.hex });
+        usedHexes.add(lower);
+      }
+    }
+  } else {
+    // Rule B: Selected preferredColor
+    // Slot 1: Exact selected preferred color
+    const prefConfig = COLOR_MAP[setup.preferredColor];
+    if (prefConfig) {
+      palette.push({ name: prefConfig.name, hex: prefConfig.hex });
+      usedHexes.add(prefConfig.hex.toLowerCase());
+    }
+
+    // Slots 2 & 3: Selected garment's curated harmony pair for this color
+    const garmentHarmony = COLOR_HARMONY_MAP[setup.coreGarment]?.[setup.preferredColor];
+    if (garmentHarmony) {
+      for (const comp of garmentHarmony) {
+        if (palette.length >= 3) break;
+        const lower = comp.hex.toLowerCase();
+        if (!usedHexes.has(lower)) {
+          palette.push({ name: comp.name, hex: comp.hex });
+          usedHexes.add(lower);
+        }
+      }
+    }
+
+    // If still < 3, check core garment palette
+    for (const swatch of core.palette) {
+      if (palette.length >= 3) break;
+      const lower = swatch.hex.toLowerCase();
+      if (!usedHexes.has(lower)) {
+        palette.push({ name: swatch.name, hex: swatch.hex });
+        usedHexes.add(lower);
+      }
     }
   }
 
-  // Fallback palette entries if needed to guarantee exactly 3 distinct swatches
-  const fallbackSwatches = [
-    { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
-    { name: 'Mộc Hương', hex: '#D1BEA8' },
-    { name: 'Đỏ Thắm', hex: '#8C2D19' },
-    { name: 'Than Chì', hex: '#2B2623' },
-    { name: 'Xanh Chàm Cổ', hex: '#1C3144' },
-  ];
-
-  for (const fb of fallbackSwatches) {
+  // Rule C: Diversity Guarantee — fallback if fewer than 3 unique hexes
+  for (const fb of GLOBAL_FALLBACK_SWATCHES) {
     if (palette.length >= 3) break;
-    if (!usedHexes.has(fb.hex.toLowerCase())) {
-      palette.push(fb);
-      usedHexes.add(fb.hex.toLowerCase());
+    const lower = fb.hex.toLowerCase();
+    if (!usedHexes.has(lower)) {
+      palette.push({ name: fb.name, hex: fb.hex });
+      usedHexes.add(lower);
     }
   }
 
