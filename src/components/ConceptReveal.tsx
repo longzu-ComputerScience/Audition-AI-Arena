@@ -216,7 +216,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
           </div>
         </div>
 
-                {/* Cultural Snippet based on the selected Core Garment */}
+        {/* Cultural Snippet based on the selected Core Garment */}
         <div className="border-t border-[#EAE3D6] pt-3.5 space-y-2.5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-[#FAF7EE] border border-[#DDD0C0] p-1.5 shrink-0 flex items-center justify-center">
