@@ -43,6 +43,7 @@ export interface SetupData {
   occasion: string;
   location: string;
   style: string;
+  preferredColor: string;
 }
 
 export interface ActiveSupportItems {

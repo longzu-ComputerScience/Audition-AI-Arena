@@ -37,6 +37,7 @@ export default function App() {
     occasion: 'Chụp ảnh kỷ niệm / Lookbook',
     location: 'Đại Nội Huế',
     style: 'Thanh lịch',
+    preferredColor: 'Để hệ thống gợi ý',
   });
 
   // Global Support Items (Step 3 active slots)
@@ -156,6 +157,7 @@ export default function App() {
               key="step-2"
               setupData={setupData}
               concept={concept}
+              onChangeSetup={handleChangeSetup}
               onBack={() => setStep(1)}
               onProceed={() => setStep(3)}
             />

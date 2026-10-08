@@ -344,32 +344,101 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
   ],
 };
 
-// Local Concept Generator based on Step 1 setup inputs
+export const PREFERRED_COLOR_OPTIONS = [
+  'Để hệ thống gợi ý',
+  'Đỏ thắm / Crimson',
+  'Vàng hoàng yến / Ochre Gold',
+  'Xanh chàm / Indigo Blue',
+  'Xanh khổng tước / Emerald Peacock',
+  'Bạch ngọc / Trắng ngà Ivory',
+  'Nâu hổ phách / Amber Brown',
+  'Than chì / Charcoal Black',
+] as const;
+
+export const COLOR_MAP: Record<string, { name: string; hex: string }> = {
+  'Đỏ thắm / Crimson': { name: 'Đỏ Thắm', hex: '#8C2D19' },
+  'Vàng hoàng yến / Ochre Gold': { name: 'Vàng Hoàng Yến', hex: '#D4AF37' },
+  'Xanh chàm / Indigo Blue': { name: 'Xanh Chàm Cổ', hex: '#1C3144' },
+  'Xanh khổng tước / Emerald Peacock': { name: 'Xanh Khổng Tước', hex: '#1C494A' },
+  'Bạch ngọc / Trắng ngà Ivory': { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+  'Nâu hổ phách / Amber Brown': { name: 'Nâu Hổ Phách', hex: '#633B26' },
+  'Than chì / Charcoal Black': { name: 'Than Chì', hex: '#2B2623' },
+};
+
+// Local Concept Generator based on setup inputs
 export function generateConcept(setup: SetupData): ConceptData {
   const core = CORE_ITEMS[setup.coreGarment] || CORE_ITEMS['ao-ngu-than'];
 
-  // Formulate a distinct, evocative concept title
+  // Formulate a distinct, evocative concept title reacting to style and core garment
   let title = '';
-  if (setup.style === 'Streetwear' || setup.style === 'Đường phố (Streetwear)') {
-    title = `Bản Hòa Âm Đường Phố · ${core.name}`;
-  } else if (setup.style === 'Hoài cổ (Vintage)') {
-    title = `Ký Ức Thời Gian · ${core.name}`;
-  } else if (setup.style === 'Tối giản') {
-    title = `Nét Tĩnh Lặng · ${core.name}`;
-  } else if (setup.style === 'Năng động') {
-    title = `Nhịp Sống Trẻ · ${core.name}`;
-  } else {
-    title = `Thanh Lịch Di Sản · ${core.name}`;
+  switch (setup.style) {
+    case 'Đường phố (Streetwear)':
+    case 'Streetwear':
+      title = `Bản Hòa Âm Đường Phố · ${core.name}`;
+      break;
+    case 'Tối giản':
+      title = `Nét Tĩnh Lặng Tối Giản · ${core.name}`;
+      break;
+    case 'Hoài cổ (Vintage)':
+      title = `Ký Ức Thời Gian Hoài Cổ · ${core.name}`;
+      break;
+    case 'Năng động':
+      title = `Nhịp Thở Năng Động · ${core.name}`;
+      break;
+    case 'Thanh lịch':
+    default:
+      title = `Thanh Lịch Di Sản · ${core.name}`;
+      break;
   }
 
-  const rationale = `Ý tưởng kết hợp ${core.name} vào dịp ${setup.occasion.toLowerCase()} tại ${setup.location}, theo phong cách ${setup.style.toLowerCase()}. Bản phối ưu tiên tôn vinh phom dáng di sản gốc kết hợp với các phụ kiện hỗ trợ linh hoạt.`;
+  // Short rationale reacting to occasion, style, and preferredColor
+  const colorNote =
+    setup.preferredColor && setup.preferredColor !== 'Để hệ thống gợi ý'
+      ? `, nhấn nhá với sắc ${setup.preferredColor.split('/')[0].trim()}`
+      : '';
 
-  // Palette: Take 2 from core and 1 neutral/location accent
-  const palette = [
-    core.palette[0] || { name: 'Sắc Thắm Di Sản', hex: '#8C3B24' },
-    core.palette[1] || { name: 'Mộc Hương', hex: '#D1BEA8' },
-    { name: 'Chàm Đêm', hex: '#26384C' },
+  const rationale = `Ý tưởng kết hợp ${core.name} cho dịp ${setup.occasion.toLowerCase()}, mang định hướng ${setup.style.toLowerCase()}${colorNote}. Bản phối tôn vinh cấu trúc nguyên bản của di sản, đồng thời tạo nét phóng khoáng hài hòa cho nhịp sống hiện đại.`;
+
+  // 3-Color Palette: coherent & no duplicate swatches
+  const palette: { name: string; hex: string }[] = [];
+  const usedHexes = new Set<string>();
+
+  // If a preferred color is chosen (not "Để hệ thống gợi ý"), make it the first swatch
+  if (
+    setup.preferredColor &&
+    setup.preferredColor !== 'Để hệ thống gợi ý' &&
+    COLOR_MAP[setup.preferredColor]
+  ) {
+    const pref = COLOR_MAP[setup.preferredColor];
+    palette.push(pref);
+    usedHexes.add(pref.hex.toLowerCase());
+  }
+
+  // Next, pick swatches from core garment's curated palette without duplicating hexes
+  for (const c of core.palette) {
+    if (palette.length >= 3) break;
+    if (!usedHexes.has(c.hex.toLowerCase())) {
+      palette.push(c);
+      usedHexes.add(c.hex.toLowerCase());
+    }
+  }
+
+  // Fallback palette entries if needed to guarantee exactly 3 distinct swatches
+  const fallbackSwatches = [
+    { name: 'Bạch Ngọc Trắng', hex: '#EDE8DF' },
+    { name: 'Mộc Hương', hex: '#D1BEA8' },
+    { name: 'Đỏ Thắm', hex: '#8C2D19' },
+    { name: 'Than Chì', hex: '#2B2623' },
+    { name: 'Xanh Chàm Cổ', hex: '#1C3144' },
   ];
+
+  for (const fb of fallbackSwatches) {
+    if (palette.length >= 3) break;
+    if (!usedHexes.has(fb.hex.toLowerCase())) {
+      palette.push(fb);
+      usedHexes.add(fb.hex.toLowerCase());
+    }
+  }
 
   return {
     title,

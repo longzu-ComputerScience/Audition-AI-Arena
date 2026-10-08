@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
-import { CORE_ITEMS, OCCASIONS, LOCATIONS, STYLES } from '../data/mockFashionData';
+import { CORE_ITEMS, OCCASIONS, STYLES } from '../data/mockFashionData';
 import { PatternMotif } from './PatternMotif';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, ChevronDown, Sparkles } from 'lucide-react';
 
 interface DiscoveryScreenProps {
   setupData: SetupData;
@@ -26,8 +26,8 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   hasSeenIntro,
   onIntroComplete,
 }) => {
-  const coreList = Object.values(CORE_ITEMS);
   const shouldReduceMotion = useReducedMotion();
+  const selectedCore = CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
 
   // If user prefers reduced motion, skip intro animation and mark as complete
   useEffect(() => {
@@ -37,14 +37,14 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   }, [shouldReduceMotion, hasSeenIntro, onIntroComplete]);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-10">
+    <div className="max-w-2xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-10">
       {/* Editorial Header & Storytelling Introduction */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
+      <div className="text-center space-y-3">
         <span className="text-xs sm:text-sm font-medium tracking-wide text-[#B3261E]">
           Studio Khám phá · Bước 01
         </span>
 
-        <h1 className="text-[28px] sm:text-[34px] lg:text-[42px] font-bold text-[#2B231D] tracking-tight leading-tight">
+        <h1 className="text-[28px] sm:text-[34px] lg:text-[40px] font-bold text-[#2B231D] tracking-tight leading-tight">
           Chọn Điểm Chạm Di Sản
         </h1>
 
@@ -90,171 +90,142 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
         </div>
       </div>
 
-      <div className="space-y-9">
-        {/* 1. Việt phục - Selectable Cards with Motif Thumbnails */}
-        <div className="space-y-3.5">
-          <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
-            <h2 className="text-base sm:text-lg font-semibold text-[#2B231D]">
+      {/* Exactly THREE Dropdown Fields Form */}
+      <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-6 sm:p-8 shadow-xs space-y-7">
+        {/* Dropdown 1: Việt phục */}
+        <div className="space-y-2">
+          <div className="flex items-baseline justify-between">
+            <label
+              htmlFor="select-core-garment"
+              className="text-sm sm:text-base font-semibold text-[#2B231D]"
+            >
               1. Việt phục
-            </h2>
-            <span className="text-xs sm:text-sm text-[#7A6E63]">
+            </label>
+            <span className="text-xs text-[#7A6E63]">
               5 dáng áo tiêu biểu
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {coreList.map((item) => {
-              const isSelected = setupData.coreGarment === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onChangeSetup({ coreGarment: item.id })}
-                  className={`relative p-4 rounded-sm border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group ${
-                    isSelected
-                      ? 'bg-[#FFFDF9] border-[#B3261E] shadow-sm ring-1 ring-[#B3261E]/30'
-                      : 'bg-[#FFFDF9]/70 hover:bg-[#FFFDF9] border-[#E3D9CC] hover:border-[#B3261E]/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FAF7EE] border border-[#DDD0C0] p-1.5 shrink-0 flex items-center justify-center">
-                      <PatternMotif
-                        type={item.patternType}
-                        color={isSelected ? '#B3261E' : '#5A4F46'}
-                        className="w-full h-full"
-                      />
-                    </div>
-                    {isSelected ? (
-                      <span className="w-5 h-5 rounded-full bg-[#B3261E] text-white flex items-center justify-center text-xs">
-                        <Check className="w-3 h-3 stroke-[2.5]" />
-                      </span>
-                    ) : (
-                      <span className="text-xs text-[#7A6E63]">
-                        {item.era.split('·')[0].trim()}
-                      </span>
-                    )}
-                  </div>
+          <div className="relative">
+            <select
+              id="select-core-garment"
+              value={setupData.coreGarment}
+              onChange={(e) =>
+                onChangeSetup({ coreGarment: e.target.value as CoreVietPhucId })
+              }
+              className="w-full appearance-none bg-[#FAF7EE] text-[#2B231D] text-sm sm:text-base font-medium px-4 py-3 rounded-xs border border-[#DDD0C0] hover:border-[#B3261E]/50 focus:outline-none focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 transition-colors cursor-pointer pr-10"
+            >
+              {Object.values(CORE_ITEMS).map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} — {item.subTitle}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#5A4F46]">
+              <ChevronDown className="w-4 h-4" />
+            </div>
+          </div>
 
-                  <div className="mt-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-[#2B231D] group-hover:text-[#B3261E] transition-colors">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#5A4F46] mt-0.5 line-clamp-1">
-                      {item.subTitle}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+          {/* Dynamic preview badge for the chosen core garment */}
+          <div className="mt-2.5 flex items-center gap-3 p-3 rounded-xs bg-[#FAF7EE]/70 border border-[#EAE3D6]">
+            <div className="w-8 h-8 rounded-full bg-[#FFFDF9] border border-[#DDD0C0] p-1.5 shrink-0 flex items-center justify-center">
+              <PatternMotif
+                type={selectedCore.patternType}
+                color="#B3261E"
+                className="w-full h-full"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold text-[#2B231D] truncate">
+                {selectedCore.vietnameseTitle}
+              </div>
+              <div className="text-[11px] text-[#7A6E63] truncate">
+                {selectedCore.era} · {selectedCore.material.split(',')[0]}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 2. Dịp - Selectable Chips */}
-        <div className="space-y-3">
-          <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
-            <h2 className="text-base sm:text-lg font-semibold text-[#2B231D]">
+        {/* Dropdown 2: Dịp */}
+        <div className="space-y-2">
+          <div className="flex items-baseline justify-between">
+            <label
+              htmlFor="select-occasion"
+              className="text-sm sm:text-base font-semibold text-[#2B231D]"
+            >
               2. Dịp
-            </h2>
-            <span className="text-xs sm:text-sm text-[#7A6E63]">
-              Mục đích diện trang phục
+            </label>
+            <span className="text-xs text-[#7A6E63]">
+              Bối cảnh sử dụng
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
-            {OCCASIONS.map((occ) => {
-              const isSelected = setupData.occasion === occ;
-              return (
-                <button
-                  key={occ}
-                  type="button"
-                  onClick={() => onChangeSetup({ occasion: occ })}
-                  className={`px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xs border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#2B231D] text-[#FAF7EE] border-[#2B231D] shadow-xs'
-                      : 'bg-[#FFFDF9] text-[#2B231D] hover:text-[#B3261E] border-[#DDD3C4] hover:border-[#B3261E]/50'
-                  }`}
-                >
+          <div className="relative">
+            <select
+              id="select-occasion"
+              value={setupData.occasion}
+              onChange={(e) => onChangeSetup({ occasion: e.target.value })}
+              className="w-full appearance-none bg-[#FAF7EE] text-[#2B231D] text-sm sm:text-base font-medium px-4 py-3 rounded-xs border border-[#DDD0C0] hover:border-[#B3261E]/50 focus:outline-none focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 transition-colors cursor-pointer pr-10"
+            >
+              {OCCASIONS.map((occ) => (
+                <option key={occ} value={occ}>
                   {occ}
-                </button>
-              );
-            })}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#5A4F46]">
+              <ChevronDown className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
-        {/* 3. Địa điểm / bối cảnh - Selectable Chips */}
-        <div className="space-y-3">
-          <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
-            <h2 className="text-base sm:text-lg font-semibold text-[#2B231D]">
-              3. Địa điểm / bối cảnh
-            </h2>
-            <span className="text-xs sm:text-sm text-[#7A6E63]">
-              Không gian trải nghiệm
+        {/* Dropdown 3: Phong cách */}
+        <div className="space-y-2">
+          <div className="flex items-baseline justify-between">
+            <label
+              htmlFor="select-style"
+              className="text-sm sm:text-base font-semibold text-[#2B231D]"
+            >
+              3. Định hướng phong cách
+            </label>
+            <span className="text-xs text-[#7A6E63]">
+              Tinh thần phối đồ
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
-            {LOCATIONS.map((loc) => {
-              const isSelected = setupData.location === loc;
-              return (
-                <button
-                  key={loc}
-                  type="button"
-                  onClick={() => onChangeSetup({ location: loc })}
-                  className={`px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xs border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#2B231D] text-[#FAF7EE] border-[#2B231D] shadow-xs'
-                      : 'bg-[#FFFDF9] text-[#2B231D] hover:text-[#B3261E] border-[#DDD3C4] hover:border-[#B3261E]/50'
-                  }`}
-                >
-                  {loc}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 4. Phong cách - Selectable Chips */}
-        <div className="space-y-3">
-          <div className="flex items-baseline justify-between border-b border-[#EAE3D6] pb-2">
-            <h2 className="text-base sm:text-lg font-semibold text-[#2B231D]">
-              4. Phong cách
-            </h2>
-            <span className="text-xs sm:text-sm text-[#7A6E63]">
-              Định hướng thẩm mỹ
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5">
-            {STYLES.map((st) => {
-              const isSelected = setupData.style === st;
-              return (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => onChangeSetup({ style: st })}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-xs border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-[#B3261E] text-white border-[#B3261E] shadow-xs font-semibold'
-                      : 'bg-[#FFFDF9] text-[#2B231D] hover:text-[#B3261E] border-[#DDD3C4] hover:border-[#B3261E]/50'
-                  }`}
-                >
+          <div className="relative">
+            <select
+              id="select-style"
+              value={setupData.style}
+              onChange={(e) => onChangeSetup({ style: e.target.value })}
+              className="w-full appearance-none bg-[#FAF7EE] text-[#2B231D] text-sm sm:text-base font-medium px-4 py-3 rounded-xs border border-[#DDD0C0] hover:border-[#B3261E]/50 focus:outline-none focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 transition-colors cursor-pointer pr-10"
+            >
+              {STYLES.map((st) => (
+                <option key={st} value={st}>
                   {st}
-                </button>
-              );
-            })}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#5A4F46]">
+              <ChevronDown className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
-        {/* Primary CTA Button */}
-        <div className="pt-4 flex justify-center">
+        {/* Action Button */}
+        <div className="pt-4 flex flex-col items-center gap-2.5">
           <button
             type="button"
             onClick={onSubmit}
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#B3261E] hover:bg-[#9A1F18] text-white text-sm sm:text-base font-semibold rounded-xs shadow-sm transition-all duration-200 cursor-pointer active:scale-98"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-[#B3261E] hover:bg-[#9A1F18] text-white text-sm sm:text-base font-semibold rounded-xs shadow-xs transition-all duration-200 cursor-pointer active:scale-98"
           >
             <span>Tạo gợi ý</span>
             <ArrowRight className="w-4 h-4" />
           </button>
+          <span className="text-xs text-[#7A6E63] flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#B3261E]" />
+            Chuyển tiếp đến bản phác thảo ý niệm & bảng màu phối hợp
+          </span>
         </div>
       </div>
     </div>
