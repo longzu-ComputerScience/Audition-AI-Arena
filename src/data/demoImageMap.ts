@@ -136,6 +136,46 @@ export const CORE_GARMENT_DEMO_IMAGES: Record<CoreVietPhucId, CoreGarmentDemoMed
   },
 };
 
+export interface CoreGarmentLookbookMedia {
+  src: string;
+  alt: string;
+  title: string;
+  caption: string;
+}
+
+export const CORE_GARMENT_LOOKBOOK_IMAGES: Record<CoreVietPhucId, CoreGarmentLookbookMedia> = {
+  'ao-nhat-binh': {
+    src: '/images/catalog/lookbook/ao-nhat-binh.webp',
+    alt: 'Lookbook gợi ý phối đồ Áo Nhật Bình Cung Đình đương đại',
+    title: 'Áo Nhật Bình · Phối Cung Đình Hiện Đại',
+    caption: 'Bản phối cảm hứng kết hợp nét trang trọng triều đình cùng bảng phối màu đương đại tinh tế.',
+  },
+  'ao-tac': {
+    src: '/images/catalog/lookbook/ao-tac.webp',
+    alt: 'Lookbook gợi ý phối đồ Áo Tấc tay thụng thanh lịch',
+    title: 'Áo Tấc · Phong Vị Đĩnh Đạc',
+    caption: 'Tà áo thụng truyền thống giao thoa cùng nhịp sống văn minh đô thị.',
+  },
+  'ao-dai': {
+    src: '/images/catalog/lookbook/ao-dai.webp',
+    alt: 'Lookbook gợi ý phối đồ Áo Dài truyền thống duyên dáng',
+    title: 'Áo Dài · Dáng Nét Thanh Xuân',
+    caption: 'Hai tà áo bay nhẹ nhàng cùng phom dáng chuẩn mực bất biến qua thời gian.',
+  },
+  'ao-tu-than': {
+    src: '/images/catalog/lookbook/ao-tu-than.webp',
+    alt: 'Lookbook gợi ý phối đồ Áo Tứ Thân dân gian cá tính',
+    title: 'Áo Tứ Thân · Dân Gian Tự Do',
+    caption: 'Vạt trước buộc lơi phóng khoáng mang tinh thần lễ hội Kinh Bắc vào hơi thở hiện đại.',
+  },
+  'ao-ngu-than': {
+    src: '/images/catalog/lookbook/ao-ngu-than.webp',
+    alt: 'Lookbook gợi ý phối đồ Áo Ngũ Thân lịch lãm thời thượng',
+    title: 'Áo Ngũ Thân · Chuẩn Mực Tri Thức',
+    caption: 'Hàng năm khuy cài đoan trang và phom dáng kín đáo toát lên thần thái lịch thiệp.',
+  },
+};
+
 export const SUPPORT_ITEM_DEMO_IMAGES: Record<string, string> = {
   // Bottoms
   'bottom-silk-wide': '/images/catalog/bottoms/bottom-silk-wide.webp',
@@ -147,12 +187,20 @@ export const SUPPORT_ITEM_DEMO_IMAGES: Record<string, string> = {
   // Bags
   'bag-gam-vintage': '/images/catalog/bags/bag-gam-vintage.webp',
   'bag-tote-linen': '/images/catalog/bags/bag-tote-linen.webp',
+  'bag-techwear-crossbody': '/images/catalog/bags/bag-techwear-crossbody.webp',
   // Accessories
-  'accent-silver-jewelry': '/images/demo/ChuoiBac.jpg',
+  'accent-silver-jewelry': '/images/catalog/accessories/accent-silver-jewelry.webp',
+  'accent-non-la': '/images/catalog/accessories/accent-non-la.webp',
+  'accent-y2k-shades': '/images/catalog/accessories/accent-y2k-shades.webp',
+  'accent-quai-thao-mini': '/images/catalog/accessories/accent-quai-thao-mini.webp',
 };
 
 export function getCoreGarmentDemoMedia(id: CoreVietPhucId): CoreGarmentDemoMedia | undefined {
   return CORE_GARMENT_DEMO_IMAGES[id];
+}
+
+export function getCoreGarmentLookbook(id: CoreVietPhucId): CoreGarmentLookbookMedia | undefined {
+  return CORE_GARMENT_LOOKBOOK_IMAGES[id];
 }
 
 export function getSupportItemDemoImage(id: string): string | undefined {

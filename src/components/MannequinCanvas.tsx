@@ -563,40 +563,45 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Hair bun pin / comb hint */}
       <line x1="145" y1="38" x2="155" y2="34" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
 
-      {/* Head oval */}
-      <ellipse cx="150" cy="66" rx="20" ry="26" fill="#EFE5D5" stroke="#4A3F35" strokeWidth="1.5" />
-      {/* Stylized serene facial guidelines / nose bridge hint */}
-      <path d="M150 63 L149 71 L153 71" stroke="#A89A88" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <line x1="147" y1="77" x2="153" y2="77" stroke="#9A8977" strokeWidth="1.2" strokeLinecap="round" />
-
-      {/* Neck */}
+      {/* Refined Serene Head with Natural Jaw & Chin Contour */}
       <path
-        d="M142 90 L141 116 L159 116 L158 90 Z"
-        fill="#E8DCB8"
+        d="M131 56 C131 43 139 39 150 39 C161 39 169 43 169 56 C169 68 167 76 160 84 C156 89 153 91.5 150 91.5 C147 91.5 144 89 140 84 C133 76 131 68 131 56 Z"
+        fill="#EFE5D5"
         stroke="#4A3F35"
         strokeWidth="1.5"
       />
+      {/* Stylized serene facial guidelines / nose bridge hint */}
+      <path d="M150 63 L149 71 L153 71" stroke="#A89A88" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+      <line x1="147" y1="78" x2="153" y2="78" stroke="#9A8977" strokeWidth="1.2" strokeLinecap="round" />
 
-      {/* Shoulders & Torso */}
+      {/* Smooth Neck transition from jawline into clavicle / collar base */}
       <path
-        d="M141 116 L108 132 C104 134 102 138 103 143 L110 220 C111 236 120 248 126 256 L124 280 L176 280 L174 256 C180 248 189 236 190 220 L197 143 C198 138 196 134 192 132 L159 116 Z"
+        d="M142 86 C142 94 140 106 139 116 L161 116 C160 106 158 94 158 86 Z"
+        fill="#E8DCB8"
+        stroke="#4A3F35"
+        strokeWidth="1.4"
+      />
+
+      {/* Refined Shoulders & Torso Contour */}
+      <path
+        d="M139 116 C131 120 118 126 108 134 C104 137 101 142 102 147 L109 220 C110 236 119 248 126 256 L124 280 L176 280 L174 256 C181 248 190 236 191 220 L198 147 C199 142 196 137 192 134 C182 126 169 120 161 116 Z"
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.5"
       />
 
-      {/* Left Arm & Hand */}
+      {/* Left Arm & Hand — Canonical Relaxed A-Pose (Angled outward from torso) */}
       <path
-        d="M103 143 L94 220 L96 295 C96 305 92 322 93 328 C94 332 99 332 101 326 L106 290 L108 220 Z"
+        d="M102 147 C100 165 91 190 82 216 C80 220 78 228 77 240 C75 258 75 276 76 290 C76 298 72 308 73 318 C74 324 77 327 79 324 C82 320 83 310 82 302 C82 296 83 292 85 290 C86 276 89 252 90 234 C91 224 94 218 94 214 C96 192 100 170 106 154 Z"
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
         strokeLinejoin="round"
       />
 
-      {/* Right Arm & Hand */}
+      {/* Right Arm & Hand — Canonical Relaxed A-Pose (Angled outward from torso) */}
       <path
-        d="M197 143 L206 220 L204 295 C204 305 208 322 207 328 C206 332 201 332 199 326 L194 290 L192 220 Z"
+        d="M198 147 C200 165 209 190 218 216 C220 220 222 228 223 240 C225 258 225 276 224 290 C224 298 228 308 227 318 C226 324 223 327 221 324 C218 320 217 310 218 302 C218 296 217 292 215 290 C214 276 211 252 210 234 C209 224 206 218 206 214 C204 192 200 170 194 154 Z"
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -949,14 +954,14 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {/* Standing Mandarin Collar */}
             <path d="M142 98 L158 98 L158 114 L142 114 Z" fill="#F4ECE1" stroke="#2B231D" strokeWidth="1.5" />
 
-            {/* Slender Raglan Sleeves hugging arms */}
+            {/* Slender Raglan Sleeves hugging arms in natural relaxed A-pose */}
             <path
-              d="M140 114 L102 138 L93 220 L99 295 L106 295 L107 220 L118 170 Z"
+              d="M140 114 L104 136 L78 218 L73 292 L86 292 L94 220 L118 170 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
             <path
-              d="M160 114 L198 138 L207 220 L201 295 L194 295 L193 220 L182 170 Z"
+              d="M160 114 L196 136 L222 218 L227 292 L214 292 L206 220 L182 170 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
@@ -1053,9 +1058,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {/* Standing Collar (Cổ Lập Lĩnh đĩnh đạc) */}
             <path d="M140 102 L160 102 L160 118 L140 118 Z" fill="#FAF7EE" stroke="#2B231D" strokeWidth="1.6" />
 
-            {/* Main Robe & Fitted Sleeves (Tay Chẽn gọn gàng) */}
+            {/* Main Robe & Fitted Sleeves (Tay Chẽn gọn gàng ôm cánh tay A-pose tự nhiên) */}
             <path
-              d="M138 118 L104 140 L88 220 L96 295 L104 295 L110 220 L112 410 L188 410 L190 220 L196 295 L204 295 L212 220 L196 140 L162 118 Z"
+              d="M138 118 L104 138 L78 218 L73 292 L86 292 L94 220 L112 410 L188 410 L190 220 L206 220 L214 292 L227 292 L222 218 L196 138 L162 118 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />

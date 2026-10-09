@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CoreItem } from '../types';
 import { PatternMotif } from './PatternMotif';
-import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
-import { X, BookOpen, Feather, Camera } from 'lucide-react';
+import { getCoreGarmentDemoMedia, getCoreGarmentLookbook } from '../data/demoImageMap';
+import { X, BookOpen, Feather, Camera, Sparkles } from 'lucide-react';
 
 interface LookbookModalProps {
   core: CoreItem | null;
@@ -13,14 +13,17 @@ interface LookbookModalProps {
 export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onClose }) => {
   const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
   const [failedSrcs, setFailedSrcs] = useState<Record<string, boolean>>({});
+  const [lookbookError, setLookbookError] = useState<boolean>(false);
 
   useEffect(() => {
     setActivePhotoIndex(0);
+    setLookbookError(false);
   }, [core?.id, isOpen]);
 
   if (!isOpen || !core) return null;
 
   const demoMedia = getCoreGarmentDemoMedia(core.id);
+  const lookbookMedia = getCoreGarmentLookbook(core.id);
   const validGallery =
     demoMedia?.gallery.filter((photo) => !failedSrcs[photo.src]) || [];
   const currentPhoto = validGallery[activePhotoIndex] || validGallery[0];
@@ -155,6 +158,52 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
             ))}
           </div>
         </div>
+
+        {/* Editorial Styling Reference / Lookbook Section */}
+        {lookbookMedia && !lookbookError && (
+          <div className="mt-6 bg-[#FAF7F2] border border-[#E7DECE] rounded-xs p-4 sm:p-5 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-[#EAE1D3] pb-2.5">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#B7410E]" />
+                <h3 className="text-xs sm:text-sm font-bold font-editorial uppercase tracking-wider text-[#241E1A]">
+                  Gợi ý phối đồ · Lookbook
+                </h3>
+              </div>
+              <span className="text-[11px] font-mono text-[#8C7E72]">
+                Bộ phối tham khảo · Cảm hứng thị giác
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              <div className="sm:col-span-5 aspect-[3/4] max-h-[300px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-1.5 shadow-2xs">
+                <img
+                  src={lookbookMedia.src}
+                  alt={lookbookMedia.alt}
+                  onError={() => setLookbookError(true)}
+                  loading="lazy"
+                  className="w-full h-full object-contain rounded-xs select-none"
+                />
+              </div>
+
+              <div className="sm:col-span-7 space-y-2.5 text-xs sm:text-sm text-[#4E433C]">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#B7410E] block mb-0.5">
+                    Lookbook Phong Cách
+                  </span>
+                  <h4 className="font-editorial font-bold text-[#241E1A] text-sm sm:text-base">
+                    {lookbookMedia.title}
+                  </h4>
+                </div>
+                <p className="font-serif italic text-[#6E6155] leading-relaxed">
+                  {lookbookMedia.caption}
+                </p>
+                <div className="text-[11px] text-[#7A6E63] font-serif bg-[#FFFDF9]/90 border border-[#E8DEC9] p-2.5 rounded-xs leading-relaxed">
+                  <strong className="text-[#B7410E] font-sans font-semibold not-italic">Lưu ý cảm hứng:</strong> Đây là ảnh tư liệu phối đồ nghệ thuật thực tế để bạn tham khảo dáng vẻ tổng thể, tách biệt với bản phối mannequin 2D tương tác đang hiển thị tại Trang 3.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Material & Tailoring Notes */}
         <div className="mt-6 pt-5 border-t border-[#EFE8DC] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
