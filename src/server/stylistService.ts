@@ -169,6 +169,7 @@ Danh mục các món đồ có sẵn trong tủ đồ để bạn có thể đ�
   * "bag-tote-linen": Túi Tote Vải Lanh Thô Tối Giản (Vải lanh tự nhiên, Modernity 55)
   * "bag-techwear-crossbody": Túi Đeo Chéo Techwear Fidlock (Cordura kháng nước, Modernity 95)
 - Điểm nhấn (accent):
+  * "accent-non-la": Nón Lá Truyền Thống (Lá tự nhiên & Khung nan tre, Modernity 20)
   * "accent-silver-jewelry": Chuỗi Bạc Thái Chạm Hoa Sen (Bạc 925, Modernity 30)
   * "accent-quai-thao-mini": Nón Quai Thao Mini Đính Bạc (Lá gồi & Bạc, Modernity 65)
   * "accent-y2k-shades": Kính Mát Gọng Bạc Slim Y2K (Titan mạ bạc, Modernity 95)
@@ -290,7 +291,7 @@ export async function generateStylistAdvice(
     },
   });
 
-  const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+  const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
   let lastError: string = '';
 
   for (const model of candidateModels) {
@@ -394,12 +395,24 @@ function generateHeuristicExpertStyling(
 
   const review = `Bản phối giữa ${core.vietnameseTitle} cùng ${bottom.name} và ${shoes.name} tạo nên diện mạo ${style.toLowerCase()} ấn tượng với chỉ số Remix đạt ${actualRemix}%. Sự gặp gỡ giữa chất liệu ${bottom.material.split('&')[0]} hiện đại và kết cấu di sản tạo nên nét đẹp đĩnh đạc, rất phù hợp cho không gian ${location}.`;
 
+  let accentRecommendation =
+    'Bạn có thể bổ sung thêm nón lá truyền thống, chuỗi bạc hoặc nón quai thao mini để tăng chiều sâu điểm nhấn cho trang phục.';
+  if (accent) {
+    if (accent.id === 'accent-non-la') {
+      accentRecommendation = `Phụ kiện ${accent.name} đội nhẹ trên đầu tôn lên đường nét thanh tú của khuôn mặt và hoàn thiện vẻ đẹp truyền thống Việt Nam.`;
+    } else if (accent.id === 'accent-y2k-shades') {
+      accentRecommendation = `Phụ kiện ${accent.name} trên khuôn mặt tạo điểm nhấn sắc sảo, mang lại độ tương phản đương đại đầy cá tính.`;
+    } else if (accent.id === 'accent-quai-thao-mini') {
+      accentRecommendation = `Phụ kiện ${accent.name} cài bên hông tạo điểm nhấn hình khối độc đáo, gợi nhắc nét duyên văn hóa Kinh Bắc.`;
+    } else {
+      accentRecommendation = `Điểm nhấn ${accent.name} tạo điểm sáng tinh tế tại vùng cổ và thềm ngực, giúp thu hút ánh nhìn một cách trang nhã.`;
+    }
+  }
+
   const recommendations = [
     `Khi xuất hiện tại ${occasion}, hãy để tà áo buông thả tự nhiên bên ngoài ${bottom.name} nhằm khoe trọn đường cắt may di sản.`,
     `Túi ${bag.name} và ${shoes.name} mang lại sự thoải mái cho việc di chuyển, tạo cảm giác thanh lịch và năng động.`,
-    accent
-      ? `Điểm nhấn ${accent.name} tạo điểm sáng tinh tế tại thềm ngực, giúp thu hút ánh nhìn một cách trang nhã.`
-      : 'Bạn có thể bổ sung thêm một chuỗi bạc hoặc nón quai thao mini để tăng chiều sâu điểm nhấn cho trang phục.',
+    accentRecommendation,
   ];
 
   const suggestedItems: StylistSuggestedItem[] = [];

@@ -592,12 +592,88 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   /* -------------------------------------------------------------
      LAYER 6: Optional Accent
-     Supports: accent-silver-jewelry | accent-quai-thao-mini | accent-y2k-shades | null
+     Supports: accent-non-la | accent-silver-jewelry | accent-quai-thao-mini | accent-y2k-shades | null
   ------------------------------------------------------------- */
   const renderAccent = () => {
     if (!items.accent) return null;
 
     switch (items.accent.id) {
+      case 'accent-non-la':
+        return (
+          <g id="accent-non-la" stroke="#5C4934" strokeWidth="1.3" strokeLinejoin="round">
+            {/* Traditional Vietnamese Conical Leaf Hat (Nón Lá) worn naturally on head */}
+            {/* Back/inner brim side wings framing upper temples without covering face */}
+            <path
+              d="M94 54 Q112 59 131 56 L131 50 Q112 51 94 54 Z"
+              fill="#C4B083"
+              stroke="#7A6242"
+              strokeWidth="1.1"
+            />
+            <path
+              d="M206 54 Q188 59 169 56 L169 50 Q188 51 206 54 Z"
+              fill="#C4B083"
+              stroke="#7A6242"
+              strokeWidth="1.1"
+            />
+
+            {/* Delicate silk chin strap hint along jawline sides */}
+            <path
+              d="M132 55 C132 72 138 84 144 90"
+              fill="none"
+              stroke="#B3261E"
+              strokeWidth="0.9"
+              opacity="0.65"
+              strokeLinecap="round"
+            />
+            <path
+              d="M168 55 C168 72 162 84 156 90"
+              fill="none"
+              stroke="#B3261E"
+              strokeWidth="0.9"
+              opacity="0.65"
+              strokeLinecap="round"
+            />
+
+            {/* Main Conical Leaf Body with pointed apex and curved wide brim */}
+            <path
+              d="M150 14 L94 54 Q150 48 206 54 Z"
+              fill="#D8C79B"
+              stroke="#5C4934"
+              strokeWidth="1.4"
+            />
+
+            {/* Subtle warm highlight on left slope of cone */}
+            <path
+              d="M150 14 L94 54 Q122 50.5 150 51 Z"
+              fill="#EAE0C0"
+              stroke="none"
+              opacity="0.55"
+            />
+
+            {/* Concentric bamboo rib rings (khung nan tre) */}
+            <path d="M136 24 Q150 22 164 24" fill="none" stroke="#927853" strokeWidth="0.9" />
+            <path d="M122 34 Q150 31 178 34" fill="none" stroke="#927853" strokeWidth="0.95" />
+            <path d="M108 44 Q150 40 192 44" fill="none" stroke="#927853" strokeWidth="1" />
+
+            {/* Radiating palm leaf ribs from pointed apex to wide brim */}
+            <line x1="150" y1="14" x2="112" y2="52.5" stroke="#927853" strokeWidth="0.85" opacity="0.75" />
+            <line x1="150" y1="14" x2="131" y2="51.5" stroke="#927853" strokeWidth="0.85" opacity="0.75" />
+            <line x1="150" y1="14" x2="150" y2="51" stroke="#927853" strokeWidth="0.85" opacity="0.75" />
+            <line x1="150" y1="14" x2="169" y2="51.5" stroke="#927853" strokeWidth="0.85" opacity="0.75" />
+            <line x1="150" y1="14" x2="188" y2="52.5" stroke="#927853" strokeWidth="0.85" opacity="0.75" />
+
+            {/* Outer bamboo brim binding (vành cái) & pointed crown tip (chóp nón) */}
+            <path
+              d="M94 54 Q150 48 206 54"
+              fill="none"
+              stroke="#7A6242"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <circle cx="150" cy="14" r="1.4" fill="#5C4934" stroke="none" />
+          </g>
+        );
+
       case 'accent-y2k-shades':
         return (
           <g id="accent-y2k-shades" stroke="#181615" strokeWidth="1.2" strokeLinejoin="round">
@@ -763,7 +839,13 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           {items.accent && (
             <>
               <span className="text-[#C8BCAC]">·</span>
-              <span className="text-[#7A6E63]">{items.accent.name.split(' ')[0]}</span>
+              <span className="text-[#7A6E63]">
+                {items.accent.id === 'accent-non-la'
+                  ? 'Nón Lá'
+                  : items.accent.id === 'accent-quai-thao-mini'
+                    ? 'Nón Quai Thao'
+                    : items.accent.name.split(' ')[0]}
+              </span>
             </>
           )}
         </div>

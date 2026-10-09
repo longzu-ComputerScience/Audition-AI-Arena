@@ -352,6 +352,20 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       editorialNote: 'Gọng kính slim mắt hẹp sắc sảo tạo độ tương phản thị giác thú vị với nét cổ phong.',
       patternType: 'geometric',
     },
+    {
+      id: 'accent-non-la',
+      name: 'Nón Lá Truyền Thống',
+      category: 'accent',
+      categoryLabel: 'Phụ Kiện · Accent',
+      material: 'Lá tự nhiên đan trên khung nan tre',
+      modernityScore: 20,
+      colorName: 'Vàng Rơm Tự Nhiên',
+      colorHex: '#D8C79B',
+      accentHex: '#927853',
+      badgeLabel: 'Di Sản',
+      editorialNote: 'Nón lá mộc mạc gợi nhắc vẻ đẹp đời sống Việt Nam, tạo nét duyên truyền thống cho bản phối đương đại.',
+      patternType: 'bamboo-scholar',
+    },
   ],
 };
 

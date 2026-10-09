@@ -150,9 +150,19 @@ export function buildFashionEditorialPrompt(selection: ValidatedOutfitSelection)
       ? `Main color accent theme: ${preferredColor}. `
       : `Palette inspired by traditional Vietnamese pigments: ${core.palette.map((p) => p.name).join(', ')}. `;
 
-  const accentSection = accent
-    ? `Fashion accessory: ${accent.name} (${accent.material}, ${accent.editorialNote}).`
-    : 'No extra jewelry accents, keeping a clean minimalist profile.';
+  let accentSection: string;
+  if (!accent) {
+    accentSection =
+      'No optional accessories, no hats or additional headwear, keeping a clean minimalist profile.';
+  } else if (accent.id === 'accent-non-la') {
+    accentSection = `Fashion accessory: ${accent.name} (${accent.material}). Traditional Vietnamese nón lá conical leaf hat, handcrafted from natural leaves over a bamboo rib frame, worn naturally on the model's head. Preserve the recognizable pointed conical silhouette and wide curved brim. Do not confuse it with the flat ceremonial nón quai thao. Keep the model's face and the traditional garment details visible. Wear only this single conical hat with no duplicate headwear.`;
+  } else if (accent.id === 'accent-quai-thao-mini') {
+    accentSection = `Fashion accessory: ${accent.name} (${accent.material}, ${accent.editorialNote}). Miniature flat round ceremonial nón quai thao accessory styled at the waist/hip or held in hand, not a conical nón lá and with no hat worn on the head.`;
+  } else if (accent.id === 'accent-y2k-shades') {
+    accentSection = `Fashion accessory: ${accent.name} (${accent.material}, ${accent.editorialNote}). Sleek slim silver Y2K sunglasses worn on the face, with no hat or headwear.`;
+  } else {
+    accentSection = `Fashion accessory: ${accent.name} (${accent.material}, ${accent.editorialNote}). Silver lotus pendant necklace at the neckline, with no hat or headwear.`;
+  }
 
   return [
     'A high-end contemporary fashion editorial portrait illustration.',
