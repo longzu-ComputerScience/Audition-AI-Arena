@@ -5,12 +5,13 @@ import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
 import { GarmentPreview } from './GarmentPreview';
 import { ConfirmedIntroFields } from './InteractiveOnboarding';
 import { alignPageToTop } from '../utils/scrollAlignment';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, BookOpen } from 'lucide-react';
 
 interface DiscoveryScreenProps {
   setupData: SetupData;
   onChangeSetup: (data: Partial<SetupData>) => void;
   onSubmit: () => void;
+  onOpenAbout: () => void;
   hasSeenIntro: boolean;
   onIntroComplete: () => void;
   confirmedIntroFields?: ConfirmedIntroFields;
@@ -28,6 +29,7 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   setupData,
   onChangeSetup,
   onSubmit,
+  onOpenAbout,
   hasSeenIntro,
   onIntroComplete,
   confirmedIntroFields,
@@ -75,8 +77,16 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.26, ease: 'easeOut' }}
-      className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10"
+      className="relative max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10"
     >
+      <button
+        type="button"
+        onClick={onOpenAbout}
+        className="absolute top-1.5 left-4 sm:left-6 lg:left-8 inline-flex items-center gap-1.5 rounded-md border border-[#DDD0C0] bg-[#FFFDF9] px-2.5 py-1.5 text-[11px] font-semibold text-[#5A4F46] transition-colors hover:border-[#B3261E]/60 hover:text-[#B3261E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
+      >
+        <BookOpen className="h-3.5 w-3.5" />
+        Đọc giới thiệu
+      </button>
       {/* Editorial Header & Storytelling Introduction (above both columns) */}
       <div className="text-center space-y-3 max-w-2xl mx-auto">
         <span className="text-xs sm:text-sm font-medium tracking-wide text-[#B3261E]">

@@ -110,7 +110,14 @@ export default function App() {
 
   // Modals state
   const [isLookbookOpen, setIsLookbookOpen] = useState<boolean>(false);
-  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  // Show the existing project introduction first on every fresh app load.
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(true);
+  // Separate from onboarding completion; used only to align/animate the welcome after dismissal.
+  const [welcomeIntroReady, setWelcomeIntroReady] = useState<boolean>(false);
+  const handleCloseAbout = () => {
+    setIsAboutOpen(false);
+    setWelcomeIntroReady(true);
+  };
 
   // Derived: Current Core Item
   const currentCore = useMemo(() => {
@@ -292,6 +299,8 @@ export default function App() {
               key="step-1-onboarding"
               setupData={setupData}
               confirmedFields={confirmedIntroFields}
+              welcomeReady={welcomeIntroReady}
+              onOpenAbout={() => setIsAboutOpen(true)}
               onSelectCoreGarment={handleOnboardingSelectCore}
               onSelectOccasion={handleOnboardingSelectOccasion}
               onSelectLocation={handleOnboardingSelectLocation}
@@ -305,6 +314,7 @@ export default function App() {
               setupData={setupData}
               onChangeSetup={handleChangeSetup}
               onSubmit={() => goToStep(2)}
+              onOpenAbout={() => setIsAboutOpen(true)}
               hasSeenIntro={hasSeenIntro}
               onIntroComplete={() => setHasSeenIntro(true)}
               confirmedIntroFields={confirmedIntroFields}
@@ -382,7 +392,7 @@ export default function App() {
 
       <AboutModal
         isOpen={isAboutOpen}
-        onClose={() => setIsAboutOpen(false)}
+        onClose={handleCloseAbout}
       />
     </div>
   );

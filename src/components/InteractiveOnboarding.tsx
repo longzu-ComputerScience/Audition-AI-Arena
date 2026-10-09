@@ -12,6 +12,7 @@ import {
   Check,
   MapPin,
   Calendar,
+  BookOpen,
 } from 'lucide-react';
 
 export interface ConfirmedIntroFields {
@@ -23,6 +24,8 @@ export interface ConfirmedIntroFields {
 interface InteractiveOnboardingProps {
   setupData: SetupData;
   confirmedFields: ConfirmedIntroFields;
+  welcomeReady: boolean;
+  onOpenAbout: () => void;
   onSelectCoreGarment: (id: CoreVietPhucId) => void;
   onSelectOccasion: (occasion: string) => void;
   onSelectLocation: (location: string) => void;
@@ -58,6 +61,8 @@ const OCCASION_SUBTITLES: Record<string, string> = {
 export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   setupData,
   confirmedFields,
+  welcomeReady,
+  onOpenAbout,
   onSelectCoreGarment,
   onSelectOccasion,
   onSelectLocation,
@@ -76,10 +81,20 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   const step2SectionRef = useRef<HTMLElement | null>(null);
   const step3SectionRef = useRef<HTMLElement | null>(null);
   const welcomeWasShownRef = useRef(false);
-  const playWelcomeEntrance = introStep === 1 && !welcomeWasShownRef.current && !shouldReduceMotion;
+  // Keep the background visible under the opening modal; play the welcome reveal
+  // when the visitor dismisses it, instead of completing the animation behind the overlay.
+  const playWelcomeEntrance = introStep === 1 && welcomeReady && !welcomeWasShownRef.current && !shouldReduceMotion;
   React.useEffect(() => {
-    if (introStep === 1) welcomeWasShownRef.current = true;
-  }, [introStep]);
+    if (introStep === 1 && welcomeReady) welcomeWasShownRef.current = true;
+  }, [introStep, welcomeReady]);
+
+  // Re-align the garment collection once after dismissing the opening introduction.
+  // The separate section mount aligner still handles normal 1/2/3 onboarding navigation.
+  React.useLayoutEffect(() => {
+    if (welcomeReady && introStep === 1) {
+      alignElementBelowStickyHeader(step1SectionRef.current, 0);
+    }
+  }, [welcomeReady]);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
@@ -282,9 +297,20 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
             className="space-y-4 sm:space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
             <StepMountAligner sectionRef={step1SectionRef} />
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={onOpenAbout}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#DDD0C0] bg-[#FFFDF9] px-2.5 py-1.5 text-[11px] font-semibold text-[#5A4F46] transition-colors hover:border-[#B3261E]/60 hover:text-[#B3261E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Đọc giới thiệu
+              </button>
+            </div>
             {/* Editorial Welcome Hero */}
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <motion.span
+                key={welcomeReady ? 'intro-label-ready' : 'intro-label-modal'}
                 initial={playWelcomeEntrance ? { opacity: 0, y: 5 } : false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.27, delay: playWelcomeEntrance ? 0.02 : 0, ease: 'easeOut' }}
@@ -293,6 +319,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 Triển lãm Khởi đầu · Năm Dáng Áo Di Sản
               </motion.span>
               <motion.h1
+                key={welcomeReady ? 'intro-heading-ready' : 'intro-heading-modal'}
                 ref={handleStepHeadingMount}
                 tabIndex={-1}
                 initial={playWelcomeEntrance ? { opacity: 0, y: 9 } : false}
@@ -303,6 +330,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 Mỗi nếp vải mang một ký ức.
               </motion.h1>
               <motion.p
+                key={welcomeReady ? 'intro-description-ready' : 'intro-description-modal'}
                 initial={playWelcomeEntrance ? { opacity: 0, y: 6 } : false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: playWelcomeEntrance ? 0.16 : 0, ease: 'easeOut' }}
@@ -355,7 +383,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
 
                 return (
                   <motion.button
-                    key={item.id}
+                    key={`${item.id}-${welcomeReady ? 'ready' : 'modal'}`}
                     type="button"
                     initial={playWelcomeEntrance ? { opacity: 0, y: 10 } : false}
                     animate={{ opacity: 1, y: 0 }}
