@@ -82,11 +82,11 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
       <button
         type="button"
         onClick={onReturnToIntro}
-        aria-label="Quay lại phần giới thiệu và chọn năm Việt phục"
+        aria-label="Back — Quay lại phần giới thiệu và chọn năm Việt phục"
         className="absolute top-1.5 left-4 sm:left-6 lg:left-8 inline-flex items-center gap-1.5 rounded-md border border-[#DDD0C0] bg-[#FFFDF9] px-2.5 py-1.5 text-[11px] font-semibold text-[#5A4F46] transition-colors hover:border-[#B3261E]/60 hover:text-[#B3261E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Quay lại giới thiệu
+        Back
       </button>
       {/* Editorial Header & Storytelling Introduction (above both columns) */}
       <div className="text-center space-y-3 max-w-2xl mx-auto">

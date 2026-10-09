@@ -8,6 +8,7 @@ import {
   SupportOption,
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
+import { getSupportItemDemoImage } from '../data/demoImageMap';
 import {
   Layers,
   Pin,
@@ -74,6 +75,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   // Active quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null) across all devices
   const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
+  const [failedThumbIds, setFailedThumbIds] = useState<Record<string, boolean>>({});
   const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
   const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
     accent: null,
@@ -1454,6 +1456,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               ? items.accent?.id || ''
               : items[activeQuickCategory].id;
           const isOptionSelected = opt.id === currentSelectedId;
+          const demoImg = getSupportItemDemoImage(opt.id);
+          const showThumb = Boolean(demoImg && !failedThumbIds[opt.id]);
 
           return (
             <button
@@ -1475,10 +1479,21 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               {isDesktopLayout ? (
                 <>
                   <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                      style={{ backgroundColor: opt.accentHex }}
-                    />
+                    {showThumb ? (
+                      <img
+                        src={demoImg}
+                        alt={opt.name}
+                        onError={() =>
+                          setFailedThumbIds((prev) => ({ ...prev, [opt.id]: true }))
+                        }
+                        className="w-7 h-7 rounded-md border border-[#E2D8C8] object-cover shrink-0 bg-[#FFFDF9]"
+                      />
+                    ) : (
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                        style={{ backgroundColor: opt.accentHex }}
+                      />
+                    )}
                     <div className="min-w-0">
                       <div className="text-xs font-semibold text-[#241E1A] truncate">
                         {opt.name}
@@ -1499,10 +1514,21 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                 <>
                   <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                        style={{ backgroundColor: opt.accentHex }}
-                      />
+                      {showThumb ? (
+                        <img
+                          src={demoImg}
+                          alt={opt.name}
+                          onError={() =>
+                            setFailedThumbIds((prev) => ({ ...prev, [opt.id]: true }))
+                          }
+                          className="w-6 h-6 rounded border border-[#E2D8C8] object-cover shrink-0 bg-[#FFFDF9]"
+                        />
+                      ) : (
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                          style={{ backgroundColor: opt.accentHex }}
+                        />
+                      )}
                       <span className="text-[10px] font-mono text-[#8C7E72] truncate">
                         {opt.badgeLabel}
                       </span>

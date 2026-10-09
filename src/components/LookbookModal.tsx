@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CoreItem } from '../types';
 import { PatternMotif } from './PatternMotif';
-import { X, BookOpen, Compass, Sparkles, Feather } from 'lucide-react';
+import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
+import { X, BookOpen, Feather, Camera } from 'lucide-react';
 
 interface LookbookModalProps {
   core: CoreItem | null;
@@ -10,7 +11,23 @@ interface LookbookModalProps {
 }
 
 export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onClose }) => {
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
+  const [failedSrcs, setFailedSrcs] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setActivePhotoIndex(0);
+  }, [core?.id, isOpen]);
+
   if (!isOpen || !core) return null;
+
+  const demoMedia = getCoreGarmentDemoMedia(core.id);
+  const validGallery =
+    demoMedia?.gallery.filter((photo) => !failedSrcs[photo.src]) || [];
+  const currentPhoto = validGallery[activePhotoIndex] || validGallery[0];
+
+  const handleImageError = (src: string) => {
+    setFailedSrcs((prev) => ({ ...prev, [src]: true }));
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#181412]/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -43,6 +60,68 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
             {core.era}
           </p>
         </div>
+
+        {/* Editorial Heritage Photo Gallery (when real photographs are available for this garment) */}
+        {validGallery.length > 0 && currentPhoto && (
+          <div className="mb-6 bg-[#FAF7F2] border border-[#E7DECE] rounded-xs p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#B7410E] inline-flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5" />
+                <span>Tư Liệu Hình Ảnh Thực Tế</span>
+              </span>
+              <span className="text-xs font-medium text-[#655A52]">
+                Góc nhìn: <strong className="text-[#241E1A]">{currentPhoto.label}</strong>
+              </span>
+            </div>
+
+            {/* Main Selected Photograph */}
+            <div className="w-full h-[300px] sm:h-[360px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-2">
+              <img
+                src={currentPhoto.src}
+                alt={currentPhoto.alt}
+                onError={() => handleImageError(currentPhoto.src)}
+                className="w-full h-full object-contain rounded-xs select-none"
+              />
+            </div>
+
+            {/* Selectable Thumbnails */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {validGallery.map((photo, idx) => {
+                const isSelected = idx === activePhotoIndex;
+                return (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(idx)}
+                    aria-pressed={isSelected}
+                    className={`flex items-center gap-2.5 p-1.5 rounded-xs border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#FFFDF9] border-[#B7410E] ring-1 ring-[#B7410E]/30 shadow-2xs'
+                        : 'bg-[#FFFDF9]/70 hover:bg-[#FFFDF9] border-[#DED3C2] opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="w-11 h-13 rounded-xs overflow-hidden bg-[#FAF7EE] border border-[#E5DEC9] shrink-0">
+                      <img
+                        src={photo.src}
+                        alt={photo.alt}
+                        onError={() => handleImageError(photo.src)}
+                        className="w-full h-full object-cover select-none"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-mono uppercase text-[#8C7E72] block">
+                        Ảnh 0{idx + 1}
+                      </span>
+                      <span className="text-xs font-semibold text-[#241E1A] truncate block">
+                        {photo.label}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Graphic & Provenance */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center bg-[#FAF7F2] p-5 rounded-xs border border-[#E7DECE] mb-6">

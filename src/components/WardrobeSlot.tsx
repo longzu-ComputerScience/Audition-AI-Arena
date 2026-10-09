@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SupportOption, SupportCategoryId } from '../types';
 import { PatternMotif } from './PatternMotif';
 import { DirectSelectPopover } from './DirectSelectPopover';
+import { getSupportItemDemoImage } from '../data/demoImageMap';
 import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 
 interface WardrobeSlotProps {
@@ -29,6 +30,12 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
   onAddSlot,
   onRemoveSlot,
 }) => {
+  const [imgError, setImgError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [item?.id]);
+
   // If slot is empty (for optional Accent)
   if (!item) {
     return (
@@ -55,6 +62,9 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
       </div>
     );
   }
+
+  const demoImageSrc = getSupportItemDemoImage(item.id);
+  const showRealThumbnail = Boolean(demoImageSrc && !imgError);
 
   return (
     <div className="relative bg-[#FAF7EE]/50 hover:bg-[#FAF7EE]/80 border border-[#EAE3D6] rounded-xl p-3 transition-colors duration-150">
@@ -107,20 +117,35 @@ export const WardrobeSlot: React.FC<WardrobeSlotProps> = ({
         }}
         className="flex items-center gap-3 cursor-pointer group"
       >
-        {/* Placeholder Visual Thumbnail */}
+        {/* Visual Thumbnail (Real photograph when available, otherwise colored motif placeholder) */}
         <div
-          className="w-13 h-13 rounded-lg border border-[#E2D8C8] overflow-hidden shrink-0 flex items-center justify-center p-2 relative transition-all group-hover:border-[#B3261E]/50"
-          style={{
-            background: `linear-gradient(135deg, ${item.colorHex}22 0%, ${item.colorHex}55 60%, ${item.accentHex}50 100%)`,
-          }}
+          className={`w-13 h-13 rounded-lg border border-[#E2D8C8] overflow-hidden shrink-0 flex items-center justify-center relative transition-all group-hover:border-[#B3261E]/50 ${
+            showRealThumbnail ? 'bg-[#FFFDF9]' : 'p-2'
+          }`}
+          style={
+            showRealThumbnail
+              ? undefined
+              : {
+                  background: `linear-gradient(135deg, ${item.colorHex}22 0%, ${item.colorHex}55 60%, ${item.accentHex}50 100%)`,
+                }
+          }
         >
-          <PatternMotif
-            type={item.patternType}
-            color="#241E1A"
-            className="w-full h-full opacity-70"
-          />
+          {showRealThumbnail && demoImageSrc ? (
+            <img
+              src={demoImageSrc}
+              alt={item.name}
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover select-none"
+            />
+          ) : (
+            <PatternMotif
+              type={item.patternType}
+              color="#241E1A"
+              className="w-full h-full opacity-70"
+            />
+          )}
           <span
-            className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full border border-black/20"
+            className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full border border-black/20 shadow-2xs"
             style={{ backgroundColor: item.accentHex }}
           />
         </div>

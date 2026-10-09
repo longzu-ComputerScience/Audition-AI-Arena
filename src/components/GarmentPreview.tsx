@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, CoreItem } from '../types';
 import { CORE_ITEMS } from '../data/mockFashionData';
+import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
 
 interface GarmentPreviewProps {
   coreGarment: CoreVietPhucId;
@@ -323,6 +324,14 @@ export const GarmentSilhouetteSvg: React.FC<GarmentSilhouetteSvgProps> = ({
 export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) => {
   const shouldReduceMotion = useReducedMotion();
   const currentCore: CoreItem = CORE_ITEMS[coreGarment] || CORE_ITEMS['ao-ngu-than'];
+  const demoMedia = getCoreGarmentDemoMedia(coreGarment);
+  const [imgError, setImgError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [coreGarment]);
+
+  const showRealPhoto = Boolean(demoMedia && !imgError);
 
   return (
     <div className="w-full bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-5 sm:p-6 shadow-xs flex flex-col justify-between h-full">
@@ -341,7 +350,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
         </span>
       </div>
 
-      {/* SVG Canvas with AnimatePresence & Stable Container */}
+      {/* SVG Canvas / Photograph with AnimatePresence & Stable Container */}
       <div className="relative w-full h-[280px] sm:h-[320px] my-3 flex items-center justify-center overflow-hidden bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70">
         <AnimatePresence mode="wait">
           <motion.div
@@ -355,7 +364,16 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
             }}
             className="w-full h-full flex items-center justify-center p-2"
           >
-            <GarmentSilhouetteSvg coreGarment={coreGarment} />
+            {showRealPhoto && demoMedia ? (
+              <img
+                src={demoMedia.previewSrc}
+                alt={demoMedia.previewAlt}
+                onError={() => setImgError(true)}
+                className="w-full h-full max-h-[300px] mx-auto object-contain rounded-xs select-none"
+              />
+            ) : (
+              <GarmentSilhouetteSvg coreGarment={coreGarment} />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -363,7 +381,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
       {/* Caption & Defining Attributes */}
       <div className="space-y-2 pt-2 border-t border-[#EAE3D6]">
         <p className="text-xs text-[#7A6E63] text-center italic font-normal">
-          Minh họa phom dáng 2D cơ bản
+          {showRealPhoto ? 'Ảnh chụp tư liệu phục dựng thực tế' : 'Minh họa phom dáng 2D cơ bản'}
         </p>
 
         {/* Bullet points of defining silhouette features */}

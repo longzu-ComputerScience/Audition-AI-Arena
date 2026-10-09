@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { SupportOption } from '../types';
+import { getSupportItemDemoImage } from '../data/demoImageMap';
 import { Check, X } from 'lucide-react';
 
 interface DirectSelectPopoverProps {
@@ -18,6 +19,7 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
   onClose,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -65,6 +67,9 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
       <div className="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
         {options.map((opt) => {
           const isSelected = opt.id === selectedId;
+          const demoImg = getSupportItemDemoImage(opt.id);
+          const showPhoto = Boolean(demoImg && !failedImages[opt.id]);
+
           return (
             <button
               key={opt.id}
@@ -82,10 +87,21 @@ export const DirectSelectPopover: React.FC<DirectSelectPopoverProps> = ({
               aria-selected={isSelected}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span
-                  className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                  style={{ backgroundColor: opt.accentHex }}
-                />
+                {showPhoto ? (
+                  <img
+                    src={demoImg}
+                    alt={opt.name}
+                    onError={() =>
+                      setFailedImages((prev) => ({ ...prev, [opt.id]: true }))
+                    }
+                    className="w-8 h-8 rounded-md border border-[#E2D8C8] object-cover shrink-0 bg-[#FFFDF9]"
+                  />
+                ) : (
+                  <span
+                    className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                    style={{ backgroundColor: opt.accentHex }}
+                  />
+                )}
                 <div className="truncate">
                   <div className="text-xs font-semibold truncate text-[#241E1A]">
                     {opt.name}
