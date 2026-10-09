@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Info,
   BookOpen,
+  ChevronDown,
 } from 'lucide-react';
 
 interface RemixStudioProps {
@@ -65,6 +66,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 }) => {
   // Only one selector open at a time
   const [openSlot, setOpenSlot] = useState<SupportCategoryId | null>(null);
+
+  // On mobile/tablet (< lg), Tủ Đồ Phối Kèm is a secondary collapsible accordion (closed by default)
+  const [isMobileWardrobeOpen, setIsMobileWardrobeOpen] = useState<boolean>(false);
 
   // State for AI image generation modal snapshot
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
@@ -134,73 +138,14 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
         {/* Right Side: Wardrobe & Styling Controls (~40% -> lg:col-span-5) */}
         <div className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
-          {/* 1. Tủ Đồ Phối Kèm (tích hợp Remix Dial ở đáy) */}
-          <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3.5">
-            <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
-                Tủ Đồ Phối Kèm
-              </h2>
-              <span className="text-[11px] font-mono text-[#8C7E72]">
-                Chọn trực tiếp từ danh mục
-              </span>
-            </div>
-
-            {/* Bottom Slot */}
-            <WardrobeSlot
-              category="bottom"
-              label="Phần dưới"
-              item={supportItems.bottom}
-              options={SUPPORT_ITEMS.bottom}
-              isOpen={openSlot === 'bottom'}
-              onToggleOpen={() => setOpenSlot((prev) => (prev === 'bottom' ? null : 'bottom'))}
-              onSelectOption={(opt) => onSelectSupportItem('bottom', opt)}
-              onClose={() => setOpenSlot(null)}
-            />
-
-            {/* Shoes Slot */}
-            <WardrobeSlot
-              category="shoes"
-              label="Giày guốc"
-              item={supportItems.shoes}
-              options={SUPPORT_ITEMS.shoes}
-              isOpen={openSlot === 'shoes'}
-              onToggleOpen={() => setOpenSlot((prev) => (prev === 'shoes' ? null : 'shoes'))}
-              onSelectOption={(opt) => onSelectSupportItem('shoes', opt)}
-              onClose={() => setOpenSlot(null)}
-            />
-
-            {/* Bag Slot */}
-            <WardrobeSlot
-              category="bag"
-              label="Túi xách"
-              item={supportItems.bag}
-              options={SUPPORT_ITEMS.bag}
-              isOpen={openSlot === 'bag'}
-              onToggleOpen={() => setOpenSlot((prev) => (prev === 'bag' ? null : 'bag'))}
-              onSelectOption={(opt) => onSelectSupportItem('bag', opt)}
-              onClose={() => setOpenSlot(null)}
-            />
-
-            {/* Optional Accent Slot */}
-            <WardrobeSlot
-              category="accent"
-              label="Phụ kiện"
-              item={supportItems.accent}
-              options={SUPPORT_ITEMS.accent}
-              isOpen={openSlot === 'accent'}
-              onToggleOpen={() => setOpenSlot((prev) => (prev === 'accent' ? null : 'accent'))}
-              onSelectOption={(opt) => onSelectSupportItem('accent', opt)}
-              onClose={() => setOpenSlot(null)}
-              onAddSlot={onAddAccent}
-              onRemoveSlot={supportItems.accent ? onRemoveAccent : undefined}
-            />
-
-            {/* Integrated Remix Dial */}
-            <div className="border-t border-[#EFE8DC] pt-3.5 mt-2 space-y-2.5">
+          {/* Wrapper allowing Mức độ Remix first on mobile (< lg) and Tủ Đồ first on desktop (lg+) with a single slider instance */}
+          <div className="flex flex-col gap-4">
+            {/* A. Mức độ Remix — Always visible outside the accordion on mobile/tablet & desktop */}
+            <section className="order-1 lg:order-2 bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="remix-dial-slider"
-                  className="text-xs font-semibold text-[#241E1A] flex items-center gap-1.5"
+                  className="text-xs font-semibold uppercase tracking-wider text-[#241E1A] flex items-center gap-1.5"
                 >
                   <Sliders className="w-3.5 h-3.5 text-[#B3261E]" />
                   <span>Mức độ Remix</span>
@@ -228,8 +173,140 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
                 <span>Cân bằng (50%)</span>
                 <span>Hiện đại (100%)</span>
               </div>
-            </div>
-          </section>
+            </section>
+
+            {/* B. Tủ Đồ Phối Kèm — Collapsible accordion on mobile/tablet (closed by default), always open on desktop (lg+) */}
+            <section className="order-2 lg:order-1 bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs">
+              {/* Desktop Header (lg+) */}
+              <div className="hidden lg:flex items-center justify-between border-b border-[#EFE8DC] pb-2 mb-3.5">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
+                  Tủ Đồ Phối Kèm
+                </h2>
+                <span className="text-[11px] font-mono text-[#8C7E72]">
+                  Chọn trực tiếp từ danh mục
+                </span>
+              </div>
+
+              {/* Mobile / Tablet Accordion Trigger (< lg) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileWardrobeOpen((prev) => {
+                    if (prev) setOpenSlot(null);
+                    return !prev;
+                  });
+                }}
+                aria-expanded={isMobileWardrobeOpen}
+                className="lg:hidden w-full flex items-center justify-between gap-3 text-left cursor-pointer"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
+                      Tủ Đồ Phối Kèm
+                    </h2>
+                    <span className="text-[10px] font-mono text-[#7A6E63] bg-[#FAF7EE] border border-[#E5DEC9] px-1.5 py-0.5 rounded">
+                      {supportItems.accent ? '4/4 món' : '3/4 món'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7A6E63] truncate mt-0.5 font-serif">
+                    {isMobileWardrobeOpen
+                      ? 'Thu gọn danh sách chi tiết tủ đồ'
+                      : 'Mở để xem chi tiết chất liệu hoặc đổi từng món'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Active item color dots preview when collapsed */}
+                  <div className="flex items-center -space-x-1">
+                    <span
+                      className="w-3 h-3 rounded-full border border-white shadow-2xs"
+                      style={{ backgroundColor: supportItems.bottom.accentHex }}
+                    />
+                    <span
+                      className="w-3 h-3 rounded-full border border-white shadow-2xs"
+                      style={{ backgroundColor: supportItems.shoes.accentHex }}
+                    />
+                    <span
+                      className="w-3 h-3 rounded-full border border-white shadow-2xs"
+                      style={{ backgroundColor: supportItems.bag.accentHex }}
+                    />
+                    {supportItems.accent && (
+                      <span
+                        className="w-3 h-3 rounded-full border border-white shadow-2xs"
+                        style={{ backgroundColor: supportItems.accent.accentHex }}
+                      />
+                    )}
+                  </div>
+
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF7EE] border border-[#DDD0C0] text-xs font-medium text-[#4E433C]">
+                    <span>{isMobileWardrobeOpen ? 'Thu gọn' : 'Mở tủ đồ'}</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isMobileWardrobeOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </span>
+                </div>
+              </button>
+
+              {/* 4 Wardrobe Slots: Collapsed by default on < lg unless toggled open; always visible on lg+ */}
+              <div
+                className={`${
+                  isMobileWardrobeOpen ? 'block mt-3.5 pt-3 border-t border-[#EFE8DC]' : 'hidden'
+                } lg:block lg:mt-0 lg:pt-0 lg:border-t-0 space-y-3.5`}
+              >
+                {/* Bottom Slot */}
+                <WardrobeSlot
+                  category="bottom"
+                  label="Phần dưới"
+                  item={supportItems.bottom}
+                  options={SUPPORT_ITEMS.bottom}
+                  isOpen={openSlot === 'bottom'}
+                  onToggleOpen={() => setOpenSlot((prev) => (prev === 'bottom' ? null : 'bottom'))}
+                  onSelectOption={(opt) => onSelectSupportItem('bottom', opt)}
+                  onClose={() => setOpenSlot(null)}
+                />
+
+                {/* Shoes Slot */}
+                <WardrobeSlot
+                  category="shoes"
+                  label="Giày guốc"
+                  item={supportItems.shoes}
+                  options={SUPPORT_ITEMS.shoes}
+                  isOpen={openSlot === 'shoes'}
+                  onToggleOpen={() => setOpenSlot((prev) => (prev === 'shoes' ? null : 'shoes'))}
+                  onSelectOption={(opt) => onSelectSupportItem('shoes', opt)}
+                  onClose={() => setOpenSlot(null)}
+                />
+
+                {/* Bag Slot */}
+                <WardrobeSlot
+                  category="bag"
+                  label="Túi xách"
+                  item={supportItems.bag}
+                  options={SUPPORT_ITEMS.bag}
+                  isOpen={openSlot === 'bag'}
+                  onToggleOpen={() => setOpenSlot((prev) => (prev === 'bag' ? null : 'bag'))}
+                  onSelectOption={(opt) => onSelectSupportItem('bag', opt)}
+                  onClose={() => setOpenSlot(null)}
+                />
+
+                {/* Optional Accent Slot */}
+                <WardrobeSlot
+                  category="accent"
+                  label="Phụ kiện"
+                  item={supportItems.accent}
+                  options={SUPPORT_ITEMS.accent}
+                  isOpen={openSlot === 'accent'}
+                  onToggleOpen={() => setOpenSlot((prev) => (prev === 'accent' ? null : 'accent'))}
+                  onSelectOption={(opt) => onSelectSupportItem('accent', opt)}
+                  onClose={() => setOpenSlot(null)}
+                  onAddSlot={onAddAccent}
+                  onRemoveSlot={supportItems.accent ? onRemoveAccent : undefined}
+                />
+              </div>
+            </section>
+          </div>
 
           {/* 2. Prominent AI Stylist Consultation Panel */}
           <AIStylistPanel

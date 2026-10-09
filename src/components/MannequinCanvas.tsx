@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
@@ -80,8 +80,162 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     bottom: null,
     shoes: null,
   });
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const trayRef = useRef<HTMLDivElement | null>(null);
+
+  interface LeaderLineGeometry {
+    category: SupportCategoryId;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    side: 'left' | 'right';
+    isOptionalEmpty?: boolean;
+  }
+
+  const [leaderLines, setLeaderLines] = useState<LeaderLineGeometry[]>([]);
+  const [stageDimensions, setStageDimensions] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+
+  // Returns exact viewBox (0 0 300 600) anchor point on the mannequin for each category's active item
+  const getMannequinAnchorPoint = useCallback(
+    (category: SupportCategoryId): { vx: number; vy: number; isOptionalEmpty?: boolean } => {
+      if (category === 'accent') {
+        if (!items.accent) {
+          return { vx: 132, vy: 70, isOptionalEmpty: true };
+        }
+        switch (items.accent.id) {
+          case 'accent-non-la':
+            return { vx: 102, vy: 50 }; // Left brim of Nón Lá on head
+          case 'accent-y2k-shades':
+            return { vx: 135, vy: 65 }; // Left frame of Y2K sunglasses on face
+          case 'accent-quai-thao-mini':
+            return { vx: 92, vy: 264 }; // Left rim of Nón Quai Thao Mini at hip
+          case 'accent-silver-jewelry':
+          default:
+            return { vx: 141, vy: 128 }; // Silver lotus pendant at neckline/chest
+        }
+      }
+
+      if (category === 'bag') {
+        switch (items.bag.id) {
+          case 'bag-tote-linen':
+            return { vx: 224, vy: 292 }; // Linen tote bag on right side
+          case 'bag-techwear-crossbody':
+            return { vx: 188, vy: 262 }; // Techwear crossbody pouch on right torso
+          case 'bag-gam-vintage':
+          default:
+            return { vx: 111, vy: 338 }; // Vintage brocade handbag
+        }
+      }
+
+      if (category === 'bottom') {
+        switch (items.bottom.id) {
+          case 'bottom-cargo-linen':
+            return { vx: 112, vy: 432 }; // Left cargo trouser leg
+          case 'bottom-raw-denim':
+            return { vx: 111, vy: 438 }; // Left raw denim leg
+          case 'bottom-silk-wide':
+          default:
+            return { vx: 102, vy: 442 }; // Left wide silk trouser leg
+        }
+      }
+
+      // shoes
+      switch (items.shoes.id) {
+        case 'shoes-chunky-loafer':
+        case 'shoes-retro-sneaker':
+          return { vx: 178, vy: 544 }; // Right shoe outer edge
+        case 'shoes-guoc-moc':
+        default:
+          return { vx: 176, vy: 544 }; // Right wooden clog outer edge
+      }
+    },
+    [items]
+  );
+
+  // Recalculate exact pixel coordinates linking SVG viewBox points to HTML buttons
+  const updateLeaderLines = useCallback(() => {
+    const stageEl = stageRef.current;
+    const svgEl = svgRef.current;
+    if (!stageEl || !svgEl) return;
+
+    const stageRect = stageEl.getBoundingClientRect();
+    const svgRect = svgEl.getBoundingClientRect();
+    if (stageRect.width <= 0 || stageRect.height <= 0 || svgRect.width <= 0 || svgRect.height <= 0) {
+      return;
+    }
+
+    // preserveAspectRatio="xMidYMid meet" mapping from viewBox 0 0 300 600
+    const scale = Math.min(svgRect.width / 300, svgRect.height / 600);
+    const drawnWidth = 300 * scale;
+    const drawnHeight = 600 * scale;
+    const svgOriginX = svgRect.left - stageRect.left + (svgRect.width - drawnWidth) / 2;
+    const svgOriginY = svgRect.top - stageRect.top + (svgRect.height - drawnHeight) / 2;
+
+    const categories: { category: SupportCategoryId; side: 'left' | 'right' }[] = [
+      { category: 'accent', side: 'left' },
+      { category: 'bag', side: 'right' },
+      { category: 'bottom', side: 'left' },
+      { category: 'shoes', side: 'right' },
+    ];
+
+    const computed: LeaderLineGeometry[] = [];
+    for (const { category, side } of categories) {
+      const btnEl = hotspotButtonRefs.current[category];
+      if (!btnEl) continue;
+      const btnRect = btnEl.getBoundingClientRect();
+      if (btnRect.width <= 0 || btnRect.height <= 0) continue;
+
+      const anchor = getMannequinAnchorPoint(category);
+      const startX = svgOriginX + anchor.vx * scale;
+      const startY = svgOriginY + anchor.vy * scale;
+
+      const endX =
+        side === 'left'
+          ? btnRect.right - stageRect.left + 4
+          : btnRect.left - stageRect.left - 4;
+      const endY = btnRect.top - stageRect.top + btnRect.height / 2;
+
+      computed.push({
+        category,
+        startX,
+        startY,
+        endX,
+        endY,
+        side,
+        isOptionalEmpty: anchor.isOptionalEmpty,
+      });
+    }
+
+    setStageDimensions({ width: stageRect.width, height: stageRect.height });
+    setLeaderLines(computed);
+  }, [getMannequinAnchorPoint]);
+
+  useLayoutEffect(() => {
+    updateLeaderLines();
+  }, [updateLeaderLines, activeQuickCategory, core.id]);
+
+  useEffect(() => {
+    const stageEl = stageRef.current;
+    const svgEl = svgRef.current;
+    if (!stageEl || !svgEl) return;
+
+    const observer = new ResizeObserver(() => {
+      updateLeaderLines();
+    });
+    observer.observe(stageEl);
+    observer.observe(svgEl);
+    window.addEventListener('resize', updateLeaderLines);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateLeaderLines);
+    };
+  }, [updateLeaderLines]);
 
   const closeQuickTray = useCallback((restoreFocus = true) => {
     const categoryToFocus = lastOpenedCategoryRef.current;
@@ -969,7 +1123,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       category: 'accent',
       label: 'Phụ kiện',
       fullTitle: 'Phụ kiện (Tùy chọn)',
-      positionClass: 'top-2 left-1.5 sm:top-3 sm:left-3',
+      positionClass: 'top-3 left-1.5 sm:top-4 sm:left-3',
       icon: <Sparkles className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.accent,
     },
@@ -977,7 +1131,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       category: 'bag',
       label: 'Túi',
       fullTitle: 'Túi xách',
-      positionClass: 'top-[43%] -translate-y-1/2 right-1.5 sm:right-3',
+      positionClass: 'top-[46%] -translate-y-1/2 right-1.5 sm:right-3',
       icon: <ShoppingBag className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.bag,
     },
@@ -985,7 +1139,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       category: 'bottom',
       label: 'Quần',
       fullTitle: 'Phần dưới',
-      positionClass: 'bottom-13 left-1.5 sm:bottom-15 sm:left-3',
+      positionClass: 'bottom-[21%] left-1.5 sm:left-3',
       icon: <Scissors className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.bottom,
     },
@@ -993,7 +1147,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       category: 'shoes',
       label: 'Giày',
       fullTitle: 'Giày guốc',
-      positionClass: 'bottom-2 right-1.5 sm:bottom-3 sm:right-3',
+      positionClass: 'bottom-3 right-1.5 sm:bottom-4 sm:right-3',
       icon: <Footprints className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.shoes,
     },
@@ -1029,7 +1183,91 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       </div>
 
       {/* Main 2D Mannequin Canvas - Responsive to available viewport */}
-      <div className="relative w-full flex-1 flex items-center justify-center py-1 sm:py-2 px-11 sm:px-14 lg:px-0 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0">
+      <div
+        ref={stageRef}
+        className="relative w-full flex-1 flex items-center justify-center py-1.5 sm:py-2.5 px-14 sm:px-20 lg:px-0 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0"
+      >
+        {/* Editorial Callout Leader Lines Overlay (Mobile/Tablet lg:hidden) */}
+        {onSelectSupportItem && stageDimensions.width > 0 && leaderLines.length > 0 && (
+          <svg
+            className="lg:hidden pointer-events-none absolute inset-0 w-full h-full z-[6]"
+            viewBox={`0 0 ${stageDimensions.width} ${stageDimensions.height}`}
+            fill="none"
+            aria-hidden="true"
+          >
+            {leaderLines.map((line) => {
+              const isSelected = activeQuickCategory === line.category;
+              const strokeColor = isSelected ? '#B3261E' : '#9A7E67';
+              const strokeOpacity = isSelected
+                ? 0.95
+                : line.isOptionalEmpty
+                  ? 0.45
+                  : line.category === 'bag' && items.bag.id === 'bag-gam-vintage'
+                    ? 0.52
+                    : 0.72;
+
+              // Build smooth cubic Bezier path from garment anchor (startX, startY) to button edge (endX, endY)
+              let dPath = '';
+              if (line.side === 'left') {
+                const spanX = Math.max(14, line.startX - line.endX);
+                const c1x =
+                  line.category === 'accent' && items.accent?.id === 'accent-quai-thao-mini'
+                    ? Math.min(line.startX - 10, line.endX + spanX * 0.35)
+                    : line.startX - spanX * 0.42;
+                const c2x = line.endX + Math.min(22, spanX * 0.48);
+                dPath = `M ${line.startX} ${line.startY} C ${c1x} ${line.startY}, ${c2x} ${line.endY}, ${line.endX} ${line.endY}`;
+              } else {
+                const spanX = Math.max(14, line.endX - line.startX);
+                const c1x = line.startX + spanX * 0.42;
+                const c2x = line.endX - Math.min(22, spanX * 0.48);
+                dPath = `M ${line.startX} ${line.startY} C ${c1x} ${line.startY}, ${c2x} ${line.endY}, ${line.endX} ${line.endY}`;
+              }
+
+              // Arrowhead pointing horizontally into the button edge
+              const arrowDir = line.side === 'left' ? 1 : -1;
+              const arrowPath = `M ${line.endX + arrowDir * 5} ${line.endY - 3} L ${line.endX} ${line.endY} L ${line.endX + arrowDir * 5} ${line.endY + 3}`;
+
+              return (
+                <g key={`leader-${line.category}`} opacity={strokeOpacity}>
+                  {/* Subtle halo behind origin dot */}
+                  <circle
+                    cx={line.startX}
+                    cy={line.startY}
+                    r={isSelected ? 3.2 : 2.5}
+                    fill="#FFFDF9"
+                    stroke={strokeColor}
+                    strokeWidth="1.1"
+                  />
+                  <circle
+                    cx={line.startX}
+                    cy={line.startY}
+                    r={isSelected ? 1.5 : 1.1}
+                    fill={strokeColor}
+                  />
+
+                  {/* Editorial Callout Curve */}
+                  <path
+                    d={dPath}
+                    stroke={strokeColor}
+                    strokeWidth={isSelected ? 1.35 : 1.05}
+                    strokeDasharray={line.isOptionalEmpty ? '3 2.5' : undefined}
+                    strokeLinecap="round"
+                  />
+
+                  {/* Delicate Arrowhead pointing to the control button */}
+                  <path
+                    d={arrowPath}
+                    stroke={strokeColor}
+                    strokeWidth={isSelected ? 1.4 : 1.15}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        )}
+
         {/* 4 Mobile/Tablet Quick-Select Hotspot Buttons around outer margins (Hidden on Desktop lg+) */}
         {onSelectSupportItem && (
           <div className="lg:hidden pointer-events-none absolute inset-0 z-10">
@@ -1046,7 +1284,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   onClick={() => handleToggleQuickCategory(spot.category)}
                   aria-label={`Chọn nhanh ${spot.label}: hiện tại ${spot.activeItem ? spot.activeItem.name : 'Chưa chọn'}`}
                   aria-expanded={isSelected}
-                  className={`pointer-events-auto absolute ${spot.positionClass} min-h-[38px] px-2 sm:px-2.5 py-1.5 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-2xs backdrop-blur-[2px] ${
+                  className={`pointer-events-auto absolute ${spot.positionClass} min-h-[36px] sm:min-h-[40px] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-2xs backdrop-blur-[2px] ${
                     isSelected
                       ? 'bg-[#B3261E] border-[#B3261E] text-[#FFFDF9] ring-2 ring-[#B3261E]/25'
                       : 'bg-[#FFFDF9]/95 hover:bg-[#FAF3EB] border-[#DDD0C0] hover:border-[#B3261E]/60 text-[#2B231D]'
@@ -1060,7 +1298,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                       {spot.label}
                     </span>
                     <span
-                      className={`hidden min-[370px]:block text-[9px] font-mono truncate max-w-[64px] sm:max-w-[84px] ${
+                      className={`hidden sm:block text-[9px] font-mono truncate max-w-[78px] ${
                         isSelected ? 'text-[#FAF7EE]/90' : 'text-[#7A6E63]'
                       }`}
                     >
