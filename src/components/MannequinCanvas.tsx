@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
 import { getSupportItemDemoImage } from '../data/demoImageMap';
+import { PHOTO_LAYER_CONFIG, isPhotoLayerSupported } from '../data/layeredOutfitMap';
 import {
   Layers,
   Pin,
@@ -76,6 +77,54 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   // Active quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null) across all devices
   const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
   const [failedThumbIds, setFailedThumbIds] = useState<Record<string, boolean>>({});
+
+  // Photo Layers (Demo) state - Default is strictly 'svg'
+  const [renderMode, setRenderMode] = useState<'svg' | 'photo'>('svg');
+  const [photoLayersReady, setPhotoLayersReady] = useState<{ nhatBinh: boolean; quanLua: boolean }>({
+    nhatBinh: false,
+    quanLua: false,
+  });
+  const [photoLayersError, setPhotoLayersError] = useState<{ nhatBinh: boolean; quanLua: boolean }>({
+    nhatBinh: false,
+    quanLua: false,
+  });
+
+  // Preload photo layer transparent PNG cutouts
+  useEffect(() => {
+    let isMounted = true;
+    const imgNb = new Image();
+    imgNb.src = PHOTO_LAYER_CONFIG.core['ao-nhat-binh'].imageSrc;
+    imgNb.onload = () => {
+      if (isMounted) setPhotoLayersReady((prev) => ({ ...prev, nhatBinh: true }));
+    };
+    imgNb.onerror = () => {
+      if (isMounted) setPhotoLayersError((prev) => ({ ...prev, nhatBinh: true }));
+    };
+
+    const imgQl = new Image();
+    imgQl.src = PHOTO_LAYER_CONFIG.bottom['bottom-silk-wide'].imageSrc;
+    imgQl.onload = () => {
+      if (isMounted) setPhotoLayersReady((prev) => ({ ...prev, quanLua: true }));
+    };
+    imgQl.onerror = () => {
+      if (isMounted) setPhotoLayersError((prev) => ({ ...prev, quanLua: true }));
+    };
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const isSupportedCombination = isPhotoLayerSupported(core.id, items.bottom.id);
+  const bothImagesLoaded =
+    photoLayersReady.nhatBinh &&
+    photoLayersReady.quanLua &&
+    !photoLayersError.nhatBinh &&
+    !photoLayersError.quanLua;
+
+  // Active ONLY when mode is 'photo', combination is supported, and both PNGs loaded cleanly
+  const isPhotoModeActive = renderMode === 'photo' && isSupportedCombination && bothImagesLoaded;
+
   const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
   const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
     accent: null,
@@ -576,6 +625,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
      Supports: bottom-silk-wide | bottom-cargo-linen | bottom-raw-denim
   ------------------------------------------------------------- */
   const renderBottomGarment = () => {
+    // Isolated Photo-Layer Prototype rendering for Quần Lụa
+    if (isPhotoModeActive && PHOTO_LAYER_CONFIG.bottom[items.bottom.id]) {
+      const config = PHOTO_LAYER_CONFIG.bottom[items.bottom.id];
+      return (
+        <g id="photo-layer-bottom" className="select-none pointer-events-none">
+          <image
+            href={config.imageSrc}
+            x={config.svgPlacement.x}
+            y={config.svgPlacement.y}
+            width={config.svgPlacement.width}
+            height={config.svgPlacement.height}
+            preserveAspectRatio={config.preserveAspectRatio}
+          />
+        </g>
+      );
+    }
+
     switch (items.bottom.id) {
       case 'bottom-cargo-linen':
         return (
@@ -787,6 +853,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
      Supports: ao-nhat-binh | ao-tac | ao-dai | ao-tu-than | ao-ngu-than
   ------------------------------------------------------------- */
   const renderCoreGarment = () => {
+    // Isolated Photo-Layer Prototype rendering for Áo Nhật Bình
+    if (isPhotoModeActive && PHOTO_LAYER_CONFIG.core[core.id]) {
+      const config = PHOTO_LAYER_CONFIG.core[core.id];
+      return (
+        <g id="photo-layer-core" className="select-none pointer-events-none">
+          <image
+            href={config.imageSrc}
+            x={config.svgPlacement.x}
+            y={config.svgPlacement.y}
+            width={config.svgPlacement.width}
+            height={config.svgPlacement.height}
+            preserveAspectRatio={config.preserveAspectRatio}
+          />
+        </g>
+      );
+    }
+
     switch (core.id) {
       case 'ao-nhat-binh':
         return (
@@ -1562,8 +1645,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   return (
     <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-      {/* Header with Title and Palette Swatches */}
-      <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-2.5 mb-3">
+      {/* Header with Title, Mode Switch (SVG | Photo Layers), and Palette Swatches */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE3D6] pb-2.5 mb-2.5">
         <div className="flex items-center gap-2">
           <Pin className="w-3.5 h-3.5 rotate-45 text-[#B3261E]" />
           <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#2B231D]">
@@ -1573,18 +1656,74 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           <span className="text-xs font-medium text-[#7A6E63]">{core.name}</span>
         </div>
 
-        {/* Core garment / active concept palette indicators */}
-        <div className="flex items-center gap-1.5">
-          {displayPalette.map((c, i) => (
-            <span
-              key={i}
-              className="w-3 h-3 rounded-full border border-black/15 shadow-2xs"
-              style={{ backgroundColor: c.hex }}
-              title={c.name}
-            />
-          ))}
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+          {/* Mode Switch: SVG | Photo Layers (Demo) */}
+          <div
+            role="radiogroup"
+            aria-label="Chế độ hiển thị mannequin"
+            className="inline-flex items-center p-0.5 bg-[#EFE8DC]/80 rounded-md border border-[#DDD3C4] text-[11px] font-sans"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={renderMode === 'svg'}
+              onClick={() => setRenderMode('svg')}
+              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-medium ${
+                renderMode === 'svg'
+                  ? 'bg-[#FFFDF9] text-[#2B231D] shadow-2xs font-semibold'
+                  : 'text-[#6C6055] hover:text-[#2B231D]'
+              }`}
+            >
+              SVG
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={renderMode === 'photo'}
+              onClick={() => setRenderMode('photo')}
+              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-medium flex items-center gap-1 ${
+                renderMode === 'photo'
+                  ? 'bg-[#B3261E] text-[#FFFDF9] shadow-2xs font-semibold'
+                  : 'text-[#6C6055] hover:text-[#2B231D]'
+              }`}
+              title={
+                isSupportedCombination
+                  ? 'Xem thử nghiệm ghép ảnh thực tế Áo Nhật Bình và Quần Lụa'
+                  : 'Chế độ ảnh ghép thử nghiệm hiện hỗ trợ cho Áo Nhật Bình + Quần Lụa'
+              }
+            >
+              <span>Photo Layers (Demo)</span>
+            </button>
+          </div>
+
+          {/* Core garment / active concept palette indicators */}
+          <div className="flex items-center gap-1.5">
+            {displayPalette.map((c, i) => (
+              <span
+                key={i}
+                className="w-3 h-3 rounded-full border border-black/15 shadow-2xs transition-opacity"
+                style={{ backgroundColor: c.hex, opacity: isPhotoModeActive ? 0.6 : 1 }}
+                title={c.name}
+              />
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Photo Layers notice when active */}
+      {isPhotoModeActive && (
+        <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
+          <span>Ảnh ghép thử nghiệm sử dụng màu gốc của trang phục.</span>
+          <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
+        </div>
+      )}
+
+      {/* Fallback notice if Photo mode is selected on an unsupported outfit */}
+      {renderMode === 'photo' && !isSupportedCombination && (
+        <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
+          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình &amp; Quần Lụa (đang hiển thị bản vẽ SVG tương ứng).</span>
+        </div>
+      )}
 
       {/* Main 2D Mannequin Canvas - Responsive horizontal breathing room on all devices so hotspots never overlap mannequin */}
       <div
