@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
 import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
 import { GarmentSilhouetteSvg } from './GarmentPreview';
+import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import {
   ArrowLeft,
   ArrowRight,
@@ -27,6 +28,14 @@ interface InteractiveOnboardingProps {
   onSelectLocation: (location: string) => void;
   onSkip: () => void;
 }
+
+// Align only when the incoming motion.section mounts; never scroll the outgoing screen.
+const StepMountAligner: React.FC<{ sectionRef: React.RefObject<HTMLElement | null> }> = ({ sectionRef }) => {
+  React.useLayoutEffect(() => {
+    alignElementBelowStickyHeader(sectionRef.current, 10);
+  }, [sectionRef]);
+  return null;
+};
 
 const ORDERED_CORE_GARMENT_IDS: CoreVietPhucId[] = [
   'ao-nhat-binh',
@@ -63,6 +72,14 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
     return 1;
   });
 
+  const step1SectionRef = useRef<HTMLElement | null>(null);
+  const step2SectionRef = useRef<HTMLElement | null>(null);
+  const step3SectionRef = useRef<HTMLElement | null>(null);
+  const welcomeWasShownRef = useRef(false);
+  const playWelcomeEntrance = introStep === 1 && !welcomeWasShownRef.current && !shouldReduceMotion;
+  React.useEffect(() => {
+    if (introStep === 1) welcomeWasShownRef.current = true;
+  }, [introStep]);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
@@ -73,9 +90,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   const navigateToIntroStep = (nextStep: 1 | 2 | 3) => {
     shouldFocusStepHeadingRef.current = true;
     setIntroStep(nextStep);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
-    }
+    // The incoming step aligns itself when mounted after the outgoing fade.
   };
 
   const handleStepHeadingMount = React.useCallback((headingEl: HTMLHeadingElement | null) => {
@@ -154,7 +169,13 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto py-6 sm:py-10 px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 overflow-x-hidden">
+    <motion.div
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+      className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 overflow-x-hidden"
+    >
       {/* Top Bar: Step Progress Breadcrumb & Prominent "Bỏ qua giới thiệu" Action */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE3D6] pb-4">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -253,28 +274,43 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
         {introStep === 1 && (
           <motion.section
             key="intro-step-1-garments"
-            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+            ref={step1SectionRef}
+            initial={shouldReduceMotion || playWelcomeEntrance ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
             transition={stepTransition}
-            className="space-y-6 sm:space-y-8"
+            className="space-y-4 sm:space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
+            <StepMountAligner sectionRef={step1SectionRef} />
             {/* Editorial Welcome Hero */}
             <div className="max-w-3xl mx-auto text-center space-y-3">
-              <span className="text-xs font-mono uppercase tracking-widest text-[#B3261E] block">
+              <motion.span
+                initial={playWelcomeEntrance ? { opacity: 0, y: 5 } : false}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.27, delay: playWelcomeEntrance ? 0.02 : 0, ease: 'easeOut' }}
+                className="text-xs font-mono uppercase tracking-widest text-[#B3261E] block"
+              >
                 Triển lãm Khởi đầu · Năm Dáng Áo Di Sản
-              </span>
-              <h1
+              </motion.span>
+              <motion.h1
                 ref={handleStepHeadingMount}
                 tabIndex={-1}
+                initial={playWelcomeEntrance ? { opacity: 0, y: 9 } : false}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.32, delay: playWelcomeEntrance ? 0.09 : 0, ease: 'easeOut' }}
                 className="text-2xl sm:text-4xl lg:text-[42px] font-editorial font-bold text-[#2B231D] tracking-tight leading-tight text-balance focus:outline-none"
               >
                 Mỗi nếp vải mang một ký ức.
-              </h1>
-              <p className="text-sm sm:text-base text-[#5A4F46] leading-relaxed max-w-2xl mx-auto font-serif">
+              </motion.h1>
+              <motion.p
+                initial={playWelcomeEntrance ? { opacity: 0, y: 6 } : false}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: playWelcomeEntrance ? 0.16 : 0, ease: 'easeOut' }}
+                className="text-sm sm:text-base text-[#5A4F46] leading-relaxed max-w-2xl mx-auto font-serif"
+              >
                 Bạn sẽ kể tiếp câu chuyện Việt phục theo cách riêng, giữa nhịp sống hôm nay.
                 Hãy chạm vào một dáng áo nguyên bản bên dưới để mở đầu bản phối của bạn.
-              </p>
+              </motion.p>
             </div>
 
             {/* Mobile/Tablet Carousel Controls & Hint (< lg) */}
@@ -318,9 +354,12 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                   confirmedFields.coreGarment && setupData.coreGarment === item.id;
 
                 return (
-                  <button
+                  <motion.button
                     key={item.id}
                     type="button"
+                    initial={playWelcomeEntrance ? { opacity: 0, y: 10 } : false}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: playWelcomeEntrance ? 0.19 + index * 0.055 : 0, ease: 'easeOut' }}
                     data-garment-card="true"
                     onClick={() => handlePickGarment(item.id)}
                     className={`group snap-start shrink-0 w-[236px] min-[375px]:w-[252px] sm:w-[264px] lg:w-auto text-left rounded-xl p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
@@ -381,7 +420,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                       <span>{isExplicitlySelected ? 'Tiếp tục với áo này' : 'Chọn dáng áo này'}</span>
                       <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
                     </div>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -391,12 +430,14 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
         {introStep === 2 && (
           <motion.section
             key="intro-step-2-occasions"
+            ref={step2SectionRef}
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
             transition={stepTransition}
-            className="max-w-5xl mx-auto space-y-6"
+            className="max-w-5xl mx-auto space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
+            <StepMountAligner sectionRef={step2SectionRef} />
             {/* Selected Garment Context Strip */}
             <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3 min-w-0">
@@ -497,12 +538,14 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
         {introStep === 3 && (
           <motion.section
             key="intro-step-3-locations"
+            ref={step3SectionRef}
             initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
             transition={stepTransition}
-            className="max-w-5xl mx-auto space-y-6"
+            className="max-w-5xl mx-auto space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
+            <StepMountAligner sectionRef={step3SectionRef} />
             {/* Selected Garment & Occasion Summary Strip */}
             <div className="bg-[#FFFDF9] border border-[#E3D9CC] rounded-xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3 min-w-0">
@@ -597,6 +640,6 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
           </motion.section>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };

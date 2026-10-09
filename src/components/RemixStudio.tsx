@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   CoreItem,
@@ -15,6 +15,7 @@ import {
   resolveCorePalette,
 } from '../data/mockFashionData';
 import { MannequinCanvas } from './MannequinCanvas';
+import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
 import { AIStylistPanel } from './AIStylistPanel';
@@ -64,6 +65,8 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   onBackToConcept,
   onOpenCoreDetail,
 }) => {
+  const workspaceAnchorRef = useRef<HTMLDivElement | null>(null);
+
   // Only one selector open at a time
   const [openSlot, setOpenSlot] = useState<SupportCategoryId | null>(null);
 
@@ -76,6 +79,10 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
   const resolvedColor = resolveCoreGarmentColor(core.id, setupData.preferredColor);
   const resolvedPalette = resolveCorePalette(core.id, setupData.preferredColor);
+
+  useLayoutEffect(() => {
+    alignElementBelowStickyHeader(workspaceAnchorRef.current, 10);
+  }, []);
 
   const handleOpenAIModal = () => {
     if (!aiStatus.isAvailable) return;
@@ -95,7 +102,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="max-w-[1440px] mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6"
+      className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5"
     >
       {/* Studio Header & Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D6] pb-4">
@@ -121,7 +128,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
       </div>
 
       {/* Main Two-Column Layout (~60% Visual Pane / ~40% Controls Pane) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div ref={workspaceAnchorRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start min-h-[calc(100dvh-4.75rem)]">
         {/* Left Side: Visual 2D Mannequin Pane (~60% -> lg:col-span-7, sticky on desktop) */}
         <div className="lg:col-span-7 xl:col-span-7 w-full order-1 lg:order-1 lg:sticky lg:top-20 lg:self-start">
           <MannequinCanvas

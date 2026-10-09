@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
 import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
 import { GarmentPreview } from './GarmentPreview';
 import { ConfirmedIntroFields } from './InteractiveOnboarding';
+import { alignPageToTop } from '../utils/scrollAlignment';
 import { ChevronDown, Check } from 'lucide-react';
 
 interface DiscoveryScreenProps {
@@ -67,8 +68,15 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
     onConsumedInitialFocus?.();
   }, [shouldFocusFirstUnconfirmed, confirmedIntroFields, onConsumedInitialFocus]);
 
+  useLayoutEffect(() => { alignPageToTop(); }, []);
   return (
-    <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10">
+    <motion.div
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.26, ease: 'easeOut' }}
+      className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10"
+    >
       {/* Editorial Header & Storytelling Introduction (above both columns) */}
       <div className="text-center space-y-3 max-w-2xl mx-auto">
         <span className="text-xs sm:text-sm font-medium tracking-wide text-[#B3261E]">
@@ -279,6 +287,6 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
           <GarmentPreview coreGarment={setupData.coreGarment} />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

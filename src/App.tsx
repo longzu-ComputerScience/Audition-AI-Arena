@@ -49,9 +49,7 @@ export default function App() {
   const goToStep = (targetStep: 1 | 2 | 3) => {
     setStep(targetStep);
     setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }
+    // Destination layout effects will align the incoming page after the old exit animation.
   };
 
   // Intro text word-by-word animation play-only-once state for DiscoveryScreen

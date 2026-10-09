@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { motion } from 'motion/react';
 import { SetupData, ConceptData, CoreItem } from '../types';
 import { CORE_ITEMS, STYLES, PREFERRED_COLOR_OPTIONS, COLOR_MAP } from '../data/mockFashionData';
 import { PatternMotif } from './PatternMotif';
+import { alignPageToTop } from '../utils/scrollAlignment';
 import { ArrowRight, ArrowLeft, Check, Sparkles, Info } from 'lucide-react';
 
 interface ConceptRevealProps {
@@ -21,6 +22,8 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
   onProceed,
 }) => {
   const core: CoreItem = CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
+
+  useLayoutEffect(() => { alignPageToTop(); }, []);
 
   return (
     <motion.section
