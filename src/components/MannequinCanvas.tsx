@@ -520,7 +520,17 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     ease: 'easeInOut' as const,
   };
 
-  const primaryFabricColor = fabricColor || core.palette[0]?.hex || '#8C3B24';
+  const [selectedColorHex, setSelectedColorHex] = useState<string>(
+    fabricColor || core.palette[0]?.hex || '#8C3B24'
+  );
+
+  useEffect(() => {
+    if (fabricColor) {
+      setSelectedColorHex(fabricColor);
+    }
+  }, [fabricColor]);
+
+  const primaryFabricColor = selectedColorHex;
   const displayPalette = palette && palette.length > 0 ? palette : core.palette;
   const fabricLuminance = getRelativeLuminance(primaryFabricColor);
 
@@ -901,8 +911,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     if (isPhotoModeActive && PHOTO_LAYER_CONFIG.core[core.id]) {
       const config = PHOTO_LAYER_CONFIG.core[core.id];
       const photoSrc = recoloredPhotoSrc || config.imageSrc;
-      // While recoloring for the first time or if there's an error, fall back to SVG
-      if (!recolorError && recoloredPhotoSrc) {
+      if (!recolorError) {
         return (
           <g id="photo-layer-core" className="select-none pointer-events-none">
             <image
@@ -1760,30 +1769,47 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           </div>
 
           {/* Core garment / active concept palette indicators */}
-          <div className="flex items-center gap-1.5">
-            {displayPalette.map((c, i) => (
-              <span
-                key={i}
-                className="w-3 h-3 rounded-full border border-black/15 shadow-2xs transition-opacity"
-                style={{ backgroundColor: c.hex, opacity: isPhotoModeActive ? 0.6 : 1 }}
-                title={c.name}
-              />
-            ))}
+          <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Bảng màu trang phục">
+            {displayPalette.map((c, i) => {
+              const isSelected = primaryFabricColor.toLowerCase() === c.hex.toLowerCase();
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setSelectedColorHex(c.hex)}
+                  className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer relative flex items-center justify-center ${
+                    isSelected
+                      ? 'ring-2 ring-[#B3261E] ring-offset-1 border-white shadow-xs scale-110'
+                      : 'border-black/20 hover:scale-110 opacity-90 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: c.hex }}
+                  title={`${c.name} (${c.hex}) - Bấm để đổi màu vải`}
+                  aria-label={`Chọn màu ${c.name}`}
+                >
+                  {isSelected && (
+                    <span className="w-1 h-1 rounded-full bg-white shadow-2xs" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Photo Layers notice when active */}
-      {isPhotoModeActive && recoloredPhotoSrc && !recolorError && (
+      {isPhotoModeActive && !recolorError && (
         <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Màu vải đã đồng bộ theo lựa chọn của bạn.</span>
-          <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
-        </div>
-      )}
-
-      {renderMode === 'photo' && isSupportedCombination && (isRecoloring && !recoloredPhotoSrc) && (
-        <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Đang đồng bộ màu sắc trang phục thực tế...</span>
+          <span>
+            {isRecoloring
+              ? 'Đang xử lý nhuộm màu ảnh thực tế...'
+              : `Màu vải ảnh thực tế: ${
+                  displayPalette.find(
+                    (p) => p.hex.toLowerCase() === primaryFabricColor.toLowerCase()
+                  )?.name || primaryFabricColor
+                }`}
+          </span>
           <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
         </div>
       )}

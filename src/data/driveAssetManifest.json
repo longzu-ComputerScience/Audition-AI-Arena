@@ -204,11 +204,12 @@
   {
     "id": "1r9MQpONgSmZKLSQdz3xZCR-2Iv5RG6-4",
     "name": "QuanTay.png",
-    "target": "public/images/catalog/bottoms/quan-tay-archive.webp",
-    "role": "catalog-unmapped",
-    "note": "Formal trousers in Drive, kept in catalog manifest without mismapping to cargo linen",
+    "target": "public/images/catalog/bottoms/bottom-tailored-trousers.webp",
+    "role": "catalog",
+    "itemId": "bottom-tailored-trousers",
+    "note": "Quần Tây âu phục cao cấp thay thế Cargo Linen",
     "rawPath": "public/images/catalog/sources/QuanTay.png",
-    "optimizedPath": "public/images/catalog/bottoms/quan-tay-archive.webp",
+    "optimizedPath": "public/images/catalog/bottoms/bottom-tailored-trousers.webp",
     "sizeBytes": 20974,
     "status": "success"
   },

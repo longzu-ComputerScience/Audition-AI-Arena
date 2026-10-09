@@ -179,6 +179,8 @@ export const CORE_GARMENT_LOOKBOOK_IMAGES: Record<CoreVietPhucId, CoreGarmentLoo
 export const SUPPORT_ITEM_DEMO_IMAGES: Record<string, string> = {
   // Bottoms
   'bottom-silk-wide': '/images/catalog/bottoms/bottom-silk-wide.webp',
+  'bottom-tailored-trousers': '/images/catalog/bottoms/bottom-tailored-trousers.webp',
+  'bottom-cargo-linen': '/images/catalog/bottoms/bottom-tailored-trousers.webp',
   'bottom-raw-denim': '/images/catalog/bottoms/bottom-raw-denim.webp',
   // Footwear
   'shoes-guoc-moc': '/images/catalog/shoes/shoes-guoc-moc.webp',

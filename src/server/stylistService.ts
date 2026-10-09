@@ -158,7 +158,7 @@ function buildStylistPrompt(data: NonNullable<ReturnType<typeof validateStylistP
 Danh mục các món đồ có sẵn trong tủ đồ để bạn có thể đề xuất thay đổi:
 - Phần dưới (bottom):
   * "bottom-silk-wide": Quần Lụa Ống Rộng Xẻ Tà (Lụa Vạn Phúc, Modernity 15)
-  * "bottom-cargo-linen": Quần Tây Xếp Ly Cargo Linen (Linen dệt mộc, Modernity 62)
+  * "bottom-tailored-trousers": Quần Tây (Vải âu cao cấp, Modernity 62)
   * "bottom-raw-denim": Raw Denim Baggy Cạp Cao (Denim Indigo 14oz, Modernity 88)
 - Giày guốc (shoes):
   * "shoes-guoc-moc": Guốc Mộc Sơn Mài Quai Nhung (Gỗ xoan & Nhung đỏ, Modernity 10)
@@ -220,8 +220,8 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm giải thích m
   "suggestedItems": [
     {
       "category": "bottom",
-      "itemId": "bottom-cargo-linen",
-      "itemName": "Quần Tây Xếp Ly Cargo Linen",
+      "itemId": "bottom-tailored-trousers",
+      "itemName": "Quần Tây",
       "reason": "Lý do gợi ý đổi món này"
     }
   ],
@@ -426,9 +426,9 @@ function generateHeuristicExpertStyling(
   } else if (actualRemix < 30) {
     suggestedItems.push({
       category: 'bottom',
-      itemId: 'bottom-cargo-linen',
-      itemName: 'Quần Tây Xếp Ly Cargo Linen',
-      reason: 'Tăng nhịp điệu đương đại và sự phóng khoáng cho dáng đứng.',
+      itemId: 'bottom-tailored-trousers',
+      itemName: 'Quần Tây',
+      reason: 'Tăng nhịp điệu đương đại và sự đĩnh đạc thanh lịch cho dáng đứng.',
     });
   }
 
