@@ -64,13 +64,70 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   });
 
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
+
+  // Track user-initiated step transitions so keyboard focus moves cleanly to the new step heading
+  const shouldFocusStepHeadingRef = useRef<boolean>(false);
+
+  const navigateToIntroStep = (nextStep: 1 | 2 | 3) => {
+    shouldFocusStepHeadingRef.current = true;
+    setIntroStep(nextStep);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
+    }
+  };
+
+  const handleStepHeadingMount = React.useCallback((headingEl: HTMLHeadingElement | null) => {
+    if (headingEl && shouldFocusStepHeadingRef.current) {
+      shouldFocusStepHeadingRef.current = false;
+      requestAnimationFrame(() => {
+        headingEl.focus({ preventScroll: true });
+      });
+    }
+  }, []);
+
+  const updateCarouselScrollState = React.useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(el.scrollLeft > 6);
+    setCanScrollRight(maxScrollLeft - el.scrollLeft > 6);
+  }, []);
+
+  React.useEffect(() => {
+    if (introStep !== 1) return;
+    const el = carouselRef.current;
+    if (!el) return;
+
+    updateCarouselScrollState();
+    const observer = new ResizeObserver(updateCarouselScrollState);
+    observer.observe(el);
+    window.addEventListener('resize', updateCarouselScrollState);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateCarouselScrollState);
+    };
+  }, [introStep, updateCarouselScrollState]);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     const el = carouselRef.current;
     if (!el) return;
-    const cardWidth = 268;
+
+    const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-garment-card="true"]'));
+    let stepWidth = 264;
+    if (cards.length >= 2) {
+      const measuredDelta = cards[1].offsetLeft - cards[0].offsetLeft;
+      if (measuredDelta > 0) {
+        stepWidth = measuredDelta;
+      }
+    } else if (cards.length === 1) {
+      stepWidth = cards[0].getBoundingClientRect().width + 16;
+    }
+
     el.scrollBy({
-      left: direction === 'left' ? -cardWidth : cardWidth,
+      left: direction === 'left' ? -stepWidth : stepWidth,
       behavior: shouldReduceMotion ? 'auto' : 'smooth',
     });
   };
@@ -79,12 +136,12 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
 
   const handlePickGarment = (id: CoreVietPhucId) => {
     onSelectCoreGarment(id);
-    setIntroStep(2);
+    navigateToIntroStep(2);
   };
 
   const handlePickOccasion = (occ: string) => {
     onSelectOccasion(occ);
-    setIntroStep(3);
+    navigateToIntroStep(3);
   };
 
   const handlePickLocation = (loc: string) => {
@@ -104,7 +161,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
           {introStep > 1 && (
             <button
               type="button"
-              onClick={() => setIntroStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : 1))}
+              onClick={() => navigateToIntroStep((introStep > 1 ? introStep - 1 : 1) as 1 | 2 | 3)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#5A4F46] hover:text-[#2B231D] bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E]/60 rounded-lg transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -115,7 +172,8 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
           <nav aria-label="Các bước khám phá mở đầu" className="flex items-center gap-1.5 sm:gap-2.5 text-xs">
             <button
               type="button"
-              onClick={() => setIntroStep(1)}
+              onClick={() => introStep !== 1 && navigateToIntroStep(1)}
+              aria-current={introStep === 1 ? 'step' : undefined}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
                 introStep === 1
                   ? 'bg-[#B3261E] text-white font-semibold'
@@ -136,7 +194,8 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
             <button
               type="button"
               disabled={!confirmedFields.coreGarment && introStep < 2}
-              onClick={() => confirmedFields.coreGarment && setIntroStep(2)}
+              onClick={() => confirmedFields.coreGarment && introStep !== 2 && navigateToIntroStep(2)}
+              aria-current={introStep === 2 ? 'step' : undefined}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
                 introStep === 2
                   ? 'bg-[#B3261E] text-white font-semibold cursor-default'
@@ -158,8 +217,12 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
               type="button"
               disabled={(!confirmedFields.coreGarment || !confirmedFields.occasion) && introStep < 3}
               onClick={() =>
-                confirmedFields.coreGarment && confirmedFields.occasion && setIntroStep(3)
+                confirmedFields.coreGarment &&
+                confirmedFields.occasion &&
+                introStep !== 3 &&
+                navigateToIntroStep(3)
               }
+              aria-current={introStep === 3 ? 'step' : undefined}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
                 introStep === 3
                   ? 'bg-[#B3261E] text-white font-semibold cursor-default'
@@ -201,7 +264,11 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
               <span className="text-xs font-mono uppercase tracking-widest text-[#B3261E] block">
                 Triển lãm Khởi đầu · Năm Dáng Áo Di Sản
               </span>
-              <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-editorial font-bold text-[#2B231D] tracking-tight leading-tight text-balance">
+              <h1
+                ref={handleStepHeadingMount}
+                tabIndex={-1}
+                className="text-2xl sm:text-4xl lg:text-[42px] font-editorial font-bold text-[#2B231D] tracking-tight leading-tight text-balance focus:outline-none"
+              >
                 Mỗi nếp vải mang một ký ức.
               </h1>
               <p className="text-sm sm:text-base text-[#5A4F46] leading-relaxed max-w-2xl mx-auto font-serif">
@@ -218,17 +285,19 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
+                  disabled={!canScrollLeft}
                   onClick={() => scrollCarousel('left')}
                   aria-label="Xem áo trước"
-                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors"
+                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] disabled:opacity-40 disabled:hover:border-[#DDD0C0] disabled:cursor-not-allowed text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
+                  disabled={!canScrollRight}
                   onClick={() => scrollCarousel('right')}
                   aria-label="Xem áo tiếp theo"
-                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors"
+                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] disabled:opacity-40 disabled:hover:border-[#DDD0C0] disabled:cursor-not-allowed text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -240,7 +309,8 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 - Mobile/Tablet (< lg): Horizontal touch-scroll snap carousel */}
             <div
               ref={carouselRef}
-              className="flex lg:grid lg:grid-cols-5 gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory pb-3 lg:pb-0 no-scrollbar -mx-1 px-1"
+              onScroll={updateCarouselScrollState}
+              className="flex lg:grid lg:grid-cols-5 gap-3.5 sm:gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory pb-3 lg:pb-0 no-scrollbar -mx-1 px-1 scroll-px-1"
             >
               {ORDERED_CORE_GARMENT_IDS.map((garmentId, index) => {
                 const item = CORE_ITEMS[garmentId];
@@ -251,8 +321,9 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                   <button
                     key={item.id}
                     type="button"
+                    data-garment-card="true"
                     onClick={() => handlePickGarment(item.id)}
-                    className={`group snap-center shrink-0 w-[248px] sm:w-[264px] lg:w-auto text-left rounded-xl p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
+                    className={`group snap-start shrink-0 w-[236px] min-[375px]:w-[252px] sm:w-[264px] lg:w-auto text-left rounded-xl p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
                       isExplicitlySelected
                         ? 'bg-[#FFFDF9] border-2 border-[#B3261E] shadow-md'
                         : 'bg-[#FFFDF9] border border-[#E3D9CC] hover:border-[#B3261E] hover:shadow-sm'
@@ -347,7 +418,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
 
               <button
                 type="button"
-                onClick={() => setIntroStep(1)}
+                onClick={() => navigateToIntroStep(1)}
                 className="text-xs font-semibold text-[#B3261E] hover:underline cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] rounded px-2 py-1"
               >
                 ← Đổi Việt phục
@@ -360,7 +431,11 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Bước 02 / 03 · Chọn Dịp Diện Đồ</span>
               </span>
-              <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-[#2B231D] text-balance">
+              <h1
+                ref={handleStepHeadingMount}
+                tabIndex={-1}
+                className="text-2xl sm:text-3xl font-editorial font-bold text-[#2B231D] text-balance focus:outline-none"
+              >
                 Bạn dự định diện {selectedCoreItem.name} vào dịp nào?
               </h1>
               <p className="text-xs sm:text-sm text-[#5A4F46] font-serif">
@@ -409,7 +484,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                     </div>
 
                     <div className="pt-2 border-t border-[#EFE8DC] flex items-center justify-between text-xs font-semibold text-[#B3261E]">
-                      <span>Chọn dịp này</span>
+                      <span>{isExplicitlySelected ? 'Tiếp tục với dịp này' : 'Chọn dịp này'}</span>
                       <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
                     </div>
                   </button>
@@ -452,7 +527,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
               <div className="flex items-center gap-3 shrink-0 text-xs font-semibold">
                 <button
                   type="button"
-                  onClick={() => setIntroStep(1)}
+                  onClick={() => navigateToIntroStep(1)}
                   className="text-[#5A4F46] hover:text-[#B3261E] hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] rounded px-1.5 py-0.5"
                 >
                   Đổi Việt phục
@@ -460,7 +535,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 <span className="text-[#C8BCAC]" aria-hidden="true">·</span>
                 <button
                   type="button"
-                  onClick={() => setIntroStep(2)}
+                  onClick={() => navigateToIntroStep(2)}
                   className="text-[#B3261E] hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] rounded px-1.5 py-0.5"
                 >
                   ← Đổi Dịp
@@ -474,7 +549,11 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                 <MapPin className="w-3.5 h-3.5" />
                 <span>Bước 03 / 03 · Chọn Bối Cảnh & Không Gian</span>
               </span>
-              <h1 className="text-2xl sm:text-3xl font-editorial font-bold text-[#2B231D] text-balance">
+              <h1
+                ref={handleStepHeadingMount}
+                tabIndex={-1}
+                className="text-2xl sm:text-3xl font-editorial font-bold text-[#2B231D] text-balance focus:outline-none"
+              >
                 Không gian nào sẽ đồng hành cùng bản phối của bạn?
               </h1>
               <p className="text-xs sm:text-sm text-[#5A4F46] font-serif">

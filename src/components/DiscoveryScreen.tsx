@@ -13,6 +13,8 @@ interface DiscoveryScreenProps {
   hasSeenIntro: boolean;
   onIntroComplete: () => void;
   confirmedIntroFields?: ConfirmedIntroFields;
+  shouldFocusFirstUnconfirmed?: boolean;
+  onConsumedInitialFocus?: () => void;
 }
 
 const STORY_WORDS = [
@@ -28,8 +30,11 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   hasSeenIntro,
   onIntroComplete,
   confirmedIntroFields,
+  shouldFocusFirstUnconfirmed,
+  onConsumedInitialFocus,
 }) => {
   const shouldReduceMotion = useReducedMotion();
+  const coreGarmentSelectRef = useRef<HTMLSelectElement | null>(null);
   const occasionSelectRef = useRef<HTMLSelectElement | null>(null);
   const locationSelectRef = useRef<HTMLSelectElement | null>(null);
 
@@ -40,10 +45,12 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
     }
   }, [shouldReduceMotion, hasSeenIntro, onIntroComplete]);
 
-  // If user skipped onboarding after picking 1 or 2 fields, gently focus the next remaining dropdown
+  // When user skips onboarding, gently focus the first remaining unconfirmed dropdown once
   useEffect(() => {
-    if (!confirmedIntroFields) return;
-    if (
+    if (!shouldFocusFirstUnconfirmed || !confirmedIntroFields) return;
+    if (!confirmedIntroFields.coreGarment && coreGarmentSelectRef.current) {
+      coreGarmentSelectRef.current.focus({ preventScroll: true });
+    } else if (
       confirmedIntroFields.coreGarment &&
       !confirmedIntroFields.occasion &&
       occasionSelectRef.current
@@ -57,7 +64,8 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
     ) {
       locationSelectRef.current.focus({ preventScroll: true });
     }
-  }, [confirmedIntroFields]);
+    onConsumedInitialFocus?.();
+  }, [shouldFocusFirstUnconfirmed, confirmedIntroFields, onConsumedInitialFocus]);
 
   return (
     <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10">
@@ -149,6 +157,7 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
 
             <div className="relative">
               <select
+                ref={coreGarmentSelectRef}
                 id="select-core-garment"
                 value={setupData.coreGarment}
                 onChange={(e) =>

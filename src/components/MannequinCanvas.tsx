@@ -359,6 +359,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     }
   }, []);
 
+  const prevQuickCategoryRef = useRef<SupportCategoryId | null>(null);
+
   const handleToggleQuickCategory = (category: SupportCategoryId) => {
     if (activeQuickCategory === category) {
       closeQuickTray(true);
@@ -367,6 +369,28 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     lastOpenedCategoryRef.current = category;
     setActiveQuickCategory(category);
   };
+
+  // When quick-select popover/tray first opens from null, move focus to the selected/first option inside the portal
+  useEffect(() => {
+    const wasClosed = prevQuickCategoryRef.current === null;
+    prevQuickCategoryRef.current = activeQuickCategory;
+
+    if (!activeQuickCategory || !wasClosed || typeof window === 'undefined') return;
+
+    const rafId = requestAnimationFrame(() => {
+      const containerEl =
+        window.innerWidth >= 1024 ? desktopPanelRef.current : trayRef.current;
+      if (!containerEl) return;
+
+      const selectedOpt = containerEl.querySelector<HTMLButtonElement>(
+        '[role="option"][aria-selected="true"]'
+      );
+      const firstOpt = containerEl.querySelector<HTMLButtonElement>('[role="option"]');
+      (selectedOpt || firstOpt)?.focus({ preventScroll: true });
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [activeQuickCategory]);
 
   // Ensure mannequin target zone on mobile/tablet is visible above the bottom quick tray
   useEffect(() => {
@@ -1539,7 +1563,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Main 2D Mannequin Canvas - Responsive horizontal breathing room on all devices so hotspots never overlap mannequin */}
       <div
         ref={stageRef}
-        className="relative w-full flex-1 flex items-center justify-center py-1.5 sm:py-2.5 px-14 sm:px-24 lg:px-36 xl:px-42 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0"
+        className="relative w-full flex-1 flex items-center justify-center py-1.5 sm:py-2.5 px-16 min-[375px]:px-18 sm:px-24 lg:px-36 xl:px-42 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0"
       >
         {/* Editorial Callout Leader Lines Overlay (Active across Mobile, Tablet, Laptop & Desktop) */}
         {onSelectSupportItem && stageDimensions.width > 0 && leaderLines.length > 0 && (

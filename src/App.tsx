@@ -43,11 +43,15 @@ export default function App() {
     occasion: false,
     location: false,
   });
+  const [pendingSkipFocus, setPendingSkipFocus] = useState<boolean>(false);
 
   // Navigate to step and remember the highest unlocked step
   const goToStep = (targetStep: 1 | 2 | 3) => {
     setStep(targetStep);
     setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
   };
 
   // Intro text word-by-word animation play-only-once state for DiscoveryScreen
@@ -229,6 +233,7 @@ export default function App() {
 
     if (!hasCompletedAllThree) {
       // Partial or zero selection -> go to classic Page 1 form while preserving chosen fields
+      setPendingSkipFocus(true);
       goToStep(1);
       return;
     }
@@ -305,6 +310,8 @@ export default function App() {
               hasSeenIntro={hasSeenIntro}
               onIntroComplete={() => setHasSeenIntro(true)}
               confirmedIntroFields={confirmedIntroFields}
+              shouldFocusFirstUnconfirmed={pendingSkipFocus}
+              onConsumedInitialFocus={() => setPendingSkipFocus(false)}
             />
           )}
 
