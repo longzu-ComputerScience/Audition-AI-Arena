@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
 import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
+import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
 import { GarmentSilhouetteSvg } from './GarmentPreview';
 import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import {
@@ -98,6 +99,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
+  const [failedGarmentImages, setFailedGarmentImages] = useState<Record<string, boolean>>({});
 
   // Track user-initiated step transitions so keyboard focus moves cleanly to the new step heading
   const shouldFocusStepHeadingRef = useRef<boolean>(false);
@@ -403,13 +405,38 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                       </div>
                     </div>
 
-                    {/* Shared 2D Silhouette SVG Showcase */}
-                    <div className="w-full h-[205px] sm:h-[220px] bg-[#FAF7EE]/75 group-hover:bg-[#FAF3EB]/80 rounded-lg border border-[#EAE3D6]/80 flex items-center justify-center p-3 my-1 transition-colors">
-                      <GarmentSilhouetteSvg
-                        coreGarment={item.id}
-                        className="w-full h-full max-h-[195px] mx-auto select-none transition-transform duration-200 group-hover:scale-[1.03]"
-                      />
-                    </div>
+                    {/* Editorial Reference Photograph with fallback to 2D Silhouette SVG */}
+                    {(() => {
+                      const demoMedia = getCoreGarmentDemoMedia(item.id);
+                      const photoSrc = demoMedia?.previewSrc;
+                      const hasValidPhoto = Boolean(photoSrc && !failedGarmentImages[item.id]);
+
+                      return (
+                        <div className="relative w-full h-[205px] sm:h-[220px] bg-[#FAF7EE]/75 group-hover:bg-[#FAF3EB]/80 rounded-lg border border-[#EAE3D6]/80 flex items-center justify-center p-2.5 my-1 transition-colors overflow-hidden">
+                          {hasValidPhoto ? (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              <img
+                                src={photoSrc}
+                                alt={`Ảnh tham khảo Việt phục ${item.name}`}
+                                onError={() =>
+                                  setFailedGarmentImages((prev) => ({ ...prev, [item.id]: true }))
+                                }
+                                loading="lazy"
+                                className="w-full h-full object-contain object-center transition-transform duration-200 group-hover:scale-[1.03]"
+                              />
+                              <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[9px] font-mono tracking-tight text-[#7A6E63] bg-[#FFFDF9]/90 backdrop-blur-[2px] rounded-xs border border-[#E5DEC9]">
+                                Ảnh tham khảo
+                              </span>
+                            </div>
+                          ) : (
+                            <GarmentSilhouetteSvg
+                              coreGarment={item.id}
+                              className="w-full h-full max-h-[195px] mx-auto select-none transition-transform duration-200 group-hover:scale-[1.03]"
+                            />
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Garment Title & Short Description */}
                     <div className="mt-3.5 space-y-1.5 w-full">

@@ -10,6 +10,7 @@ import {
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
 import { getSupportItemDemoImage } from '../data/demoImageMap';
 import { PHOTO_LAYER_CONFIG, isPhotoLayerSupported } from '../data/layeredOutfitMap';
+import { recolorGarmentImage } from '../utils/fabricRecolor';
 import {
   Layers,
   Pin,
