@@ -67,8 +67,8 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   // Only one selector open at a time
   const [openSlot, setOpenSlot] = useState<SupportCategoryId | null>(null);
 
-  // On mobile/tablet (< lg), Tủ Đồ Phối Kèm is a secondary collapsible accordion (closed by default)
-  const [isMobileWardrobeOpen, setIsMobileWardrobeOpen] = useState<boolean>(false);
+  // Tủ Đồ Phối Kèm acts as a secondary collapsible accordion on all devices (closed by default)
+  const [isWardrobeOpen, setIsWardrobeOpen] = useState<boolean>(false);
 
   // State for AI image generation modal snapshot
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
@@ -138,10 +138,10 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
         {/* Right Side: Wardrobe & Styling Controls (~40% -> lg:col-span-5) */}
         <div className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
-          {/* Wrapper allowing Mức độ Remix first on mobile (< lg) and Tủ Đồ first on desktop (lg+) with a single slider instance */}
+          {/* Controls Stack: Mức độ Remix always visible on top, Tủ Đồ Phối Kèm as a collapsible secondary accordion on all devices */}
           <div className="flex flex-col gap-4">
-            {/* A. Mức độ Remix — Always visible outside the accordion on mobile/tablet & desktop */}
-            <section className="order-1 lg:order-2 bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2.5">
+            {/* A. Mức độ Remix — Always visible outside the accordion on all devices */}
+            <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="remix-dial-slider"
@@ -175,29 +175,18 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
               </div>
             </section>
 
-            {/* B. Tủ Đồ Phối Kèm — Collapsible accordion on mobile/tablet (closed by default), always open on desktop (lg+) */}
-            <section className="order-2 lg:order-1 bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs">
-              {/* Desktop Header (lg+) */}
-              <div className="hidden lg:flex items-center justify-between border-b border-[#EFE8DC] pb-2 mb-3.5">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A]">
-                  Tủ Đồ Phối Kèm
-                </h2>
-                <span className="text-[11px] font-mono text-[#8C7E72]">
-                  Chọn trực tiếp từ danh mục
-                </span>
-              </div>
-
-              {/* Mobile / Tablet Accordion Trigger (< lg) */}
+            {/* B. Tủ Đồ Phối Kèm — Secondary collapsible accordion on all devices (collapsed by default to focus on mannequin) */}
+            <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs">
               <button
                 type="button"
                 onClick={() => {
-                  setIsMobileWardrobeOpen((prev) => {
+                  setIsWardrobeOpen((prev) => {
                     if (prev) setOpenSlot(null);
                     return !prev;
                   });
                 }}
-                aria-expanded={isMobileWardrobeOpen}
-                className="lg:hidden w-full flex items-center justify-between gap-3 text-left cursor-pointer"
+                aria-expanded={isWardrobeOpen}
+                className="w-full flex items-center justify-between gap-3 text-left cursor-pointer"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -209,14 +198,14 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A6E63] truncate mt-0.5 font-serif">
-                    {isMobileWardrobeOpen
+                    {isWardrobeOpen
                       ? 'Thu gọn danh sách chi tiết tủ đồ'
                       : 'Mở để xem chi tiết chất liệu hoặc đổi từng món'}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Active item color dots preview when collapsed */}
+                  {/* Active item color dots preview */}
                   <div className="flex items-center -space-x-1">
                     <span
                       className="w-3 h-3 rounded-full border border-white shadow-2xs"
@@ -238,22 +227,22 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
                     )}
                   </div>
 
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF7EE] border border-[#DDD0C0] text-xs font-medium text-[#4E433C]">
-                    <span>{isMobileWardrobeOpen ? 'Thu gọn' : 'Mở tủ đồ'}</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF7EE] border border-[#DDD0C0] text-xs font-medium text-[#4E433C] whitespace-nowrap">
+                    <span>{isWardrobeOpen ? 'Thu gọn' : 'Mở tủ đồ'}</span>
                     <ChevronDown
                       className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        isMobileWardrobeOpen ? 'rotate-180' : ''
+                        isWardrobeOpen ? 'rotate-180' : ''
                       }`}
                     />
                   </span>
                 </div>
               </button>
 
-              {/* 4 Wardrobe Slots: Collapsed by default on < lg unless toggled open; always visible on lg+ */}
+              {/* 4 Wardrobe Slots: Collapsed by default on all devices unless toggled open */}
               <div
                 className={`${
-                  isMobileWardrobeOpen ? 'block mt-3.5 pt-3 border-t border-[#EFE8DC]' : 'hidden'
-                } lg:block lg:mt-0 lg:pt-0 lg:border-t-0 space-y-3.5`}
+                  isWardrobeOpen ? 'block mt-3.5 pt-3.5 border-t border-[#EFE8DC]' : 'hidden'
+                } space-y-3.5`}
               >
                 {/* Bottom Slot */}
                 <WardrobeSlot

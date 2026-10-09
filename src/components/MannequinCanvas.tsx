@@ -19,6 +19,7 @@ import {
   X,
   Trash2,
   Sliders,
+  ChevronDown,
 } from 'lucide-react';
 
 interface MannequinCanvasProps {
@@ -71,7 +72,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 }) => {
   const shouldReduceMotion = useReducedMotion();
 
-  // Active mobile quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null)
+  // Active quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null) across all devices
   const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
   const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
   const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
@@ -83,6 +84,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const stageRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const trayRef = useRef<HTMLDivElement | null>(null);
+  const desktopPanelRef = useRef<HTMLDivElement | null>(null);
 
   interface LeaderLineGeometry {
     category: SupportCategoryId;
@@ -100,61 +102,76 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     height: 0,
   });
 
-  // Returns exact viewBox (0 0 300 600) anchor point on the mannequin for each category's active item
+  // Returns viewBox (0 0 300 600) callout origin point positioned in the open air near each item's outer edge
+  // so leader lines and origin dots never touch or cross over the garment fabric, face, or Nón Lá.
   const getMannequinAnchorPoint = useCallback(
     (category: SupportCategoryId): { vx: number; vy: number; isOptionalEmpty?: boolean } => {
+      const isWideSleeveTac = core.id === 'ao-tac';
+
       if (category === 'accent') {
         if (!items.accent) {
-          return { vx: 132, vy: 70, isOptionalEmpty: true };
+          // Open space to the left of upper head/neck
+          return { vx: 110, vy: 72, isOptionalEmpty: true };
         }
         switch (items.accent.id) {
           case 'accent-non-la':
-            return { vx: 102, vy: 50 }; // Left brim of Nón Lá on head
+            // Open space ~16 units left of Nón Lá left brim tip (x=94, y=54)
+            return { vx: 78, vy: 52 };
           case 'accent-y2k-shades':
-            return { vx: 135, vy: 65 }; // Left frame of Y2K sunglasses on face
+            // Open space ~18 units left of sunglasses temple / head edge (x=130, y=65)
+            return { vx: 112, vy: 65 };
           case 'accent-quai-thao-mini':
-            return { vx: 92, vy: 264 }; // Left rim of Nón Quai Thao Mini at hip
+            // Open space left of Quai Thao Mini at hip (x=88) or outside Áo Tấc wide sleeve (x=57)
+            return { vx: isWideSleeveTac ? 44 : 72, vy: 270 };
           case 'accent-silver-jewelry':
           default:
-            return { vx: 141, vy: 128 }; // Silver lotus pendant at neckline/chest
+            // Open space left of collar/neckline above shoulder slope so line never crosses chest
+            return { vx: 114, vy: 104 };
         }
       }
 
       if (category === 'bag') {
         switch (items.bag.id) {
           case 'bag-tote-linen':
-            return { vx: 224, vy: 292 }; // Linen tote bag on right side
+            // Open space right of Linen Tote outer edge (x=234) and Áo Tấc wide sleeve (x=242)
+            return { vx: isWideSleeveTac ? 256 : 250, vy: 300 };
           case 'bag-techwear-crossbody':
-            return { vx: 188, vy: 262 }; // Techwear crossbody pouch on right torso
+            // Open space right of right arm/sleeve at waist pouch level (y=262)
+            return { vx: isWideSleeveTac ? 256 : 224, vy: 262 };
           case 'bag-gam-vintage':
           default:
-            return { vx: 111, vy: 338 }; // Vintage brocade handbag
+            // Open space on right side at handbag/hand level so line never cuts across the robe
+            return { vx: isWideSleeveTac ? 254 : 224, vy: 326 };
         }
       }
 
       if (category === 'bottom') {
         switch (items.bottom.id) {
           case 'bottom-cargo-linen':
-            return { vx: 112, vy: 432 }; // Left cargo trouser leg
+            // Open space ~19 units left of cargo trouser leg (x=115)
+            return { vx: 96, vy: 452 };
           case 'bottom-raw-denim':
-            return { vx: 111, vy: 438 }; // Left raw denim leg
+            // Open space ~18 units left of raw denim leg (x=110)
+            return { vx: 92, vy: 452 };
           case 'bottom-silk-wide':
           default:
-            return { vx: 102, vy: 442 }; // Left wide silk trouser leg
+            // Open space ~18 units left of wide silk trouser billow (x=99)
+            return { vx: 81, vy: 452 };
         }
       }
 
-      // shoes
+      // shoes: Open space to the right of right shoe outer edge (x=178) & wide silk trouser hem (x=204)
+      const isWideSilkBottom = items.bottom.id === 'bottom-silk-wide';
       switch (items.shoes.id) {
         case 'shoes-chunky-loafer':
         case 'shoes-retro-sneaker':
-          return { vx: 178, vy: 544 }; // Right shoe outer edge
+          return { vx: isWideSilkBottom ? 208 : 196, vy: 546 };
         case 'shoes-guoc-moc':
         default:
-          return { vx: 176, vy: 544 }; // Right wooden clog outer edge
+          return { vx: isWideSilkBottom ? 208 : 195, vy: 546 };
       }
     },
-    [items]
+    [items, core.id]
   );
 
   // Recalculate exact pixel coordinates linking SVG viewBox points to HTML buttons
@@ -191,14 +208,20 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       if (btnRect.width <= 0 || btnRect.height <= 0) continue;
 
       const anchor = getMannequinAnchorPoint(category);
-      const startX = svgOriginX + anchor.vx * scale;
+      const rawStartX = svgOriginX + anchor.vx * scale;
       const startY = svgOriginY + anchor.vy * scale;
 
       const endX =
         side === 'left'
-          ? btnRect.right - stageRect.left + 4
-          : btnRect.left - stageRect.left - 4;
+          ? btnRect.right - stageRect.left + 6
+          : btnRect.left - stageRect.left - 6;
       const endY = btnRect.top - stageRect.top + btnRect.height / 2;
+
+      // Ensure startX always stays on the mannequin side of endX with at least 14px span
+      const startX =
+        side === 'left'
+          ? Math.max(endX + 14, rawStartX)
+          : Math.min(endX - 14, rawStartX);
 
       computed.push({
         category,
@@ -256,9 +279,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     setActiveQuickCategory(category);
   };
 
-  // Ensure mannequin target zone (especially shoes/bottom or head/accent) is visible above the quick tray
+  // Ensure mannequin target zone on mobile/tablet is visible above the bottom quick tray
   useEffect(() => {
-    if (!activeQuickCategory) return;
+    if (!activeQuickCategory || window.innerWidth >= 1024) return;
 
     const rafId = requestAnimationFrame(() => {
       if (!svgRef.current) return;
@@ -271,7 +294,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         svgRect.bottom > visibleBottomLimit
       ) {
         const delta = svgRect.bottom - visibleBottomLimit;
-        // Only nudge scroll if it won't push the top of the mannequin off-screen
         if (svgRect.top - delta >= 8) {
           window.scrollBy({
             top: delta,
@@ -289,7 +311,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     return () => cancelAnimationFrame(rafId);
   }, [activeQuickCategory, shouldReduceMotion]);
 
-  // Close tray on Escape key or when resizing to desktop (>= 1024px)
+  // Close quick selector on Escape key or outside click on desktop
   useEffect(() => {
     if (!activeQuickCategory) return;
 
@@ -300,17 +322,26 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       }
     };
 
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setActiveQuickCategory(null);
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      // Ignore clicks inside desktop panel or mobile tray
+      if (desktopPanelRef.current?.contains(target) || trayRef.current?.contains(target)) {
+        return;
       }
+      // Ignore clicks on the 4 hotspot buttons themselves (their onClick toggles)
+      const clickedHotspot = Object.values(hotspotButtonRefs.current).some((btn) =>
+        btn?.contains(target)
+      );
+      if (clickedHotspot) return;
+
+      closeQuickTray(false);
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('resize', handleResize);
+    document.addEventListener('mousedown', handleMouseDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('mousedown', handleMouseDown);
     };
   }, [activeQuickCategory, closeQuickTray]);
 
@@ -1114,40 +1145,50 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const quickHotspots: {
     category: SupportCategoryId;
     label: string;
+    desktopLabel: string;
     fullTitle: string;
     positionClass: string;
+    side: 'left' | 'right';
     icon: React.ReactNode;
     activeItem: SupportOption | null;
   }[] = [
     {
       category: 'accent',
       label: 'Phụ kiện',
+      desktopLabel: 'Phụ kiện',
       fullTitle: 'Phụ kiện (Tùy chọn)',
-      positionClass: 'top-3 left-1.5 sm:top-4 sm:left-3',
+      positionClass: 'top-3 left-1.5 sm:top-4 sm:left-3 lg:top-5 lg:left-3',
+      side: 'left',
       icon: <Sparkles className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.accent,
     },
     {
       category: 'bag',
       label: 'Túi',
+      desktopLabel: 'Túi xách',
       fullTitle: 'Túi xách',
-      positionClass: 'top-[46%] -translate-y-1/2 right-1.5 sm:right-3',
+      positionClass: 'top-[46%] -translate-y-1/2 right-1.5 sm:right-3 lg:right-3',
+      side: 'right',
       icon: <ShoppingBag className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.bag,
     },
     {
       category: 'bottom',
       label: 'Quần',
+      desktopLabel: 'Phần dưới',
       fullTitle: 'Phần dưới',
-      positionClass: 'bottom-[21%] left-1.5 sm:left-3',
+      positionClass: 'bottom-[21%] left-1.5 sm:left-3 lg:left-3',
+      side: 'left',
       icon: <Scissors className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.bottom,
     },
     {
       category: 'shoes',
       label: 'Giày',
+      desktopLabel: 'Giày guốc',
       fullTitle: 'Giày guốc',
-      positionClass: 'bottom-3 right-1.5 sm:bottom-4 sm:right-3',
+      positionClass: 'bottom-3 right-1.5 sm:bottom-4 sm:right-3 lg:bottom-5 lg:right-3',
+      side: 'right',
       icon: <Footprints className="w-3.5 h-3.5 shrink-0" />,
       activeItem: items.shoes,
     },
@@ -1155,6 +1196,177 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   const activeCategoryConfig = quickHotspots.find((h) => h.category === activeQuickCategory);
   const activeCategoryOptions = activeQuickCategory ? SUPPORT_ITEMS[activeQuickCategory] : [];
+
+  const renderQuickSelectorHeader = () => {
+    if (!activeQuickCategory || !activeCategoryConfig) return null;
+    return (
+      <div className="flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2 shrink-0">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+          {quickHotspots.map((tab) => {
+            const isTabActive = tab.category === activeQuickCategory;
+            return (
+              <button
+                key={tab.category}
+                type="button"
+                onClick={() => {
+                  lastOpenedCategoryRef.current = tab.category;
+                  setActiveQuickCategory(tab.category);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] lg:text-xs font-semibold transition-colors cursor-pointer shrink-0 whitespace-nowrap ${
+                  isTabActive
+                    ? 'bg-[#B3261E] text-white'
+                    : 'bg-[#FAF7EE] text-[#5A4F46] hover:bg-[#F2EAE0] border border-[#E5DEC9]'
+                }`}
+              >
+                {tab.icon}
+                <span className="lg:hidden">{tab.label}</span>
+                <span className="hidden lg:inline">{tab.desktopLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {typeof remixDialValue === 'number' && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-mono tabular-nums font-semibold text-[#B3261E] bg-[#FAF3EB] border border-[#E8D5C4] px-2 py-0.5 rounded-md whitespace-nowrap"
+              title="Mức độ Remix hiện tại"
+            >
+              <Sliders className="w-3 h-3" />
+              <span>{remixDialValue}%</span>
+            </span>
+          )}
+
+          {activeQuickCategory === 'accent' && items.accent && onRemoveAccent && (
+            <button
+              type="button"
+              onClick={onRemoveAccent}
+              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-[#B3261E] bg-[#FDF2F0] hover:bg-[#FBE4E0] border border-[#F5C2BA] rounded-md cursor-pointer transition-colors whitespace-nowrap"
+              title="Gỡ bỏ phụ kiện đang chọn"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span className="hidden min-[380px]:inline">Gỡ phụ kiện</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => closeQuickTray(true)}
+            className="p-1.5 text-[#5A4F46] hover:text-[#241E1A] bg-[#FAF7EE] hover:bg-[#EFE8DC] rounded-lg cursor-pointer transition-colors"
+            aria-label="Đóng bảng chọn đồ"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuickSelectorOptions = (isDesktopLayout: boolean) => {
+    if (!activeQuickCategory || !activeCategoryConfig || !onSelectSupportItem) return null;
+    return (
+      <div
+        role="listbox"
+        aria-label={`Danh sách ${activeCategoryConfig.fullTitle}`}
+        className={
+          isDesktopLayout
+            ? 'grid grid-cols-2 xl:grid-cols-3 gap-2 pt-1 max-h-[210px] overflow-y-auto pr-0.5'
+            : 'flex items-stretch gap-2 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory'
+        }
+      >
+        {/* Optional 'None' card for Accent category */}
+        {activeQuickCategory === 'accent' && onRemoveAccent && (
+          <button
+            type="button"
+            role="option"
+            aria-selected={items.accent === null}
+            onClick={onRemoveAccent}
+            className={`${
+              isDesktopLayout
+                ? 'w-full p-2.5'
+                : 'snap-start shrink-0 w-[132px] sm:w-[148px] p-2.5'
+            } rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+              items.accent === null
+                ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A]'
+                : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#5A4F46]'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-full border border-dashed border-[#8C7E72] shrink-0" />
+              <span className="text-[10px] font-mono text-[#7A6E63]">Tùy chọn</span>
+              {items.accent === null && (
+                <Check className="w-3.5 h-3.5 text-[#B3261E] shrink-0 ml-auto" />
+              )}
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-[#241E1A] leading-snug">
+                Không dùng phụ kiện
+              </div>
+              <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
+                Giữ nguyên bản tối giản
+              </div>
+            </div>
+          </button>
+        )}
+
+        {activeCategoryOptions.map((opt) => {
+          const currentSelectedId =
+            activeQuickCategory === 'accent'
+              ? items.accent?.id || ''
+              : items[activeQuickCategory].id;
+          const isOptionSelected = opt.id === currentSelectedId;
+
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              role="option"
+              aria-selected={isOptionSelected}
+              onClick={() => onSelectSupportItem(activeQuickCategory, opt)}
+              className={`${
+                isDesktopLayout
+                  ? 'w-full p-2.5'
+                  : 'snap-start shrink-0 w-[158px] sm:w-[176px] p-2.5'
+              } rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                isOptionSelected
+                  ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A] shadow-2xs'
+                  : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#4E433C]'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                    style={{ backgroundColor: opt.accentHex }}
+                  />
+                  <span className="text-[10px] font-mono text-[#8C7E72] truncate">
+                    {opt.badgeLabel}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[10px] font-mono tabular-nums font-semibold text-[#B3261E]">
+                    {opt.modernityScore}%
+                  </span>
+                  {isOptionSelected && (
+                    <Check className="w-3.5 h-3.5 text-[#B3261E]" />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-[#241E1A] leading-snug line-clamp-1">
+                  {opt.name}
+                </div>
+                <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
+                  {opt.material.split('&')[0]}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
@@ -1182,74 +1394,63 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         </div>
       </div>
 
-      {/* Main 2D Mannequin Canvas - Responsive to available viewport */}
+      {/* Main 2D Mannequin Canvas - Responsive horizontal breathing room on all devices so hotspots never overlap mannequin */}
       <div
         ref={stageRef}
-        className="relative w-full flex-1 flex items-center justify-center py-1.5 sm:py-2.5 px-14 sm:px-20 lg:px-0 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0"
+        className="relative w-full flex-1 flex items-center justify-center py-1.5 sm:py-2.5 px-14 sm:px-24 lg:px-36 xl:px-42 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0"
       >
-        {/* Editorial Callout Leader Lines Overlay (Mobile/Tablet lg:hidden) */}
+        {/* Editorial Callout Leader Lines Overlay (Active across Mobile, Tablet, Laptop & Desktop) */}
         {onSelectSupportItem && stageDimensions.width > 0 && leaderLines.length > 0 && (
           <svg
-            className="lg:hidden pointer-events-none absolute inset-0 w-full h-full z-[6]"
+            className="pointer-events-none absolute inset-0 w-full h-full z-[6]"
             viewBox={`0 0 ${stageDimensions.width} ${stageDimensions.height}`}
             fill="none"
             aria-hidden="true"
           >
             {leaderLines.map((line) => {
               const isSelected = activeQuickCategory === line.category;
-              const strokeColor = isSelected ? '#B3261E' : '#9A7E67';
+              const strokeColor = isSelected ? '#B3261E' : '#A68B73';
               const strokeOpacity = isSelected
-                ? 0.95
+                ? 0.92
                 : line.isOptionalEmpty
-                  ? 0.45
-                  : line.category === 'bag' && items.bag.id === 'bag-gam-vintage'
-                    ? 0.52
-                    : 0.72;
+                  ? 0.42
+                  : 0.65;
 
-              // Build smooth cubic Bezier path from garment anchor (startX, startY) to button edge (endX, endY)
+              // Smooth editorial cubic Bezier curve from open space near garment (startX, startY) to button edge (endX, endY)
               let dPath = '';
               if (line.side === 'left') {
                 const spanX = Math.max(14, line.startX - line.endX);
-                const c1x =
-                  line.category === 'accent' && items.accent?.id === 'accent-quai-thao-mini'
-                    ? Math.min(line.startX - 10, line.endX + spanX * 0.35)
-                    : line.startX - spanX * 0.42;
-                const c2x = line.endX + Math.min(22, spanX * 0.48);
+                const c1x = line.startX - spanX * 0.42;
+                const c2x = line.endX + Math.min(24, spanX * 0.48);
                 dPath = `M ${line.startX} ${line.startY} C ${c1x} ${line.startY}, ${c2x} ${line.endY}, ${line.endX} ${line.endY}`;
               } else {
                 const spanX = Math.max(14, line.endX - line.startX);
                 const c1x = line.startX + spanX * 0.42;
-                const c2x = line.endX - Math.min(22, spanX * 0.48);
+                const c2x = line.endX - Math.min(24, spanX * 0.48);
                 dPath = `M ${line.startX} ${line.startY} C ${c1x} ${line.startY}, ${c2x} ${line.endY}, ${line.endX} ${line.endY}`;
               }
 
-              // Arrowhead pointing horizontally into the button edge
+              // Arrowhead pointing horizontally into the hotspot button edge
               const arrowDir = line.side === 'left' ? 1 : -1;
               const arrowPath = `M ${line.endX + arrowDir * 5} ${line.endY - 3} L ${line.endX} ${line.endY} L ${line.endX + arrowDir * 5} ${line.endY + 3}`;
 
               return (
                 <g key={`leader-${line.category}`} opacity={strokeOpacity}>
-                  {/* Subtle halo behind origin dot */}
+                  {/* Delicate editorial origin dot in the open air near the garment */}
                   <circle
                     cx={line.startX}
                     cy={line.startY}
-                    r={isSelected ? 3.2 : 2.5}
-                    fill="#FFFDF9"
+                    r={isSelected ? 2.4 : 1.75}
+                    fill={isSelected ? '#B3261E' : '#FFFDF9'}
                     stroke={strokeColor}
                     strokeWidth="1.1"
-                  />
-                  <circle
-                    cx={line.startX}
-                    cy={line.startY}
-                    r={isSelected ? 1.5 : 1.1}
-                    fill={strokeColor}
                   />
 
                   {/* Editorial Callout Curve */}
                   <path
                     d={dPath}
                     stroke={strokeColor}
-                    strokeWidth={isSelected ? 1.35 : 1.05}
+                    strokeWidth={isSelected ? 1.3 : 1}
                     strokeDasharray={line.isOptionalEmpty ? '3 2.5' : undefined}
                     strokeLinecap="round"
                   />
@@ -1258,7 +1459,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   <path
                     d={arrowPath}
                     stroke={strokeColor}
-                    strokeWidth={isSelected ? 1.4 : 1.15}
+                    strokeWidth={isSelected ? 1.35 : 1.1}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -1268,12 +1469,14 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           </svg>
         )}
 
-        {/* 4 Mobile/Tablet Quick-Select Hotspot Buttons around outer margins (Hidden on Desktop lg+) */}
+        {/* 4 Direct-Select Hotspot Buttons around outer margins (Responsive across Mobile, Tablet, Laptop & Desktop) */}
         {onSelectSupportItem && (
-          <div className="lg:hidden pointer-events-none absolute inset-0 z-10">
+          <div className="pointer-events-none absolute inset-0 z-10">
             {quickHotspots.map((spot) => {
               const isSelected = activeQuickCategory === spot.category;
               const shortName = getShortItemName(spot.category);
+              const fullItemName = spot.activeItem ? spot.activeItem.name : 'Chưa chọn phụ kiện';
+
               return (
                 <button
                   key={spot.category}
@@ -1282,43 +1485,99 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   }}
                   type="button"
                   onClick={() => handleToggleQuickCategory(spot.category)}
-                  aria-label={`Chọn nhanh ${spot.label}: hiện tại ${spot.activeItem ? spot.activeItem.name : 'Chưa chọn'}`}
+                  aria-label={`Chọn nhanh ${spot.desktopLabel}: hiện tại ${fullItemName}`}
                   aria-expanded={isSelected}
-                  className={`pointer-events-auto absolute ${spot.positionClass} min-h-[36px] sm:min-h-[40px] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-2xs backdrop-blur-[2px] ${
+                  className={`pointer-events-auto absolute ${spot.positionClass} min-h-[38px] sm:min-h-[42px] lg:min-h-[52px] lg:w-[130px] xl:w-[152px] px-2 sm:px-2.5 lg:px-3 py-1 sm:py-1.5 lg:py-2 rounded-lg lg:rounded-xl border text-left transition-all duration-150 cursor-pointer flex items-center lg:items-start justify-between gap-1.5 shadow-2xs backdrop-blur-[2px] ${
                     isSelected
                       ? 'bg-[#B3261E] border-[#B3261E] text-[#FFFDF9] ring-2 ring-[#B3261E]/25'
                       : 'bg-[#FFFDF9]/95 hover:bg-[#FAF3EB] border-[#DDD0C0] hover:border-[#B3261E]/60 text-[#2B231D]'
                   }`}
                 >
-                  <span className={isSelected ? 'text-[#FFFDF9]' : 'text-[#B3261E]'}>
-                    {spot.icon}
-                  </span>
-                  <span className="leading-tight">
-                    <span className="block text-[11px] font-semibold tracking-tight">
-                      {spot.label}
+                  {/* Mobile & Tablet Compact Layout (< lg) */}
+                  <div className="flex lg:hidden items-center gap-1.5 min-w-0">
+                    <span className={isSelected ? 'text-[#FFFDF9]' : 'text-[#B3261E]'}>
+                      {spot.icon}
                     </span>
-                    <span
-                      className={`hidden sm:block text-[9px] font-mono truncate max-w-[78px] ${
-                        isSelected ? 'text-[#FAF7EE]/90' : 'text-[#7A6E63]'
+                    <span className="leading-tight min-w-0">
+                      <span className="block text-[11px] font-semibold tracking-tight whitespace-nowrap">
+                        {spot.label}
+                      </span>
+                      <span
+                        className={`hidden sm:block text-[9px] font-mono truncate max-w-[78px] ${
+                          isSelected ? 'text-[#FAF7EE]/90' : 'text-[#7A6E63]'
+                        }`}
+                      >
+                        {shortName}
+                      </span>
+                    </span>
+                    {spot.activeItem ? (
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                          isSelected ? 'border-white/70' : 'border-black/20'
+                        }`}
+                        style={{ backgroundColor: spot.activeItem.accentHex }}
+                      />
+                    ) : (
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full shrink-0 border border-dashed ${
+                          isSelected ? 'border-white/80' : 'border-[#8C7E72]'
+                        }`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Laptop & Desktop Informative Editorial Layout (lg+) */}
+                  <div className="hidden lg:flex flex-col w-full gap-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1.5 w-full">
+                      <span className="inline-flex items-center gap-1 min-w-0">
+                        <span className={isSelected ? 'text-[#FFFDF9]' : 'text-[#B3261E]'}>
+                          {spot.icon}
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono uppercase tracking-wider font-semibold truncate ${
+                            isSelected ? 'text-[#FAF7EE]/90' : 'text-[#7A6E63]'
+                          }`}
+                        >
+                          {spot.desktopLabel}
+                        </span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1 shrink-0">
+                        {spot.activeItem ? (
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full border ${
+                              isSelected ? 'border-white/70' : 'border-black/20'
+                            }`}
+                            style={{ backgroundColor: spot.activeItem.accentHex }}
+                          />
+                        ) : (
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full border border-dashed ${
+                              isSelected ? 'border-white/80' : 'border-[#8C7E72]'
+                            }`}
+                          />
+                        )}
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform duration-150 ${
+                            isSelected ? 'rotate-180 text-white' : 'text-[#8C7E72]'
+                          }`}
+                        />
+                      </span>
+                    </div>
+
+                    <div
+                      className={`text-xs font-semibold truncate leading-snug ${
+                        isSelected
+                          ? 'text-white'
+                          : spot.activeItem
+                            ? 'text-[#241E1A]'
+                            : 'text-[#8C7E72] italic font-normal'
                       }`}
+                      title={fullItemName}
                     >
-                      {shortName}
-                    </span>
-                  </span>
-                  {spot.activeItem ? (
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
-                        isSelected ? 'border-white/70' : 'border-black/20'
-                      }`}
-                      style={{ backgroundColor: spot.activeItem.accentHex }}
-                    />
-                  ) : (
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full shrink-0 border border-dashed ${
-                        isSelected ? 'border-white/80' : 'border-[#8C7E72]'
-                      }`}
-                    />
-                  )}
+                      {spot.activeItem ? spot.activeItem.name : 'Chưa chọn'}
+                    </div>
+                  </div>
                 </button>
               );
             })}
@@ -1328,7 +1587,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         <svg
           ref={svgRef}
           viewBox="0 0 300 600"
-          className="w-full max-w-[340px] h-auto max-h-[min(410px,55dvh)] sm:max-h-[min(480px,60dvh)] lg:max-h-[calc(100vh-230px)] xl:max-h-[min(560px,calc(100vh-230px))] mx-auto select-none drop-shadow-xs"
+          className="w-full max-w-[340px] h-auto max-h-[min(410px,55dvh)] sm:max-h-[min(480px,60dvh)] lg:max-h-[min(470px,calc(100vh-270px))] xl:max-h-[min(520px,calc(100vh-260px))] mx-auto select-none drop-shadow-xs"
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >
@@ -1387,6 +1646,26 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         </svg>
       </div>
 
+      {/* Laptop/Desktop Non-Overlapping Floating Popover Dock (lg+) — anchored cleanly below the mannequin stage so it never covers the figure or causes layout shift */}
+      <AnimatePresence>
+        {onSelectSupportItem && activeQuickCategory && activeCategoryConfig && (
+          <motion.div
+            ref={desktopPanelRef}
+            role="dialog"
+            aria-modal="false"
+            aria-label={`Bảng chọn nhanh ${activeCategoryConfig.fullTitle}`}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.16, ease: 'easeOut' }}
+            className="hidden lg:flex flex-col gap-2.5 absolute left-3 right-3 top-[calc(100%-48px)] z-30 bg-[#FFFDF9] border border-[#B3261E]/70 rounded-xl p-3.5 shadow-[0_12px_32px_rgba(43,35,29,0.16)]"
+          >
+            {renderQuickSelectorHeader()}
+            {renderQuickSelectorOptions(true)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer Info Strip with Outfit Composition & Detail Action */}
       <div className="mt-4 pt-3 border-t border-[#EAE3D6] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
         <div className="flex items-center gap-1.5 flex-wrap text-[#5A4F46]">
@@ -1426,7 +1705,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         )}
       </div>
 
-      {/* Mobile/Tablet Compact Bottom Quick-Select Tray (Portal to body so never clipped) */}
+      {/* Mobile/Tablet Compact Bottom Quick-Select Tray (< lg, Portal to body so never clipped) */}
       {typeof document !== 'undefined' &&
         onSelectSupportItem &&
         createPortal(
@@ -1444,7 +1723,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   aria-hidden="true"
                 />
 
-                {/* Compact Bottom Sheet Tray (30-35% max height, single-row horizontal scroll on short/narrow screens) */}
+                {/* Compact Bottom Sheet Tray */}
                 <motion.div
                   ref={trayRef}
                   role="dialog"
@@ -1456,155 +1735,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: 'easeOut' }}
                   className="relative z-10 pointer-events-auto w-full bg-[#FFFDF9] border-t-2 border-[#B3261E]/80 shadow-[0_-8px_24px_rgba(43,35,29,0.14)] rounded-t-2xl px-3.5 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[min(35dvh,220px)] flex flex-col gap-2"
                 >
-                  {/* Tray Header: Category Switcher Pills + Remix Score + Close */}
-                  <div className="flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2 shrink-0">
-                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-                      {quickHotspots.map((tab) => {
-                        const isTabActive = tab.category === activeQuickCategory;
-                        return (
-                          <button
-                            key={tab.category}
-                            type="button"
-                            onClick={() => {
-                              lastOpenedCategoryRef.current = tab.category;
-                              setActiveQuickCategory(tab.category);
-                            }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${
-                              isTabActive
-                                ? 'bg-[#B3261E] text-white'
-                                : 'bg-[#FAF7EE] text-[#5A4F46] hover:bg-[#F2EAE0] border border-[#E5DEC9]'
-                            }`}
-                          >
-                            {tab.icon}
-                            <span>{tab.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {typeof remixDialValue === 'number' && (
-                        <span
-                          className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#B3261E] bg-[#FAF3EB] border border-[#E8D5C4] px-2 py-0.5 rounded-md"
-                          title="Mức độ Remix hiện tại"
-                        >
-                          <Sliders className="w-3 h-3" />
-                          <span>{remixDialValue}%</span>
-                        </span>
-                      )}
-
-                      {activeQuickCategory === 'accent' && items.accent && onRemoveAccent && (
-                        <button
-                          type="button"
-                          onClick={onRemoveAccent}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-[#B3261E] bg-[#FDF2F0] hover:bg-[#FBE4E0] border border-[#F5C2BA] rounded-md cursor-pointer transition-colors"
-                          title="Gỡ bỏ phụ kiện đang chọn"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span className="hidden min-[380px]:inline">Gỡ</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => closeQuickTray(true)}
-                        className="p-1.5 text-[#5A4F46] hover:text-[#241E1A] bg-[#FAF7EE] hover:bg-[#EFE8DC] rounded-lg cursor-pointer transition-colors"
-                        aria-label="Đóng khay chọn đồ"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Horizontal Touch-Scroll Strip on Mobile / Grid on Tablet */}
-                  <div
-                    role="listbox"
-                    aria-label={`Danh sách ${activeCategoryConfig.fullTitle}`}
-                    className="flex items-stretch gap-2 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory"
-                  >
-                    {/* Optional 'None' card for Accent category */}
-                    {activeQuickCategory === 'accent' && onRemoveAccent && (
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={items.accent === null}
-                        onClick={onRemoveAccent}
-                        className={`snap-start shrink-0 w-[132px] sm:w-[148px] p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                          items.accent === null
-                            ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A]'
-                            : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#5A4F46]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="w-3.5 h-3.5 rounded-full border border-dashed border-[#8C7E72] shrink-0" />
-                          <span className="text-[10px] font-mono text-[#7A6E63]">Tùy chọn</span>
-                          {items.accent === null && (
-                            <Check className="w-3.5 h-3.5 text-[#B3261E] shrink-0 ml-auto" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-[#241E1A] leading-snug">
-                            Không dùng phụ kiện
-                          </div>
-                          <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
-                            Giữ nguyên bản tối giản
-                          </div>
-                        </div>
-                      </button>
-                    )}
-
-                    {activeCategoryOptions.map((opt) => {
-                      const currentSelectedId =
-                        activeQuickCategory === 'accent'
-                          ? items.accent?.id || ''
-                          : items[activeQuickCategory].id;
-                      const isOptionSelected = opt.id === currentSelectedId;
-
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          role="option"
-                          aria-selected={isOptionSelected}
-                          onClick={() => onSelectSupportItem(activeQuickCategory, opt)}
-                          className={`snap-start shrink-0 w-[158px] sm:w-[176px] p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                            isOptionSelected
-                              ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A] shadow-2xs'
-                              : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#4E433C]'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span
-                                className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                                style={{ backgroundColor: opt.accentHex }}
-                              />
-                              <span className="text-[10px] font-mono text-[#8C7E72] truncate">
-                                {opt.badgeLabel}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <span className="text-[10px] font-mono font-semibold text-[#B3261E]">
-                                {opt.modernityScore}%
-                              </span>
-                              {isOptionSelected && (
-                                <Check className="w-3.5 h-3.5 text-[#B3261E]" />
-                              )}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-[#241E1A] leading-snug line-clamp-1">
-                              {opt.name}
-                            </div>
-                            <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
-                              {opt.material.split('&')[0]}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {renderQuickSelectorHeader()}
+                  {renderQuickSelectorOptions(false)}
                 </motion.div>
               </div>
             )}
