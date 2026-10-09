@@ -5,13 +5,13 @@ import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
 import { GarmentPreview } from './GarmentPreview';
 import { ConfirmedIntroFields } from './InteractiveOnboarding';
 import { alignPageToTop } from '../utils/scrollAlignment';
-import { ChevronDown, Check, BookOpen } from 'lucide-react';
+import { ChevronDown, Check, ArrowLeft } from 'lucide-react';
 
 interface DiscoveryScreenProps {
   setupData: SetupData;
   onChangeSetup: (data: Partial<SetupData>) => void;
   onSubmit: () => void;
-  onOpenAbout: () => void;
+  onReturnToIntro: () => void;
   hasSeenIntro: boolean;
   onIntroComplete: () => void;
   confirmedIntroFields?: ConfirmedIntroFields;
@@ -29,7 +29,7 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   setupData,
   onChangeSetup,
   onSubmit,
-  onOpenAbout,
+  onReturnToIntro,
   hasSeenIntro,
   onIntroComplete,
   confirmedIntroFields,
@@ -81,11 +81,12 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
     >
       <button
         type="button"
-        onClick={onOpenAbout}
+        onClick={onReturnToIntro}
+        aria-label="Quay lại phần giới thiệu và chọn năm Việt phục"
         className="absolute top-1.5 left-4 sm:left-6 lg:left-8 inline-flex items-center gap-1.5 rounded-md border border-[#DDD0C0] bg-[#FFFDF9] px-2.5 py-1.5 text-[11px] font-semibold text-[#5A4F46] transition-colors hover:border-[#B3261E]/60 hover:text-[#B3261E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
       >
-        <BookOpen className="h-3.5 w-3.5" />
-        Đọc giới thiệu
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Quay lại giới thiệu
       </button>
       {/* Editorial Header & Storytelling Introduction (above both columns) */}
       <div className="text-center space-y-3 max-w-2xl mx-auto">

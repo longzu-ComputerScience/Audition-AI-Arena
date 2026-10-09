@@ -12,7 +12,6 @@ import {
   Check,
   MapPin,
   Calendar,
-  BookOpen,
 } from 'lucide-react';
 
 export interface ConfirmedIntroFields {
@@ -25,7 +24,7 @@ interface InteractiveOnboardingProps {
   setupData: SetupData;
   confirmedFields: ConfirmedIntroFields;
   welcomeReady: boolean;
-  onOpenAbout: () => void;
+  restartFromGarmentSelection: boolean;
   onSelectCoreGarment: (id: CoreVietPhucId) => void;
   onSelectOccasion: (occasion: string) => void;
   onSelectLocation: (location: string) => void;
@@ -62,7 +61,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   setupData,
   confirmedFields,
   welcomeReady,
-  onOpenAbout,
+  restartFromGarmentSelection,
   onSelectCoreGarment,
   onSelectOccasion,
   onSelectLocation,
@@ -72,6 +71,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
 
   // Internal onboarding sub-step: 1 (Việt phục) | 2 (Dịp) | 3 (Bối cảnh)
   const [introStep, setIntroStep] = useState<1 | 2 | 3>(() => {
+    if (restartFromGarmentSelection) return 1;
     if (confirmedFields.coreGarment && confirmedFields.occasion) return 3;
     if (confirmedFields.coreGarment) return 2;
     return 1;
@@ -297,16 +297,6 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
             className="space-y-4 sm:space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
             <StepMountAligner sectionRef={step1SectionRef} />
-            <div className="flex justify-start">
-              <button
-                type="button"
-                onClick={onOpenAbout}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[#DDD0C0] bg-[#FFFDF9] px-2.5 py-1.5 text-[11px] font-semibold text-[#5A4F46] transition-colors hover:border-[#B3261E]/60 hover:text-[#B3261E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                Đọc giới thiệu
-              </button>
-            </div>
             {/* Editorial Welcome Hero */}
             <div className="max-w-3xl mx-auto text-center space-y-3">
               <motion.span

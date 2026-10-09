@@ -44,6 +44,9 @@ export default function App() {
     location: false,
   });
   const [pendingSkipFocus, setPendingSkipFocus] = useState<boolean>(false);
+  // Explicitly revisiting the interactive discovery should start with the five garments,
+  // even when earlier onboarding choices have already been confirmed.
+  const [restartIntroFromGarments, setRestartIntroFromGarments] = useState<boolean>(false);
 
   // Navigate to step and remember the highest unlocked step
   const goToStep = (targetStep: 1 | 2 | 3) => {
@@ -276,6 +279,14 @@ export default function App() {
     resolvePostOnboardingNavigation('skipped', confirmedIntroFields);
   };
 
+  const handleReturnToInteractiveIntro = () => {
+    // This is a user-requested return from the classic Page 1, not the About modal.
+    // Keep setupData, confirmed fields, wardrobe selections and unlocked steps.
+    setPendingSkipFocus(false);
+    setRestartIntroFromGarments(true);
+    setOnboardingState('active');
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7EE] text-[#2B231D] flex flex-col font-sans selection:bg-[#B3261E]/20 selection:text-[#B3261E]">
       {/* Header with unlocked visited steps navigation */}
@@ -300,7 +311,7 @@ export default function App() {
               setupData={setupData}
               confirmedFields={confirmedIntroFields}
               welcomeReady={welcomeIntroReady}
-              onOpenAbout={() => setIsAboutOpen(true)}
+              restartFromGarmentSelection={restartIntroFromGarments}
               onSelectCoreGarment={handleOnboardingSelectCore}
               onSelectOccasion={handleOnboardingSelectOccasion}
               onSelectLocation={handleOnboardingSelectLocation}
@@ -314,7 +325,7 @@ export default function App() {
               setupData={setupData}
               onChangeSetup={handleChangeSetup}
               onSubmit={() => goToStep(2)}
-              onOpenAbout={() => setIsAboutOpen(true)}
+              onReturnToIntro={handleReturnToInteractiveIntro}
               hasSeenIntro={hasSeenIntro}
               onIntroComplete={() => setHasSeenIntro(true)}
               confirmedIntroFields={confirmedIntroFields}
