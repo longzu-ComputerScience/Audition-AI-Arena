@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
 import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
 import { GarmentPreview } from './GarmentPreview';
-import { ChevronDown, ArrowRight } from 'lucide-react';
+import { ConfirmedIntroFields } from './InteractiveOnboarding';
+import { ChevronDown, Check } from 'lucide-react';
 
 interface DiscoveryScreenProps {
   setupData: SetupData;
@@ -11,6 +12,7 @@ interface DiscoveryScreenProps {
   onSubmit: () => void;
   hasSeenIntro: boolean;
   onIntroComplete: () => void;
+  confirmedIntroFields?: ConfirmedIntroFields;
 }
 
 const STORY_WORDS = [
@@ -25,8 +27,11 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   onSubmit,
   hasSeenIntro,
   onIntroComplete,
+  confirmedIntroFields,
 }) => {
   const shouldReduceMotion = useReducedMotion();
+  const occasionSelectRef = useRef<HTMLSelectElement | null>(null);
+  const locationSelectRef = useRef<HTMLSelectElement | null>(null);
 
   // If user prefers reduced motion, skip intro animation and mark as complete
   useEffect(() => {
@@ -34,6 +39,25 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
       onIntroComplete();
     }
   }, [shouldReduceMotion, hasSeenIntro, onIntroComplete]);
+
+  // If user skipped onboarding after picking 1 or 2 fields, gently focus the next remaining dropdown
+  useEffect(() => {
+    if (!confirmedIntroFields) return;
+    if (
+      confirmedIntroFields.coreGarment &&
+      !confirmedIntroFields.occasion &&
+      occasionSelectRef.current
+    ) {
+      occasionSelectRef.current.focus({ preventScroll: true });
+    } else if (
+      confirmedIntroFields.coreGarment &&
+      confirmedIntroFields.occasion &&
+      !confirmedIntroFields.location &&
+      locationSelectRef.current
+    ) {
+      locationSelectRef.current.focus({ preventScroll: true });
+    }
+  }, [confirmedIntroFields]);
 
   return (
     <div className="max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10">
@@ -111,8 +135,15 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
               >
                 1. Việt phục
               </label>
-              <span className="text-xs text-[#7A6E63]">
-                5 dáng áo tiêu biểu
+              <span className="text-xs text-[#7A6E63] inline-flex items-center gap-1">
+                {confirmedIntroFields?.coreGarment ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#B3261E]" />
+                    <span className="text-[#B3261E] font-medium">Đã chọn từ mở đầu</span>
+                  </>
+                ) : (
+                  '5 dáng áo tiêu biểu'
+                )}
               </span>
             </div>
 
@@ -146,13 +177,21 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
               >
                 2. Dịp
               </label>
-              <span className="text-xs text-[#7A6E63]">
-                Mục đích diện đồ
+              <span className="text-xs text-[#7A6E63] inline-flex items-center gap-1">
+                {confirmedIntroFields?.occasion ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#B3261E]" />
+                    <span className="text-[#B3261E] font-medium">Đã chọn từ mở đầu</span>
+                  </>
+                ) : (
+                  'Mục đích diện đồ'
+                )}
               </span>
             </div>
 
             <div className="relative">
               <select
+                ref={occasionSelectRef}
                 id="select-occasion"
                 value={setupData.occasion}
                 onChange={(e) => onChangeSetup({ occasion: e.target.value })}
@@ -179,13 +218,21 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
               >
                 3. Địa điểm / bối cảnh
               </label>
-              <span className="text-xs text-[#7A6E63]">
-                Không gian diện đồ
+              <span className="text-xs text-[#7A6E63] inline-flex items-center gap-1">
+                {confirmedIntroFields?.location ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#B3261E]" />
+                    <span className="text-[#B3261E] font-medium">Đã chọn từ mở đầu</span>
+                  </>
+                ) : (
+                  'Không gian diện đồ'
+                )}
               </span>
             </div>
 
             <div className="relative">
               <select
+                ref={locationSelectRef}
                 id="select-location"
                 value={setupData.location}
                 onChange={(e) => onChangeSetup({ location: e.target.value })}

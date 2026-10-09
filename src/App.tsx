@@ -7,6 +7,7 @@ import {
   SupportCategoryId,
   GuardrailResult,
   AIStatusInfo,
+  CoreVietPhucId,
 } from './types';
 import {
   CORE_ITEMS,
@@ -21,6 +22,10 @@ import {
 import { fetchAIStatus } from './services/aiStylistApi';
 import { Header } from './components/Header';
 import { DiscoveryScreen } from './components/DiscoveryScreen';
+import {
+  InteractiveOnboarding,
+  ConfirmedIntroFields,
+} from './components/InteractiveOnboarding';
 import { ConceptReveal } from './components/ConceptReveal';
 import { RemixStudio } from './components/RemixStudio';
 import { LookbookModal } from './components/LookbookModal';
@@ -31,13 +36,21 @@ export default function App() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState<1 | 2 | 3>(1);
 
+  // Separate Interactive Onboarding State (Iteration 3B) — distinct from DiscoveryScreen's text animation hasSeenIntro
+  const [onboardingState, setOnboardingState] = useState<'active' | 'skipped' | 'completed'>('active');
+  const [confirmedIntroFields, setConfirmedIntroFields] = useState<ConfirmedIntroFields>({
+    coreGarment: false,
+    occasion: false,
+    location: false,
+  });
+
   // Navigate to step and remember the highest unlocked step
   const goToStep = (targetStep: 1 | 2 | 3) => {
     setStep(targetStep);
     setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
   };
 
-  // Intro animation play-only-once state
+  // Intro text word-by-word animation play-only-once state for DiscoveryScreen
   const [hasSeenIntro, setHasSeenIntro] = useState<boolean>(false);
 
   // Global Setup Data (Step 1 inputs)
@@ -205,27 +218,93 @@ export default function App() {
     setGuardrailResult(result);
   };
 
+  // Shared routing logic when user finishes or skips Interactive Onboarding
+  const resolvePostOnboardingNavigation = (
+    status: 'skipped' | 'completed',
+    confirmed: ConfirmedIntroFields
+  ) => {
+    setOnboardingState(status);
+    const hasCompletedAllThree =
+      confirmed.coreGarment && confirmed.occasion && confirmed.location;
+
+    if (!hasCompletedAllThree) {
+      // Partial or zero selection -> go to classic Page 1 form while preserving chosen fields
+      goToStep(1);
+      return;
+    }
+
+    // All 3 fields explicitly confirmed:
+    // Only allow jumping directly to Page 3 if the user has already unlocked Remix (completed Page 2 before)
+    if (maxUnlockedStep === 3) {
+      goToStep(3);
+    } else {
+      goToStep(2);
+    }
+  };
+
+  const handleOnboardingSelectCore = (garmentId: CoreVietPhucId) => {
+    handleChangeSetup({ coreGarment: garmentId });
+    setConfirmedIntroFields((prev) => ({ ...prev, coreGarment: true }));
+  };
+
+  const handleOnboardingSelectOccasion = (occasion: string) => {
+    handleChangeSetup({ occasion });
+    setConfirmedIntroFields((prev) => ({ ...prev, occasion: true }));
+  };
+
+  const handleOnboardingSelectLocation = (location: string) => {
+    handleChangeSetup({ location });
+    const nextConfirmed: ConfirmedIntroFields = {
+      ...confirmedIntroFields,
+      location: true,
+    };
+    setConfirmedIntroFields(nextConfirmed);
+    resolvePostOnboardingNavigation('completed', nextConfirmed);
+  };
+
+  const handleSkipOnboarding = () => {
+    resolvePostOnboardingNavigation('skipped', confirmedIntroFields);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7EE] text-[#2B231D] flex flex-col font-sans selection:bg-[#B3261E]/20 selection:text-[#B3261E]">
       {/* Header with unlocked visited steps navigation */}
       <Header
         currentStep={step}
         maxUnlockedStep={maxUnlockedStep}
-        onStepClick={(targetStep) => goToStep(targetStep)}
+        onStepClick={(targetStep) => {
+          if (onboardingState === 'active' && targetStep === 1) {
+            return;
+          }
+          goToStep(targetStep);
+        }}
         onOpenAbout={() => setIsAboutOpen(true)}
       />
 
       {/* Main Multi-step Content (Preserving state across back/forward navigation) */}
       <main className="flex-1 w-full">
         <AnimatePresence mode="wait">
-          {step === 1 && (
+          {step === 1 && onboardingState === 'active' && (
+            <InteractiveOnboarding
+              key="step-1-onboarding"
+              setupData={setupData}
+              confirmedFields={confirmedIntroFields}
+              onSelectCoreGarment={handleOnboardingSelectCore}
+              onSelectOccasion={handleOnboardingSelectOccasion}
+              onSelectLocation={handleOnboardingSelectLocation}
+              onSkip={handleSkipOnboarding}
+            />
+          )}
+
+          {step === 1 && onboardingState !== 'active' && (
             <DiscoveryScreen
-              key="step-1"
+              key="step-1-discovery"
               setupData={setupData}
               onChangeSetup={handleChangeSetup}
               onSubmit={() => goToStep(2)}
               hasSeenIntro={hasSeenIntro}
               onIntroComplete={() => setHasSeenIntro(true)}
+              confirmedIntroFields={confirmedIntroFields}
             />
           )}
 

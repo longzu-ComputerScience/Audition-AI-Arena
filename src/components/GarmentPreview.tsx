@@ -7,20 +7,24 @@ interface GarmentPreviewProps {
   coreGarment: CoreVietPhucId;
 }
 
-export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) => {
-  const shouldReduceMotion = useReducedMotion();
-  const currentCore: CoreItem = CORE_ITEMS[coreGarment] || CORE_ITEMS['ao-ngu-than'];
+interface GarmentSilhouetteSvgProps {
+  coreGarment: CoreVietPhucId;
+  className?: string;
+}
 
-  // Render distinguishable 2D fashion silhouettes for each core garment
-  const renderGarmentSvg = (id: CoreVietPhucId) => {
-    switch (id) {
-      case 'ao-nhat-binh':
-        return (
-          <svg
-            viewBox="0 0 240 320"
-            className="w-full h-full max-h-[300px] mx-auto select-none"
-            aria-label="Minh họa Áo Nhật Bình cổ chữ nhật"
-          >
+// Shared distinguishable 2D fashion silhouettes for all 5 core Việt phục garments
+export const GarmentSilhouetteSvg: React.FC<GarmentSilhouetteSvgProps> = ({
+  coreGarment,
+  className = 'w-full h-full max-h-[300px] mx-auto select-none',
+}) => {
+  switch (coreGarment) {
+    case 'ao-nhat-binh':
+      return (
+        <svg
+          viewBox="0 0 240 320"
+          className={className}
+          aria-label="Minh họa Áo Nhật Bình cổ chữ nhật"
+        >
             {/* Background silhouette guide */}
             <g stroke="#2B231D" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none">
               {/* Head & Neck silhouette */}
@@ -73,7 +77,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
         return (
           <svg
             viewBox="0 0 240 320"
-            className="w-full h-full max-h-[300px] mx-auto select-none"
+            className={className}
             aria-label="Minh họa Áo Tấc tay thụ rộng"
           >
             <g stroke="#2B231D" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none">
@@ -134,7 +138,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
         return (
           <svg
             viewBox="0 0 240 320"
-            className="w-full h-full max-h-[300px] mx-auto select-none"
+            className={className}
             aria-label="Minh họa Áo Dài tà dài xẻ eo"
           >
             <g stroke="#2B231D" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none">
@@ -191,7 +195,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
         return (
           <svg
             viewBox="0 0 240 320"
-            className="w-full h-full max-h-[300px] mx-auto select-none"
+            className={className}
             aria-label="Minh họa Áo Tứ Thân vạt trước buộc thắt và yếm"
           >
             <g stroke="#2B231D" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none">
@@ -256,7 +260,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
         return (
           <svg
             viewBox="0 0 240 320"
-            className="w-full h-full max-h-[300px] mx-auto select-none"
+            className={className}
             aria-label="Minh họa Áo Ngũ Thân tay chẽn và cổ lập lĩnh"
           >
             <g stroke="#2B231D" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" fill="none">
@@ -314,7 +318,11 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
           </svg>
         );
     }
-  };
+};
+
+export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const currentCore: CoreItem = CORE_ITEMS[coreGarment] || CORE_ITEMS['ao-ngu-than'];
 
   return (
     <div className="w-full bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-5 sm:p-6 shadow-xs flex flex-col justify-between h-full">
@@ -347,7 +355,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
             }}
             className="w-full h-full flex items-center justify-center p-2"
           >
-            {renderGarmentSvg(coreGarment)}
+            <GarmentSilhouetteSvg coreGarment={coreGarment} />
           </motion.div>
         </AnimatePresence>
       </div>
