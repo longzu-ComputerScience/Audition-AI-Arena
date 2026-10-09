@@ -90,6 +90,11 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     quanLua: false,
   });
 
+  // Photo fabric recoloring state
+  const [recoloredPhotoSrc, setRecoloredPhotoSrc] = useState<string | null>(null);
+  const [isRecoloring, setIsRecoloring] = useState<boolean>(false);
+  const [recolorError, setRecolorError] = useState<boolean>(false);
+
   // Preload photo layer transparent PNG cutouts
   useEffect(() => {
     let isMounted = true;
@@ -519,6 +524,39 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const displayPalette = palette && palette.length > 0 ? palette : core.palette;
   const fabricLuminance = getRelativeLuminance(primaryFabricColor);
 
+  // Dynamic in-browser photo fabric recoloring for Áo Nhật Bình
+  useEffect(() => {
+    let isCancelled = false;
+    const config = PHOTO_LAYER_CONFIG.core[core.id];
+    if (!config?.isRecolorable || !config.fabricMaskSrc) {
+      setRecoloredPhotoSrc(null);
+      setRecolorError(false);
+      return;
+    }
+
+    setIsRecoloring(true);
+    setRecolorError(false);
+
+    recolorGarmentImage(config.imageSrc, config.fabricMaskSrc, primaryFabricColor)
+      .then((recoloredUrl) => {
+        if (!isCancelled) {
+          setRecoloredPhotoSrc(recoloredUrl);
+          setIsRecoloring(false);
+        }
+      })
+      .catch((err) => {
+        console.error('[MannequinCanvas] Fabric recoloring failed:', err);
+        if (!isCancelled) {
+          setRecolorError(true);
+          setIsRecoloring(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [core.id, primaryFabricColor]);
+
   // Adaptive contrast strokes for internal garment pleats/seams on very dark or very light fabrics
   const isVeryDarkFabric = fabricLuminance < 0.035;
   const isLightFabric = fabricLuminance > 0.55;
@@ -590,18 +628,18 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         strokeWidth="1.5"
       />
 
-      {/* Left Arm & Hand — Canonical Relaxed A-Pose (Angled outward from torso) */}
+      {/* Left Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
-        d="M102 147 C100 165 91 190 82 216 C80 220 78 228 77 240 C75 258 75 276 76 290 C76 298 72 308 73 318 C74 324 77 327 79 324 C82 320 83 310 82 302 C82 296 83 292 85 290 C86 276 89 252 90 234 C91 224 94 218 94 214 C96 192 100 170 106 154 Z"
+        d="M108 134 C102 142 88 168 74 194 C68 206 60 220 54 234 C50 238 45 244 44 248 C45 250 48 250 50 247 C52 244 56 240 59 236 C65 222 73 208 80 196 C86 182 95 166 103 153 C105 145 107 138 108 134 Z"
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
         strokeLinejoin="round"
       />
 
-      {/* Right Arm & Hand — Canonical Relaxed A-Pose (Angled outward from torso) */}
+      {/* Right Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
-        d="M198 147 C200 165 209 190 218 216 C220 220 222 228 223 240 C225 258 225 276 224 290 C224 298 228 308 227 318 C226 324 223 327 221 324 C218 320 217 310 218 302 C218 296 217 292 215 290 C214 276 211 252 210 234 C209 224 206 218 206 214 C204 192 200 170 194 154 Z"
+        d="M192 134 C198 142 212 168 226 194 C232 206 240 220 246 234 C250 238 255 244 256 248 C255 250 252 250 250 247 C248 244 244 240 241 236 C235 222 227 208 220 196 C214 182 205 166 197 153 C195 145 193 138 192 134 Z"
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -862,18 +900,22 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     // Isolated Photo-Layer Prototype rendering for Áo Nhật Bình
     if (isPhotoModeActive && PHOTO_LAYER_CONFIG.core[core.id]) {
       const config = PHOTO_LAYER_CONFIG.core[core.id];
-      return (
-        <g id="photo-layer-core" className="select-none pointer-events-none">
-          <image
-            href={config.imageSrc}
-            x={config.svgPlacement.x}
-            y={config.svgPlacement.y}
-            width={config.svgPlacement.width}
-            height={config.svgPlacement.height}
-            preserveAspectRatio={config.preserveAspectRatio}
-          />
-        </g>
-      );
+      const photoSrc = recoloredPhotoSrc || config.imageSrc;
+      // While recoloring for the first time or if there's an error, fall back to SVG
+      if (!recolorError && recoloredPhotoSrc) {
+        return (
+          <g id="photo-layer-core" className="select-none pointer-events-none">
+            <image
+              href={photoSrc}
+              x={config.svgPlacement.x}
+              y={config.svgPlacement.y}
+              width={config.svgPlacement.width}
+              height={config.svgPlacement.height}
+              preserveAspectRatio={config.preserveAspectRatio}
+            />
+          </g>
+        );
+      }
     }
 
     switch (core.id) {
@@ -882,14 +924,14 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           <g id="core-ao-nhat-binh" stroke={garmentContourStroke} strokeWidth="1.6" strokeLinejoin="round">
             {/* Robe Main Body & Moderate Sleeves */}
             <path
-              d="M136 116 L92 140 L70 205 L90 216 L106 170 L108 395 L192 395 L194 170 L210 216 L230 205 L208 140 L164 116 Z"
+              d="M136 116 L96 138 L54 220 L76 232 L98 170 L108 395 L192 395 L194 170 L224 232 L246 220 L204 138 L164 116 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
 
             {/* Traditional Sleeve Cuffs with Gold Border */}
-            <path d="M70 205 L90 216 L86 226 L66 215 Z" fill="#FAF7EE" stroke="#D4AF37" strokeWidth="1.5" />
-            <path d="M210 216 L230 205 L234 215 L214 226 Z" fill="#FAF7EE" stroke="#D4AF37" strokeWidth="1.5" />
+            <path d="M54 220 L76 232 L72 242 L50 230 Z" fill="#FAF7EE" stroke="#D4AF37" strokeWidth="1.5" />
+            <path d="M246 220 L224 232 L228 242 L250 230 Z" fill="#FAF7EE" stroke="#D4AF37" strokeWidth="1.5" />
 
             {/* Signature Rectangular Collar (Cổ Nhật Bình đặc trưng) */}
             <path
@@ -956,12 +998,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
             {/* Slender Raglan Sleeves hugging arms in natural relaxed A-pose */}
             <path
-              d="M140 114 L104 136 L78 218 L73 292 L86 292 L94 220 L118 170 Z"
+              d="M140 114 L102 136 L68 194 L50 232 L60 236 L78 200 L118 170 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
             <path
-              d="M160 114 L196 136 L222 218 L227 292 L214 292 L206 220 L182 170 Z"
+              d="M160 114 L198 136 L232 194 L250 232 L240 236 L222 200 L182 170 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
@@ -1006,12 +1048,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {/* Outer Robe Body (Four Panels, open chest) */}
             {/* Left and Right Open Shoulders & Relaxed Sleeves */}
             <path
-              d="M136 114 L98 138 L84 210 L94 220 L108 170 L114 250 L134 250 L130 180 Z"
+              d="M136 114 L98 138 L68 196 L76 206 L108 170 L114 250 L134 250 L130 180 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
             <path
-              d="M164 114 L202 138 L216 210 L206 220 L192 170 L186 250 L166 250 L170 180 Z"
+              d="M164 114 L202 138 L232 196 L224 206 L192 170 L186 250 L166 250 L170 180 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
@@ -1060,7 +1102,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
             {/* Main Robe & Fitted Sleeves (Tay Chẽn gọn gàng ôm cánh tay A-pose tự nhiên) */}
             <path
-              d="M138 118 L104 138 L78 218 L73 292 L86 292 L94 220 L112 410 L188 410 L190 220 L206 220 L214 292 L227 292 L222 218 L196 138 L162 118 Z"
+              d="M138 118 L102 138 L68 194 L50 232 L60 236 L78 200 L112 410 L188 410 L190 220 L222 200 L240 236 L250 232 L232 194 L198 138 L162 118 Z"
               fill={primaryFabricColor}
               style={fabricTransitionStyle}
             />
@@ -1152,10 +1194,25 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       default:
         return (
           <g id="bag-gam-vintage" stroke="#3A281E" strokeWidth="1.4" strokeLinejoin="round">
-            {/* Hand-held Vintage Brocade Handbag at left hand */}
+            {/* Hanging silk cords attaching handbag gracefully from left hand */}
+            <path
+              d="M48 248 C49 268 76 290 88 312"
+              fill="none"
+              stroke="#A34836"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <path
+              d="M51 247 C54 268 84 290 96 312"
+              fill="none"
+              stroke="#A34836"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+
             {/* Wooden Arched Handle */}
             <path
-              d="M90 320 C90 306 106 306 106 320"
+              d="M84 314 C84 300 100 300 100 314"
               fill="none"
               stroke="#523428"
               strokeWidth="2.5"
@@ -1164,17 +1221,17 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
             {/* Brocade Trapezoid Pouch */}
             <path
-              d="M86 320 L110 320 L114 362 L82 362 Z"
+              d="M80 314 L104 314 L108 356 L76 356 Z"
               fill="#8C6C38"
             />
             {/* Gold woven pattern lines & brass clasp */}
-            <path d="M86 320 L110 320 L108 327 L88 327 Z" fill="#523428" />
-            <circle cx="98" cy="324" r="2" fill="#D4AF37" stroke="#3A281E" strokeWidth="0.8" />
+            <path d="M80 314 L104 314 L102 321 L82 321 Z" fill="#523428" />
+            <circle cx="92" cy="318" r="2" fill="#D4AF37" stroke="#3A281E" strokeWidth="0.8" />
             {/* Lotus brocade geometric hints */}
-            <path d="M98 335 L103 343 L98 351 L93 343 Z" fill="#D4AF37" opacity="0.85" />
+            <path d="M92 329 L97 337 L92 345 L87 337 Z" fill="#D4AF37" opacity="0.85" />
             {/* Hanging silk tassel */}
-            <line x1="98" y1="362" x2="98" y2="378" stroke="#A34836" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="98" cy="363" r="1.5" fill="#D4AF37" />
+            <line x1="92" y1="356" x2="92" y2="372" stroke="#A34836" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="92" cy="357" r="1.5" fill="#D4AF37" />
           </g>
         );
     }
@@ -1717,10 +1774,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       </div>
 
       {/* Photo Layers notice when active */}
-      {isPhotoModeActive && (
+      {isPhotoModeActive && recoloredPhotoSrc && !recolorError && (
         <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Ảnh ghép thử nghiệm sử dụng màu gốc của trang phục.</span>
+          <span>Màu vải đã đồng bộ theo lựa chọn của bạn.</span>
           <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
+        </div>
+      )}
+
+      {renderMode === 'photo' && isSupportedCombination && (isRecoloring && !recoloredPhotoSrc) && (
+        <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
+          <span>Đang đồng bộ màu sắc trang phục thực tế...</span>
+          <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
+        </div>
+      )}
+
+      {renderMode === 'photo' && isSupportedCombination && recolorError && (
+        <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
+          <span>Chưa thể tải ảnh màu thực tế, đang hiển thị bản vẽ SVG tương ứng.</span>
         </div>
       )}
 
