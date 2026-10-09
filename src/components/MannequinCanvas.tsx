@@ -1,13 +1,34 @@
-import React from 'react';
-import { motion, useReducedMotion } from 'motion/react';
-import { CoreItem, ActiveSupportItems } from '../types';
-import { Layers, Pin } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import {
+  CoreItem,
+  ActiveSupportItems,
+  SupportCategoryId,
+  SupportOption,
+} from '../types';
+import { SUPPORT_ITEMS } from '../data/mockFashionData';
+import {
+  Layers,
+  Pin,
+  Sparkles,
+  ShoppingBag,
+  Scissors,
+  Footprints,
+  Check,
+  X,
+  Trash2,
+  Sliders,
+} from 'lucide-react';
 
 interface MannequinCanvasProps {
   core: CoreItem;
   items: ActiveSupportItems;
   fabricColor?: string;
   palette?: { name: string; hex: string }[];
+  remixDialValue?: number;
+  onSelectSupportItem?: (category: SupportCategoryId, item: SupportOption) => void;
+  onRemoveAccent?: () => void;
   onOpenCoreDetail?: () => void;
 }
 
@@ -43,9 +64,101 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   items,
   fabricColor,
   palette,
+  remixDialValue,
+  onSelectSupportItem,
+  onRemoveAccent,
   onOpenCoreDetail,
 }) => {
   const shouldReduceMotion = useReducedMotion();
+
+  // Active mobile quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null)
+  const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
+  const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
+  const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
+    accent: null,
+    bag: null,
+    bottom: null,
+    shoes: null,
+  });
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const trayRef = useRef<HTMLDivElement | null>(null);
+
+  const closeQuickTray = useCallback((restoreFocus = true) => {
+    const categoryToFocus = lastOpenedCategoryRef.current;
+    setActiveQuickCategory(null);
+    if (restoreFocus && categoryToFocus) {
+      requestAnimationFrame(() => {
+        hotspotButtonRefs.current[categoryToFocus]?.focus({ preventScroll: true });
+      });
+    }
+  }, []);
+
+  const handleToggleQuickCategory = (category: SupportCategoryId) => {
+    if (activeQuickCategory === category) {
+      closeQuickTray(true);
+      return;
+    }
+    lastOpenedCategoryRef.current = category;
+    setActiveQuickCategory(category);
+  };
+
+  // Ensure mannequin target zone (especially shoes/bottom or head/accent) is visible above the quick tray
+  useEffect(() => {
+    if (!activeQuickCategory) return;
+
+    const rafId = requestAnimationFrame(() => {
+      if (!svgRef.current) return;
+      const svgRect = svgRef.current.getBoundingClientRect();
+      const trayHeight = trayRef.current?.getBoundingClientRect().height || 168;
+      const visibleBottomLimit = window.innerHeight - trayHeight - 12;
+
+      if (
+        (activeQuickCategory === 'shoes' || activeQuickCategory === 'bottom') &&
+        svgRect.bottom > visibleBottomLimit
+      ) {
+        const delta = svgRect.bottom - visibleBottomLimit;
+        // Only nudge scroll if it won't push the top of the mannequin off-screen
+        if (svgRect.top - delta >= 8) {
+          window.scrollBy({
+            top: delta,
+            behavior: shouldReduceMotion ? 'auto' : 'smooth',
+          });
+        }
+      } else if (activeQuickCategory === 'accent' && svgRect.top < 64) {
+        window.scrollBy({
+          top: svgRect.top - 72,
+          behavior: shouldReduceMotion ? 'auto' : 'smooth',
+        });
+      }
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [activeQuickCategory, shouldReduceMotion]);
+
+  // Close tray on Escape key or when resizing to desktop (>= 1024px)
+  useEffect(() => {
+    if (!activeQuickCategory) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeQuickTray(true);
+      }
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setActiveQuickCategory(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [activeQuickCategory, closeQuickTray]);
 
   const layerTransition = {
     duration: shouldReduceMotion ? 0 : 0.2,
@@ -821,8 +934,76 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     }
   };
 
+  const getShortItemName = (category: SupportCategoryId): string => {
+    if (category === 'accent') {
+      if (!items.accent) return 'Chưa chọn';
+      if (items.accent.id === 'accent-non-la') return 'Nón Lá';
+      if (items.accent.id === 'accent-quai-thao-mini') return 'Quai Thao';
+      if (items.accent.id === 'accent-y2k-shades') return 'Kính Y2K';
+      return 'Chuỗi Bạc';
+    }
+    if (category === 'bag') {
+      if (items.bag.id === 'bag-gam-vintage') return 'Túi Gấm';
+      if (items.bag.id === 'bag-tote-linen') return 'Túi Tote';
+      return 'Techwear';
+    }
+    if (category === 'bottom') {
+      if (items.bottom.id === 'bottom-silk-wide') return 'Quần Lụa';
+      if (items.bottom.id === 'bottom-cargo-linen') return 'Cargo Linen';
+      return 'Raw Denim';
+    }
+    if (items.shoes.id === 'shoes-guoc-moc') return 'Guốc Mộc';
+    if (items.shoes.id === 'shoes-chunky-loafer') return 'Loafer';
+    return 'Sneaker';
+  };
+
+  const quickHotspots: {
+    category: SupportCategoryId;
+    label: string;
+    fullTitle: string;
+    positionClass: string;
+    icon: React.ReactNode;
+    activeItem: SupportOption | null;
+  }[] = [
+    {
+      category: 'accent',
+      label: 'Phụ kiện',
+      fullTitle: 'Phụ kiện (Tùy chọn)',
+      positionClass: 'top-2 left-1.5 sm:top-3 sm:left-3',
+      icon: <Sparkles className="w-3.5 h-3.5 shrink-0" />,
+      activeItem: items.accent,
+    },
+    {
+      category: 'bag',
+      label: 'Túi',
+      fullTitle: 'Túi xách',
+      positionClass: 'top-[43%] -translate-y-1/2 right-1.5 sm:right-3',
+      icon: <ShoppingBag className="w-3.5 h-3.5 shrink-0" />,
+      activeItem: items.bag,
+    },
+    {
+      category: 'bottom',
+      label: 'Quần',
+      fullTitle: 'Phần dưới',
+      positionClass: 'bottom-13 left-1.5 sm:bottom-15 sm:left-3',
+      icon: <Scissors className="w-3.5 h-3.5 shrink-0" />,
+      activeItem: items.bottom,
+    },
+    {
+      category: 'shoes',
+      label: 'Giày',
+      fullTitle: 'Giày guốc',
+      positionClass: 'bottom-2 right-1.5 sm:bottom-3 sm:right-3',
+      icon: <Footprints className="w-3.5 h-3.5 shrink-0" />,
+      activeItem: items.shoes,
+    },
+  ];
+
+  const activeCategoryConfig = quickHotspots.find((h) => h.category === activeQuickCategory);
+  const activeCategoryOptions = activeQuickCategory ? SUPPORT_ITEMS[activeQuickCategory] : [];
+
   return (
-    <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-4 sm:p-5 shadow-xs overflow-hidden flex flex-col justify-between">
+    <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
       {/* Header with Title and Palette Swatches */}
       <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-2.5 mb-3">
         <div className="flex items-center gap-2">
@@ -848,10 +1029,68 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       </div>
 
       {/* Main 2D Mannequin Canvas - Responsive to available viewport */}
-      <div className="relative w-full flex-1 flex items-center justify-center py-1 sm:py-2 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 overflow-hidden min-h-0">
+      <div className="relative w-full flex-1 flex items-center justify-center py-1 sm:py-2 px-11 sm:px-14 lg:px-0 bg-[#FAF7EE]/60 rounded-xs border border-[#EAE3D6]/70 min-h-0">
+        {/* 4 Mobile/Tablet Quick-Select Hotspot Buttons around outer margins (Hidden on Desktop lg+) */}
+        {onSelectSupportItem && (
+          <div className="lg:hidden pointer-events-none absolute inset-0 z-10">
+            {quickHotspots.map((spot) => {
+              const isSelected = activeQuickCategory === spot.category;
+              const shortName = getShortItemName(spot.category);
+              return (
+                <button
+                  key={spot.category}
+                  ref={(el) => {
+                    hotspotButtonRefs.current[spot.category] = el;
+                  }}
+                  type="button"
+                  onClick={() => handleToggleQuickCategory(spot.category)}
+                  aria-label={`Chọn nhanh ${spot.label}: hiện tại ${spot.activeItem ? spot.activeItem.name : 'Chưa chọn'}`}
+                  aria-expanded={isSelected}
+                  className={`pointer-events-auto absolute ${spot.positionClass} min-h-[38px] px-2 sm:px-2.5 py-1.5 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center gap-1.5 shadow-2xs backdrop-blur-[2px] ${
+                    isSelected
+                      ? 'bg-[#B3261E] border-[#B3261E] text-[#FFFDF9] ring-2 ring-[#B3261E]/25'
+                      : 'bg-[#FFFDF9]/95 hover:bg-[#FAF3EB] border-[#DDD0C0] hover:border-[#B3261E]/60 text-[#2B231D]'
+                  }`}
+                >
+                  <span className={isSelected ? 'text-[#FFFDF9]' : 'text-[#B3261E]'}>
+                    {spot.icon}
+                  </span>
+                  <span className="leading-tight">
+                    <span className="block text-[11px] font-semibold tracking-tight">
+                      {spot.label}
+                    </span>
+                    <span
+                      className={`hidden min-[370px]:block text-[9px] font-mono truncate max-w-[64px] sm:max-w-[84px] ${
+                        isSelected ? 'text-[#FAF7EE]/90' : 'text-[#7A6E63]'
+                      }`}
+                    >
+                      {shortName}
+                    </span>
+                  </span>
+                  {spot.activeItem ? (
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                        isSelected ? 'border-white/70' : 'border-black/20'
+                      }`}
+                      style={{ backgroundColor: spot.activeItem.accentHex }}
+                    />
+                  ) : (
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 border border-dashed ${
+                        isSelected ? 'border-white/80' : 'border-[#8C7E72]'
+                      }`}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <svg
+          ref={svgRef}
           viewBox="0 0 300 600"
-          className="w-full max-w-[340px] h-auto max-h-[440px] sm:max-h-[500px] lg:max-h-[calc(100vh-230px)] xl:max-h-[min(560px,calc(100vh-230px))] mx-auto select-none drop-shadow-xs"
+          className="w-full max-w-[340px] h-auto max-h-[min(410px,55dvh)] sm:max-h-[min(480px,60dvh)] lg:max-h-[calc(100vh-230px)] xl:max-h-[min(560px,calc(100vh-230px))] mx-auto select-none drop-shadow-xs"
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >
@@ -948,6 +1187,192 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           </button>
         )}
       </div>
+
+      {/* Mobile/Tablet Compact Bottom Quick-Select Tray (Portal to body so never clipped) */}
+      {typeof document !== 'undefined' &&
+        onSelectSupportItem &&
+        createPortal(
+          <AnimatePresence>
+            {activeQuickCategory && activeCategoryConfig && (
+              <div className="fixed inset-0 z-50 lg:hidden pointer-events-none flex flex-col justify-end">
+                {/* Subtle click-outside backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
+                  onClick={() => closeQuickTray(true)}
+                  className="fixed inset-0 bg-black/15 pointer-events-auto"
+                  aria-hidden="true"
+                />
+
+                {/* Compact Bottom Sheet Tray (30-35% max height, single-row horizontal scroll on short/narrow screens) */}
+                <motion.div
+                  ref={trayRef}
+                  role="dialog"
+                  aria-modal="false"
+                  aria-label={`Khay chọn nhanh ${activeCategoryConfig.fullTitle}`}
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 28 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+                  className="relative z-10 pointer-events-auto w-full bg-[#FFFDF9] border-t-2 border-[#B3261E]/80 shadow-[0_-8px_24px_rgba(43,35,29,0.14)] rounded-t-2xl px-3.5 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[min(35dvh,220px)] flex flex-col gap-2"
+                >
+                  {/* Tray Header: Category Switcher Pills + Remix Score + Close */}
+                  <div className="flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2 shrink-0">
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                      {quickHotspots.map((tab) => {
+                        const isTabActive = tab.category === activeQuickCategory;
+                        return (
+                          <button
+                            key={tab.category}
+                            type="button"
+                            onClick={() => {
+                              lastOpenedCategoryRef.current = tab.category;
+                              setActiveQuickCategory(tab.category);
+                            }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer shrink-0 ${
+                              isTabActive
+                                ? 'bg-[#B3261E] text-white'
+                                : 'bg-[#FAF7EE] text-[#5A4F46] hover:bg-[#F2EAE0] border border-[#E5DEC9]'
+                            }`}
+                          >
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {typeof remixDialValue === 'number' && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#B3261E] bg-[#FAF3EB] border border-[#E8D5C4] px-2 py-0.5 rounded-md"
+                          title="Mức độ Remix hiện tại"
+                        >
+                          <Sliders className="w-3 h-3" />
+                          <span>{remixDialValue}%</span>
+                        </span>
+                      )}
+
+                      {activeQuickCategory === 'accent' && items.accent && onRemoveAccent && (
+                        <button
+                          type="button"
+                          onClick={onRemoveAccent}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-[#B3261E] bg-[#FDF2F0] hover:bg-[#FBE4E0] border border-[#F5C2BA] rounded-md cursor-pointer transition-colors"
+                          title="Gỡ bỏ phụ kiện đang chọn"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span className="hidden min-[380px]:inline">Gỡ</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => closeQuickTray(true)}
+                        className="p-1.5 text-[#5A4F46] hover:text-[#241E1A] bg-[#FAF7EE] hover:bg-[#EFE8DC] rounded-lg cursor-pointer transition-colors"
+                        aria-label="Đóng khay chọn đồ"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Horizontal Touch-Scroll Strip on Mobile / Grid on Tablet */}
+                  <div
+                    role="listbox"
+                    aria-label={`Danh sách ${activeCategoryConfig.fullTitle}`}
+                    className="flex items-stretch gap-2 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory"
+                  >
+                    {/* Optional 'None' card for Accent category */}
+                    {activeQuickCategory === 'accent' && onRemoveAccent && (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={items.accent === null}
+                        onClick={onRemoveAccent}
+                        className={`snap-start shrink-0 w-[132px] sm:w-[148px] p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                          items.accent === null
+                            ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A]'
+                            : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#5A4F46]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="w-3.5 h-3.5 rounded-full border border-dashed border-[#8C7E72] shrink-0" />
+                          <span className="text-[10px] font-mono text-[#7A6E63]">Tùy chọn</span>
+                          {items.accent === null && (
+                            <Check className="w-3.5 h-3.5 text-[#B3261E] shrink-0 ml-auto" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-[#241E1A] leading-snug">
+                            Không dùng phụ kiện
+                          </div>
+                          <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
+                            Giữ nguyên bản tối giản
+                          </div>
+                        </div>
+                      </button>
+                    )}
+
+                    {activeCategoryOptions.map((opt) => {
+                      const currentSelectedId =
+                        activeQuickCategory === 'accent'
+                          ? items.accent?.id || ''
+                          : items[activeQuickCategory].id;
+                      const isOptionSelected = opt.id === currentSelectedId;
+
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          role="option"
+                          aria-selected={isOptionSelected}
+                          onClick={() => onSelectSupportItem(activeQuickCategory, opt)}
+                          className={`snap-start shrink-0 w-[158px] sm:w-[176px] p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                            isOptionSelected
+                              ? 'bg-[#FAF3EB] border-[#B3261E] ring-1 ring-[#B3261E]/30 text-[#241E1A] shadow-2xs'
+                              : 'bg-[#FAF7EE] hover:bg-[#F3ECE1] border-[#E5DEC9] text-[#4E433C]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
+                                style={{ backgroundColor: opt.accentHex }}
+                              />
+                              <span className="text-[10px] font-mono text-[#8C7E72] truncate">
+                                {opt.badgeLabel}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className="text-[10px] font-mono font-semibold text-[#B3261E]">
+                                {opt.modernityScore}%
+                              </span>
+                              {isOptionSelected && (
+                                <Check className="w-3.5 h-3.5 text-[#B3261E]" />
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-semibold text-[#241E1A] leading-snug line-clamp-1">
+                              {opt.name}
+                            </div>
+                            <div className="text-[10px] text-[#7A6E63] font-serif truncate mt-0.5">
+                              {opt.material.split('&')[0]}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 };

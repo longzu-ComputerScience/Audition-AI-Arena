@@ -125,6 +125,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             items={supportItems}
             fabricColor={resolvedColor.hex}
             palette={resolvedPalette}
+            remixDialValue={remixDialValue}
+            onSelectSupportItem={onSelectSupportItem}
+            onRemoveAccent={onRemoveAccent}
             onOpenCoreDetail={onOpenCoreDetail}
           />
         </div>
