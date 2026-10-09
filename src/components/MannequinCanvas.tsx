@@ -558,7 +558,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     setIsRecoloring(true);
     setRecolorError(false);
 
-    recolorGarmentImage(config.imageSrc, config.fabricMaskSrc, primaryFabricColor)
+    recolorGarmentImage(
+      config.imageSrc,
+      config.fabricMaskSrc,
+      primaryFabricColor,
+      config.baseFabricLuminance
+    )
       .then((recoloredUrl) => {
         if (!isCancelled) {
           setRecoloredPhotoSrc(recoloredUrl);
@@ -1815,8 +1820,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               }`}
               title={
                 isSupportedCombination
-                  ? 'Xem thử nghiệm ghép ảnh thực tế Áo Nhật Bình và Quần Lụa'
-                  : 'Chế độ ảnh ghép thử nghiệm hiện hỗ trợ cho Áo Nhật Bình + Quần Lụa'
+                  ? `Xem thử nghiệm ghép ảnh thực tế ${core.name} và ${items.bottom.name}`
+                  : 'Chế độ ảnh ghép thử nghiệm hiện hỗ trợ cho Áo Nhật Bình và Áo Tấc'
               }
             >
               <span>Photo Layers (Demo)</span>
@@ -1878,7 +1883,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Fallback notice if Photo mode is selected on an unsupported outfit */}
       {renderMode === 'photo' && !isSupportedCombination && (
         <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình kết hợp các mẫu Quần &amp; Phụ kiện (đang hiển thị bản vẽ SVG tương ứng).</span>
+          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình và Áo Tấc kết hợp các mẫu Quần &amp; Phụ kiện (đang hiển thị bản vẽ SVG tương ứng).</span>
         </div>
       )}
 

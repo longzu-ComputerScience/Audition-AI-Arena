@@ -189,4 +189,92 @@ fs.writeFileSync('/tmp/nb_processed.rgba', nbDst);
 execSync(`convert -size ${nbW}x${nbH} -depth 8 /tmp/nb_processed.rgba public/images/layers/ao-nhat-binh.png`);
 console.log('✓ Saved public/images/layers/ao-nhat-binh.png');
 
+// 3. Process Áo Tấc
+console.log('\n3. Processing Áo Tấc (ao-tac)...');
+const atW = 895, atH = 1200;
+execSync('convert public/images/layers/sources/ao-tac-original.png /tmp/at_raw.rgba');
+const atSrc = fs.readFileSync('/tmp/at_raw.rgba');
+const atDst = Buffer.from(atSrc);
+
+const atIsBgCand = new Uint8Array(atW * atH);
+for (let y = 0; y < atH; y++) {
+  for (let x = 0; x < atW; x++) {
+    const idx = (y * atW + x) * 4;
+    const r = atSrc[idx], g = atSrc[idx + 1], b = atSrc[idx + 2];
+    const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+    const sat = maxC - minC;
+    const p = y * atW + x;
+
+    if (y < 144 || y > 1112 || x < 45 || x > 850) {
+      atIsBgCand[p] = 1;
+    } else {
+      const isNeutral = (sat <= 11) && (minC >= 190);
+      const isTurquoise = (b - r >= 12) || (g - r >= 10);
+      if (isNeutral && !isTurquoise) {
+        atIsBgCand[p] = 1;
+      }
+    }
+  }
+}
+
+const atIsBg = new Uint8Array(atW * atH);
+const atQueue = new Int32Array(atW * atH);
+let atHead = 0, atTail = 0;
+
+function atPush(p) {
+  if (!atIsBg[p] && atIsBgCand[p]) {
+    atIsBg[p] = 1;
+    atQueue[atTail++] = p;
+  }
+}
+
+for (let x = 0; x < atW; x++) {
+  atPush(x);
+  atPush((atH - 1) * atW + x);
+}
+for (let y = 0; y < atH; y++) {
+  atPush(y * atW);
+  atPush(y * atW + (atW - 1));
+}
+
+while (atHead < atTail) {
+  const curr = atQueue[atHead++];
+  const x = curr % atW;
+  const y = (curr / atW) | 0;
+  if (x > 0) atPush(curr - 1);
+  if (x < atW - 1) atPush(curr + 1);
+  if (y > 0) atPush(curr - atW);
+  if (y < atH - 1) atPush(curr + atW);
+}
+
+for (let y = 0; y < atH; y++) {
+  for (let x = 0; x < atW; x++) {
+    const p = y * atW + x;
+    const idx = p * 4;
+    if (atIsBg[p]) {
+      atDst[idx + 3] = 0; // Transparent
+    } else {
+      let bgNeighbors = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || nx >= atW || ny < 0 || ny >= atH || atIsBg[ny * atW + nx]) {
+            bgNeighbors++;
+          }
+        }
+      }
+      if (bgNeighbors > 0) {
+        const alpha = Math.round(255 * (1 - (bgNeighbors / 9) * 0.7));
+        atDst[idx + 3] = Math.max(30, Math.min(255, alpha));
+      } else {
+        atDst[idx + 3] = 255;
+      }
+    }
+  }
+}
+
+fs.writeFileSync('/tmp/at_cutout.rgba', atDst);
+execSync(`convert -size ${atW}x${atH} -depth 8 /tmp/at_cutout.rgba public/images/layers/ao-tac.png`);
+console.log('✓ Saved public/images/layers/ao-tac.png');
+
 console.log('\n=== COMPLETE ===');

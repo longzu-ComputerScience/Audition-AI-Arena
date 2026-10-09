@@ -73,4 +73,68 @@ for (const c of testColors) {
   console.log(`✓ Generated /tmp/nb_preview_${c.name}.jpg for ${c.name} (${c.hex})`);
 }
 
+console.log('\n=== TESTING ÁO TẤC FABRIC RECOLORING ===\n');
+const atW = 895, atH = 1200;
+execSync('convert public/images/layers/ao-tac.png /tmp/at_test_src.rgba');
+execSync('convert public/images/layers/masks/ao-tac-fabric-mask.png /tmp/at_test_mask.rgba');
+const atSrc = fs.readFileSync('/tmp/at_test_src.rgba');
+const atMask = fs.readFileSync('/tmp/at_test_mask.rgba');
+
+function recolorAoTac(targetHex, baseLum = 169) {
+  const cleanHex = targetHex.replace('#', '');
+  const tr = parseInt(cleanHex.slice(0, 2), 16);
+  const tg = parseInt(cleanHex.slice(2, 4), 16);
+  const tb = parseInt(cleanHex.slice(4, 6), 16);
+  
+  const targetLum = 0.299 * tr + 0.587 * tg + 0.114 * tb;
+  const isLight = targetLum > 160;
+
+  const out = Buffer.from(atSrc);
+
+  for (let y = 0; y < atH; y++) {
+    for (let x = 0; x < atW; x++) {
+      const idx = (y * atW + x) * 4;
+      const mVal = atMask[idx];
+      if (mVal === 0 || atSrc[idx+3] < 15) continue;
+
+      const r = atSrc[idx], g = atSrc[idx + 1], b = atSrc[idx + 2];
+      const origLum = 0.299 * r + 0.587 * g + 0.114 * b;
+      const weight = (mVal / 255) * (atSrc[idx+3] / 255);
+
+      let nr, ng, nb;
+      if (!isLight) {
+        const shade = Math.min(2.2, Math.max(0.15, origLum / baseLum));
+        nr = Math.min(255, Math.max(0, tr * shade));
+        ng = Math.min(255, Math.max(0, tg * shade));
+        nb = Math.min(255, Math.max(0, tb * shade));
+      } else {
+        const normLum = Math.min(1.0, Math.max(0.0, (origLum - 50) / 180));
+        const shadowFactor = 0.68 + normLum * 0.40;
+        nr = Math.min(255, Math.max(0, tr * shadowFactor));
+        ng = Math.min(255, Math.max(0, tg * shadowFactor));
+        nb = Math.min(255, Math.max(0, tb * shadowFactor));
+      }
+
+      out[idx] = Math.round((1 - weight) * r + weight * nr);
+      out[idx + 1] = Math.round((1 - weight) * g + weight * ng);
+      out[idx + 2] = Math.round((1 - weight) * b + weight * nb);
+    }
+  }
+
+  return out;
+}
+
+const aoTacColors = [
+  { name: 'nau_ho_phach', hex: '#633B26' },
+  { name: 'bach_ngoc_trang', hex: '#EDE8DF' },
+  { name: 'than_chi', hex: '#2B2623' },
+];
+
+for (const c of aoTacColors) {
+  const buf = recolorAoTac(c.hex);
+  fs.writeFileSync(`/tmp/at_recolor_${c.name}.rgba`, buf);
+  execSync(`convert -size ${atW}x${atH} -depth 8 /tmp/at_recolor_${c.name}.rgba -resize 600x /tmp/at_preview_${c.name}.jpg`);
+  console.log(`✓ Generated /tmp/at_preview_${c.name}.jpg for ${c.name} (${c.hex})`);
+}
+
 console.log('\nAll test recoloring passes completed successfully!');

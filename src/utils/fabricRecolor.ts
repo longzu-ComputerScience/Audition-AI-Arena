@@ -43,10 +43,12 @@ function parseHexRgb(hex: string): [number, number, number] {
 export async function recolorGarmentImage(
   imageSrc: string,
   maskSrc: string,
-  targetHex: string
+  targetHex: string,
+  baseFabricLuminance?: number
 ): Promise<string> {
   const normalizedHex = targetHex.toLowerCase();
-  const cacheKey = `${imageSrc}::${maskSrc}::${normalizedHex}`;
+  const baseLum = baseFabricLuminance ?? 68;
+  const cacheKey = `${imageSrc}::${maskSrc}::${normalizedHex}::${baseLum}`;
 
   if (recolorCache.has(cacheKey)) {
     // Refresh LRU order: delete and re-insert
@@ -93,7 +95,6 @@ export async function recolorGarmentImage(
     const [tr, tg, tb] = parseHexRgb(targetHex);
     const targetLum = 0.299 * tr + 0.587 * tg + 0.114 * tb;
     const isLight = targetLum > 160;
-    const baseRedLum = 68; // Base red silk luminance in original photograph
 
     const totalLen = pixels.length;
     for (let i = 0; i < totalLen; i += 4) {
@@ -111,15 +112,23 @@ export async function recolorGarmentImage(
 
       let nr: number, ng: number, nb: number;
       if (!isLight) {
-        // Normal and dark colors: luminance-preserving shading factor
-        const shade = Math.min(2.2, Math.max(0.15, origLum / baseRedLum));
+        // Normal and dark colors: luminance-preserving shading factor relative to garment base luminance
+        const shade = Math.min(2.2, Math.max(0.15, origLum / baseLum));
         nr = Math.min(255, Math.max(0, tr * shade));
         ng = Math.min(255, Math.max(0, tg * shade));
         nb = Math.min(255, Math.max(0, tb * shade));
       } else {
         // Light / cream / white tones: preserve natural textile shadow depth without washout
-        const normLum = Math.min(1.0, Math.max(0.0, (origLum - 25) / 110));
-        const shadowFactor = 0.65 + normLum * 0.45;
+        let shadowFactor: number;
+        if (baseLum <= 100) {
+          // Darker base fabric (e.g. Áo Nhật Bình red silk)
+          const normLum = Math.min(1.0, Math.max(0.0, (origLum - 25) / 110));
+          shadowFactor = 0.65 + normLum * 0.45;
+        } else {
+          // Lighter pastel base fabric (e.g. Áo Tấc turquoise silk)
+          const normLum = Math.min(1.0, Math.max(0.0, (origLum - 50) / 180));
+          shadowFactor = 0.68 + normLum * 0.40;
+        }
         nr = Math.min(255, Math.max(0, tr * shadowFactor));
         ng = Math.min(255, Math.max(0, tg * shadowFactor));
         nb = Math.min(255, Math.max(0, tb * shadowFactor));

@@ -90,3 +90,32 @@ console.log(`Recolorable fabric pixels: ${maskedCount} (${(maskedCount / totalGa
 fs.writeFileSync('/tmp/nb_mask_raw.rgba', mask);
 execSync(`convert -size ${w}x${h} -depth 8 /tmp/nb_mask_raw.rgba public/images/layers/masks/ao-nhat-binh-fabric-mask.png`);
 console.log('✓ Saved public/images/layers/masks/ao-nhat-binh-fabric-mask.png');
+
+// 2. Áo Tấc Mask
+console.log('\n=== GENERATING ÁO TẤC FABRIC RECOLORING MASK ===\n');
+const atW = 895, atH = 1200;
+execSync('convert public/images/layers/ao-tac.png /tmp/at_layer.rgba');
+const atSrc = fs.readFileSync('/tmp/at_layer.rgba');
+const atMask = Buffer.alloc(atW * atH * 4);
+
+let atMaskedCount = 0;
+for (let i = 0; i < atSrc.length; i += 4) {
+  const a = atSrc[i + 3];
+  if (a < 15) {
+    atMask[i] = 0;
+    atMask[i + 1] = 0;
+    atMask[i + 2] = 0;
+    atMask[i + 3] = 0;
+  } else {
+    atMaskedCount++;
+    atMask[i] = a;
+    atMask[i + 1] = a;
+    atMask[i + 2] = a;
+    atMask[i + 3] = a;
+  }
+}
+
+console.log(`Recolorable fabric pixels for Áo Tấc: ${atMaskedCount}`);
+fs.writeFileSync('/tmp/at_mask_raw.rgba', atMask);
+execSync(`convert -size ${atW}x${atH} -depth 8 /tmp/at_mask_raw.rgba public/images/layers/masks/ao-tac-fabric-mask.png`);
+console.log('✓ Saved public/images/layers/masks/ao-tac-fabric-mask.png');

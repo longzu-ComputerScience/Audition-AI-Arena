@@ -43,6 +43,7 @@ export interface LayerPhotoItemConfig {
   imageSrc: string;
   fabricMaskSrc?: string;
   isRecolorable?: boolean;
+  baseFabricLuminance?: number;
   sourceDimensions: { width: number; height: number };
   visibleBounds: {
     minX: number;
@@ -82,6 +83,7 @@ export const PHOTO_LAYER_CONFIG: PhotoLayerOutfitMap = {
       imageSrc: '/images/layers/ao-nhat-binh.png',
       fabricMaskSrc: '/images/layers/masks/ao-nhat-binh-fabric-mask.png',
       isRecolorable: true,
+      baseFabricLuminance: 68,
       sourceDimensions: { width: 1792, height: 2400 },
       visibleBounds: {
         minX: 125,
@@ -98,6 +100,33 @@ export const PHOTO_LAYER_CONFIG: PhotoLayerOutfitMap = {
         y: 59.5,
         width: 275.9,
         height: 369.6,
+      },
+      preserveAspectRatio: 'xMidYMid meet',
+      renderOrder: 4,
+    },
+    'ao-tac': {
+      catalogId: 'ao-tac',
+      name: 'Áo Tấc Cổ Phục',
+      imageSrc: '/images/layers/ao-tac.png',
+      fabricMaskSrc: '/images/layers/masks/ao-tac-fabric-mask.png',
+      isRecolorable: true,
+      baseFabricLuminance: 169,
+      sourceDimensions: { width: 895, height: 1200 },
+      visibleBounds: {
+        minX: 47,
+        maxX: 847,
+        minY: 146,
+        maxY: 1108,
+        width: 801,
+        height: 963,
+        centerX: 447,
+      },
+      // Aligns standing collar with neck landmark (y=103..116), hem at (y=430), centered at x=150
+      svgPlacement: {
+        x: -1.94,
+        y: 53.37,
+        width: 304.23,
+        height: 407.9,
       },
       preserveAspectRatio: 'xMidYMid meet',
       renderOrder: 4,
