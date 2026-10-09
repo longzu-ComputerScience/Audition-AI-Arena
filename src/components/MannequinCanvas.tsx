@@ -9,7 +9,11 @@ import {
 } from '../types';
 import { SUPPORT_ITEMS } from '../data/mockFashionData';
 import { getSupportItemDemoImage } from '../data/demoImageMap';
-import { PHOTO_LAYER_CONFIG, isPhotoLayerSupported } from '../data/layeredOutfitMap';
+import {
+  PHOTO_LAYER_CONFIG,
+  isPhotoLayerSupported,
+  getPhotoLayerConfig,
+} from '../data/layeredOutfitMap';
 import { recolorGarmentImage } from '../utils/fabricRecolor';
 import {
   Layers,
@@ -81,55 +85,61 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   // Photo Layers (Demo) state - Default is strictly 'svg'
   const [renderMode, setRenderMode] = useState<'svg' | 'photo'>('svg');
-  const [photoLayersReady, setPhotoLayersReady] = useState<{ nhatBinh: boolean; quanLua: boolean }>({
-    nhatBinh: false,
-    quanLua: false,
-  });
-  const [photoLayersError, setPhotoLayersError] = useState<{ nhatBinh: boolean; quanLua: boolean }>({
-    nhatBinh: false,
-    quanLua: false,
-  });
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [erroredImages, setErroredImages] = useState<Record<string, boolean>>({});
 
   // Photo fabric recoloring state
   const [recoloredPhotoSrc, setRecoloredPhotoSrc] = useState<string | null>(null);
   const [isRecoloring, setIsRecoloring] = useState<boolean>(false);
   const [recolorError, setRecolorError] = useState<boolean>(false);
 
-  // Preload photo layer transparent PNG cutouts
+  // Preload all available photo layer transparent PNG cutouts across categories
   useEffect(() => {
     let isMounted = true;
-    const imgNb = new Image();
-    imgNb.src = PHOTO_LAYER_CONFIG.core['ao-nhat-binh'].imageSrc;
-    imgNb.onload = () => {
-      if (isMounted) setPhotoLayersReady((prev) => ({ ...prev, nhatBinh: true }));
-    };
-    imgNb.onerror = () => {
-      if (isMounted) setPhotoLayersError((prev) => ({ ...prev, nhatBinh: true }));
-    };
+    const allConfigs = [
+      ...Object.values(PHOTO_LAYER_CONFIG.core),
+      ...Object.values(PHOTO_LAYER_CONFIG.bottom),
+      ...Object.values(PHOTO_LAYER_CONFIG.shoes),
+      ...Object.values(PHOTO_LAYER_CONFIG.bag),
+      ...Object.values(PHOTO_LAYER_CONFIG.accent),
+    ];
 
-    const imgQl = new Image();
-    imgQl.src = PHOTO_LAYER_CONFIG.bottom['bottom-silk-wide'].imageSrc;
-    imgQl.onload = () => {
-      if (isMounted) setPhotoLayersReady((prev) => ({ ...prev, quanLua: true }));
-    };
-    imgQl.onerror = () => {
-      if (isMounted) setPhotoLayersError((prev) => ({ ...prev, quanLua: true }));
-    };
+    allConfigs.forEach((cfg) => {
+      const img = new Image();
+      img.src = cfg.imageSrc;
+      if (img.complete && img.naturalWidth > 0) {
+        if (isMounted) setLoadedImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
+      } else {
+        img.onload = () => {
+          if (isMounted) setLoadedImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
+        };
+        img.onerror = () => {
+          if (isMounted) setErroredImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
+        };
+      }
+    });
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const isSupportedCombination = isPhotoLayerSupported(core.id, items.bottom.id);
-  const bothImagesLoaded =
-    photoLayersReady.nhatBinh &&
-    photoLayersReady.quanLua &&
-    !photoLayersError.nhatBinh &&
-    !photoLayersError.quanLua;
+  const corePhotoConfig = getPhotoLayerConfig('core', core.id);
+  const bottomPhotoConfig = getPhotoLayerConfig('bottom', items.bottom?.id);
 
-  // Active ONLY when mode is 'photo', combination is supported, and both PNGs loaded cleanly
-  const isPhotoModeActive = renderMode === 'photo' && isSupportedCombination && bothImagesLoaded;
+  const isSupportedCombination = isPhotoLayerSupported(core.id, items.bottom?.id);
+
+  // Photo readiness tracks actual selected garments: primary core and bottom layers must be ready
+  const isCoreImageLoaded = Boolean(
+    corePhotoConfig && loadedImages[corePhotoConfig.imageSrc] && !erroredImages[corePhotoConfig.imageSrc]
+  );
+  const isBottomImageLoaded = Boolean(
+    bottomPhotoConfig && loadedImages[bottomPhotoConfig.imageSrc] && !erroredImages[bottomPhotoConfig.imageSrc]
+  );
+  const primaryImagesReady = isCoreImageLoaded && isBottomImageLoaded;
+
+  // Active ONLY when mode is 'photo', combination is supported, and primary photo assets are loaded cleanly
+  const isPhotoModeActive = renderMode === 'photo' && isSupportedCombination && primaryImagesReady;
 
   const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
   const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
@@ -287,8 +297,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
       if (category === 'bottom') {
         switch (items.bottom.id) {
+          case 'bottom-tailored-trousers':
           case 'bottom-cargo-linen':
-            // Open space ~19 units left of cargo trouser leg (x=115)
+            // Open space ~19 units left of tailored trouser leg (x=115)
             return { vx: 96, vy: 452 };
           case 'bottom-raw-denim':
             // Open space ~18 units left of raw denim leg (x=110)
@@ -676,58 +687,51 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   /* -------------------------------------------------------------
      LAYER 2: Bottom Garment
-     Supports: bottom-silk-wide | bottom-cargo-linen | bottom-raw-denim
+     Supports: bottom-silk-wide | bottom-tailored-trousers | bottom-raw-denim
   ------------------------------------------------------------- */
   const renderBottomGarment = () => {
-    // Isolated Photo-Layer Prototype rendering for Quần Lụa
-    if (isPhotoModeActive && PHOTO_LAYER_CONFIG.bottom[items.bottom.id]) {
-      const config = PHOTO_LAYER_CONFIG.bottom[items.bottom.id];
+    // Photographic Layer rendering for Bottoms
+    const bottomPhotoConfig = getPhotoLayerConfig('bottom', items.bottom?.id);
+    if (isPhotoModeActive && bottomPhotoConfig && loadedImages[bottomPhotoConfig.imageSrc]) {
       return (
         <g id="photo-layer-bottom" className="select-none pointer-events-none">
           <image
-            href={config.imageSrc}
-            x={config.svgPlacement.x}
-            y={config.svgPlacement.y}
-            width={config.svgPlacement.width}
-            height={config.svgPlacement.height}
-            preserveAspectRatio={config.preserveAspectRatio}
+            href={bottomPhotoConfig.imageSrc}
+            x={bottomPhotoConfig.svgPlacement.x}
+            y={bottomPhotoConfig.svgPlacement.y}
+            width={bottomPhotoConfig.svgPlacement.width}
+            height={bottomPhotoConfig.svgPlacement.height}
+            preserveAspectRatio={bottomPhotoConfig.preserveAspectRatio}
           />
         </g>
       );
     }
 
     switch (items.bottom.id) {
+      case 'bottom-tailored-trousers':
       case 'bottom-cargo-linen':
         return (
-          <g id="bottom-cargo-linen" stroke="#2B231D" strokeWidth="1.5" strokeLinejoin="round">
-            {/* Linen waistband & pleats */}
+          <g id="bottom-tailored-trousers" stroke="#2B231D" strokeWidth="1.5" strokeLinejoin="round">
+            {/* Tailored waistband & front pleats */}
             <path d="M122 246 L178 246 L180 262 L120 262 Z" fill="#DDD3C4" />
             <line x1="138" y1="248" x2="136" y2="278" stroke="#9E886D" strokeWidth="1.2" />
             <line x1="162" y1="248" x2="164" y2="278" stroke="#9E886D" strokeWidth="1.2" />
 
-            {/* Left trouser leg: straight tailored with side cargo pocket */}
+            {/* Left trouser leg: formal straight-leg silhouette with pressed crease */}
             <path
               d="M120 260 L114 360 L115 470 L116 515 L145 515 L147 470 L148 360 L149 270 Z"
               fill="#E5DCCE"
             />
             {/* Left trouser sharp pressed crease */}
             <line x1="130" y1="262" x2="131" y2="512" stroke="#B8A790" strokeWidth="1.3" />
-            {/* Left Cargo 3D pocket */}
-            <rect x="107" y="325" width="14" height="26" rx="2" fill="#D3C7B2" stroke="#2B231D" strokeWidth="1.3" />
-            <path d="M107 325 L121 325 L119 331 L109 331 Z" fill="#B4A590" />
-            <circle cx="114" cy="334" r="1.2" fill="#2B231D" />
 
-            {/* Right trouser leg: straight tailored with side cargo pocket */}
+            {/* Right trouser leg: formal straight-leg silhouette with pressed crease */}
             <path
               d="M151 270 L152 360 L153 470 L155 515 L184 515 L185 470 L186 360 L180 260 Z"
               fill="#E5DCCE"
             />
             {/* Right trouser pressed crease */}
             <line x1="169" y1="262" x2="170" y2="512" stroke="#B8A790" strokeWidth="1.3" />
-            {/* Right Cargo 3D pocket */}
-            <rect x="179" y="325" width="14" height="26" rx="2" fill="#D3C7B2" stroke="#2B231D" strokeWidth="1.3" />
-            <path d="M179 325 L193 325 L191 331 L181 331 Z" fill="#B4A590" />
-            <circle cx="186" cy="334" r="1.2" fill="#2B231D" />
 
             {/* Trouser bottom hems */}
             <line x1="116" y1="510" x2="145" y2="510" stroke="#9E886D" strokeWidth="1.2" />
@@ -821,6 +825,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
      Supports: shoes-guoc-moc | shoes-chunky-loafer | shoes-retro-sneaker
   ------------------------------------------------------------- */
   const renderShoes = () => {
+    // Photographic Layer rendering for Footwear
+    const shoesPhotoConfig = getPhotoLayerConfig('shoes', items.shoes?.id);
+    if (isPhotoModeActive && shoesPhotoConfig && loadedImages[shoesPhotoConfig.imageSrc]) {
+      return (
+        <g id="photo-layer-shoes" className="select-none pointer-events-none">
+          <image
+            href={shoesPhotoConfig.imageSrc}
+            x={shoesPhotoConfig.svgPlacement.x}
+            y={shoesPhotoConfig.svgPlacement.y}
+            width={shoesPhotoConfig.svgPlacement.width}
+            height={shoesPhotoConfig.svgPlacement.height}
+            preserveAspectRatio={shoesPhotoConfig.preserveAspectRatio}
+          />
+        </g>
+      );
+    }
+
     switch (items.shoes.id) {
       case 'shoes-chunky-loafer':
         return (
@@ -1146,6 +1167,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
      Supports: bag-gam-vintage | bag-tote-linen | bag-techwear-crossbody
   ------------------------------------------------------------- */
   const renderBag = () => {
+    // Photographic Layer rendering for Bag
+    const bagPhotoConfig = getPhotoLayerConfig('bag', items.bag?.id);
+    if (isPhotoModeActive && bagPhotoConfig && loadedImages[bagPhotoConfig.imageSrc]) {
+      return (
+        <g id="photo-layer-bag" className="select-none pointer-events-none">
+          <image
+            href={bagPhotoConfig.imageSrc}
+            x={bagPhotoConfig.svgPlacement.x}
+            y={bagPhotoConfig.svgPlacement.y}
+            width={bagPhotoConfig.svgPlacement.width}
+            height={bagPhotoConfig.svgPlacement.height}
+            preserveAspectRatio={bagPhotoConfig.preserveAspectRatio}
+          />
+        </g>
+      );
+    }
+
     switch (items.bag.id) {
       case 'bag-techwear-crossbody':
         return (
@@ -1252,6 +1290,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   ------------------------------------------------------------- */
   const renderAccent = () => {
     if (!items.accent) return null;
+
+    // Photographic Layer rendering for Accent
+    const accentPhotoConfig = getPhotoLayerConfig('accent', items.accent.id);
+    if (isPhotoModeActive && accentPhotoConfig && loadedImages[accentPhotoConfig.imageSrc]) {
+      return (
+        <g id="photo-layer-accent" className="select-none pointer-events-none">
+          <image
+            href={accentPhotoConfig.imageSrc}
+            x={accentPhotoConfig.svgPlacement.x}
+            y={accentPhotoConfig.svgPlacement.y}
+            width={accentPhotoConfig.svgPlacement.width}
+            height={accentPhotoConfig.svgPlacement.height}
+            preserveAspectRatio={accentPhotoConfig.preserveAspectRatio}
+          />
+        </g>
+      );
+    }
 
     switch (items.accent.id) {
       case 'accent-non-la':
@@ -1404,7 +1459,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     }
     if (category === 'bottom') {
       if (items.bottom.id === 'bottom-silk-wide') return 'Quần Lụa';
-      if (items.bottom.id === 'bottom-cargo-linen') return 'Cargo Linen';
+      if (items.bottom.id === 'bottom-tailored-trousers' || items.bottom.id === 'bottom-cargo-linen') return 'Quần Tây';
       return 'Raw Denim';
     }
     if (items.shoes.id === 'shoes-guoc-moc') return 'Guốc Mộc';
@@ -1810,7 +1865,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   )?.name || primaryFabricColor
                 }`}
           </span>
-          <span className="font-mono text-[10px] text-[#A65B53]">Áo Nhật Bình · Quần Lụa</span>
+          <span className="font-mono text-[10px] text-[#A65B53]">{core.name} · {items.bottom.name}</span>
         </div>
       )}
 
@@ -1823,7 +1878,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Fallback notice if Photo mode is selected on an unsupported outfit */}
       {renderMode === 'photo' && !isSupportedCombination && (
         <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình &amp; Quần Lụa (đang hiển thị bản vẽ SVG tương ứng).</span>
+          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình kết hợp các mẫu Quần &amp; Phụ kiện (đang hiển thị bản vẽ SVG tương ứng).</span>
         </div>
       )}
 
