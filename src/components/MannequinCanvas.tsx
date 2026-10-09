@@ -6,12 +6,43 @@ import { Layers, Pin } from 'lucide-react';
 interface MannequinCanvasProps {
   core: CoreItem;
   items: ActiveSupportItems;
+  fabricColor?: string;
+  palette?: { name: string; hex: string }[];
   onOpenCoreDetail?: () => void;
+}
+
+function parseHexRgb(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '').trim();
+  if (clean.length !== 6) return [140, 59, 36];
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+    return [140, 59, 36];
+  }
+  return [r, g, b];
+}
+
+function getRelativeLuminance(hex: string): number {
+  const [r, g, b] = parseHexRgb(hex).map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function shiftHexBrightness(hex: string, delta: number): string {
+  const [r, g, b] = parseHexRgb(hex);
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const toHex = (n: number) => clamp(n).toString(16).padStart(2, '0');
+  return `#${toHex(r + delta)}${toHex(g + delta)}${toHex(b + delta)}`;
 }
 
 export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   core,
   items,
+  fabricColor,
+  palette,
   onOpenCoreDetail,
 }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -19,6 +50,34 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const layerTransition = {
     duration: shouldReduceMotion ? 0 : 0.2,
     ease: 'easeInOut' as const,
+  };
+
+  const primaryFabricColor = fabricColor || core.palette[0]?.hex || '#8C3B24';
+  const displayPalette = palette && palette.length > 0 ? palette : core.palette;
+  const fabricLuminance = getRelativeLuminance(primaryFabricColor);
+
+  // Adaptive contrast strokes for internal garment pleats/seams on very dark or very light fabrics
+  const isVeryDarkFabric = fabricLuminance < 0.035;
+  const isLightFabric = fabricLuminance > 0.55;
+
+  const garmentContourStroke = isVeryDarkFabric ? '#4A423B' : '#2B231D';
+  const garmentDetailStroke = isVeryDarkFabric
+    ? '#6E6259'
+    : isLightFabric
+      ? '#9A8B7A'
+      : shiftHexBrightness(primaryFabricColor, -42);
+  const garmentSubtleSeamStroke = isVeryDarkFabric
+    ? '#5C5149'
+    : isLightFabric
+      ? '#B0A190'
+      : shiftHexBrightness(primaryFabricColor, -28);
+  // Subtle secondary shade for Áo Tứ Thân lower/back panels to preserve multi-layer depth
+  const secondaryFabricShade = isVeryDarkFabric
+    ? shiftHexBrightness(primaryFabricColor, 16)
+    : shiftHexBrightness(primaryFabricColor, -14);
+
+  const fabricTransitionStyle: React.CSSProperties = {
+    transition: shouldReduceMotion ? 'none' : 'fill 200ms ease-in-out, stroke 200ms ease-in-out',
   };
 
   /* -------------------------------------------------------------
@@ -318,11 +377,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     switch (core.id) {
       case 'ao-nhat-binh':
         return (
-          <g id="core-ao-nhat-binh" stroke="#2B231D" strokeWidth="1.6" strokeLinejoin="round">
+          <g id="core-ao-nhat-binh" stroke={garmentContourStroke} strokeWidth="1.6" strokeLinejoin="round">
             {/* Robe Main Body & Moderate Sleeves */}
             <path
               d="M136 116 L92 140 L70 205 L90 216 L106 170 L108 395 L192 395 L194 170 L210 216 L230 205 L208 140 L164 116 Z"
-              fill="#8C2D19"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
             />
 
             {/* Traditional Sleeve Cuffs with Gold Border */}
@@ -356,22 +416,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
       case 'ao-tac':
         return (
-          <g id="core-ao-tac" stroke="#2B231D" strokeWidth="1.6" strokeLinejoin="round">
+          <g id="core-ao-tac" stroke={garmentContourStroke} strokeWidth="1.6" strokeLinejoin="round">
             {/* Grand Ceremonial Robe with DRAMATIC EXTRA-WIDE FLOWING SLEEVES (Tay thụng) */}
             <path
               d="M139 116 L102 136 L60 220 C54 290 62 340 76 348 C92 348 106 280 110 210 L110 430 L190 430 L190 210 C194 280 208 348 224 348 C238 340 246 290 240 220 L198 136 L161 116 Z"
-              fill="#633B26"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
             />
 
             {/* Standing Collar (Cổ Lập Lĩnh) */}
             <path d="M140 102 L160 102 L160 116 L140 116 Z" fill="#EDE8DF" stroke="#2B231D" strokeWidth="1.5" />
 
             {/* Wide Sleeve Flow Pleats / Drapes */}
-            <path d="M78 240 C76 290 82 335 88 345" fill="none" stroke="#4A2A1A" strokeWidth="1.5" />
-            <path d="M222 240 C224 290 218 335 212 345" fill="none" stroke="#4A2A1A" strokeWidth="1.5" />
+            <path d="M78 240 C76 290 82 335 88 345" fill="none" stroke={garmentDetailStroke} strokeWidth="1.5" style={fabricTransitionStyle} />
+            <path d="M222 240 C224 290 218 335 212 345" fill="none" stroke={garmentDetailStroke} strokeWidth="1.5" style={fabricTransitionStyle} />
 
             {/* Center spine seam (Đường can sống lưng / vạt trước đĩnh đạc) */}
-            <line x1="150" y1="116" x2="150" y2="430" stroke="#4A2A1A" strokeWidth="1.5" />
+            <line x1="150" y1="116" x2="150" y2="430" stroke={garmentDetailStroke} strokeWidth="1.5" style={fabricTransitionStyle} />
 
             {/* 5 Button Closures (Khuy Ngũ Thường) curving gently down right overlap */}
             <circle cx="150" cy="118" r="2" fill="#D4AF37" stroke="#2B231D" strokeWidth="1" />
@@ -381,25 +442,34 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             <circle cx="168" cy="168" r="2" fill="#D4AF37" stroke="#2B231D" strokeWidth="1" />
 
             {/* Hem border */}
-            <line x1="110" y1="426" x2="190" y2="426" stroke="#4A2A1A" strokeWidth="1.5" />
+            <line x1="110" y1="426" x2="190" y2="426" stroke={garmentDetailStroke} strokeWidth="1.5" style={fabricTransitionStyle} />
           </g>
         );
 
       case 'ao-dai':
         return (
-          <g id="core-ao-dai" stroke="#2B231D" strokeWidth="1.5" strokeLinejoin="round">
+          <g id="core-ao-dai" stroke={garmentContourStroke} strokeWidth="1.5" strokeLinejoin="round">
             {/* Standing Mandarin Collar */}
             <path d="M142 98 L158 98 L158 114 L142 114 Z" fill="#F4ECE1" stroke="#2B231D" strokeWidth="1.5" />
 
             {/* Slender Raglan Sleeves hugging arms */}
-            <path d="M140 114 L102 138 L93 220 L99 295 L106 295 L107 220 L118 170 Z" fill="#F4ECE1" />
-            <path d="M160 114 L198 138 L207 220 L201 295 L194 295 L193 220 L182 170 Z" fill="#F4ECE1" />
+            <path
+              d="M140 114 L102 138 L93 220 L99 295 L106 295 L107 220 L118 170 Z"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
+            />
+            <path
+              d="M160 114 L198 138 L207 220 L201 295 L194 295 L193 220 L182 170 Z"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
+            />
 
             {/* Slender Torso with High Side Slits at natural waist (Y=245) */}
             {/* Front Panel: Drapes down to shins (Y=490) while leaving sides open to show trousers */}
             <path
               d="M136 114 L118 170 L123 245 C121 310 118 400 120 490 L180 490 C182 400 179 310 177 245 L182 170 L164 114 Z"
-              fill="#F9F5EE"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
             />
 
             {/* High Side Slits Indicators (showing bottom layer underneath) */}
@@ -414,13 +484,13 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             <circle cx="174" cy="138" r="1.5" fill="#B3261E" />
 
             {/* Delicate hem curve */}
-            <path d="M120 490 C135 495 165 495 180 490" fill="none" stroke="#2B231D" strokeWidth="1.4" />
+            <path d="M120 490 C135 495 165 495 180 490" fill="none" stroke={garmentContourStroke} strokeWidth="1.4" />
           </g>
         );
 
       case 'ao-tu-than':
         return (
-          <g id="core-ao-tu-than" stroke="#2B231D" strokeWidth="1.6" strokeLinejoin="round">
+          <g id="core-ao-tu-than" stroke={garmentContourStroke} strokeWidth="1.6" strokeLinejoin="round">
             {/* Inner Silk Yếm Bodice (revealed through open front) */}
             <path
               d="M142 110 C146 114 154 114 158 110 L168 180 L132 180 Z"
@@ -433,12 +503,28 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
             {/* Outer Robe Body (Four Panels, open chest) */}
             {/* Left and Right Open Shoulders & Relaxed Sleeves */}
-            <path d="M136 114 L98 138 L84 210 L94 220 L108 170 L114 250 L134 250 L130 180 Z" fill="#4E3629" />
-            <path d="M164 114 L202 138 L216 210 L206 220 L192 170 L186 250 L166 250 L170 180 Z" fill="#4E3629" />
+            <path
+              d="M136 114 L98 138 L84 210 L94 220 L108 170 L114 250 L134 250 L130 180 Z"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
+            />
+            <path
+              d="M164 114 L202 138 L216 210 L206 220 L192 170 L186 250 L166 250 L170 180 Z"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
+            />
 
             {/* Back panels flowing down to knee level (Y=405) */}
-            <path d="M116 250 L112 405 L144 405 L142 250 Z" fill="#432E22" />
-            <path d="M158 250 L156 405 L188 405 L184 250 Z" fill="#432E22" />
+            <path
+              d="M116 250 L112 405 L144 405 L142 250 Z"
+              fill={secondaryFabricShade}
+              style={fabricTransitionStyle}
+            />
+            <path
+              d="M158 250 L156 405 L188 405 L184 250 Z"
+              fill={secondaryFabricShade}
+              style={fabricTransitionStyle}
+            />
 
             {/* Distinctive Front Tied Sash & Flowing Knot (Buộc vạt trước duyên dáng) */}
             {/* Tied knot at waist center */}
@@ -458,22 +544,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             />
 
             {/* Open front drape lapel lines */}
-            <line x1="134" y1="120" x2="144" y2="250" stroke="#3A271C" strokeWidth="1.6" />
-            <line x1="166" y1="120" x2="156" y2="250" stroke="#3A271C" strokeWidth="1.6" />
+            <line x1="134" y1="120" x2="144" y2="250" stroke={garmentDetailStroke} strokeWidth="1.6" style={fabricTransitionStyle} />
+            <line x1="166" y1="120" x2="156" y2="250" stroke={garmentDetailStroke} strokeWidth="1.6" style={fabricTransitionStyle} />
           </g>
         );
 
       case 'ao-ngu-than':
       default:
         return (
-          <g id="core-ao-ngu-than" stroke="#2B231D" strokeWidth="1.6" strokeLinejoin="round">
+          <g id="core-ao-ngu-than" stroke={garmentContourStroke} strokeWidth="1.6" strokeLinejoin="round">
             {/* Standing Collar (Cổ Lập Lĩnh đĩnh đạc) */}
             <path d="M140 102 L160 102 L160 118 L140 118 Z" fill="#FAF7EE" stroke="#2B231D" strokeWidth="1.6" />
 
             {/* Main Robe & Fitted Sleeves (Tay Chẽn gọn gàng) */}
             <path
               d="M138 118 L104 140 L88 220 L96 295 L104 295 L110 220 L112 410 L188 410 L190 220 L196 295 L204 295 L212 220 L196 140 L162 118 Z"
-              fill="#8C3B24"
+              fill={primaryFabricColor}
+              style={fabricTransitionStyle}
             />
 
             {/* Distinct Asymmetric Overlap (Vạt hữu / năm thân ghép kín đáo) */}
@@ -481,8 +568,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             <path
               d="M150 118 C153 130 165 144 176 150 L176 250 L174 410"
               fill="none"
-              stroke="#5E2213"
+              stroke={garmentDetailStroke}
               strokeWidth="1.8"
+              style={fabricTransitionStyle}
             />
 
             {/* 5 Traditional Buttons (Khuy Ngũ Thường) */}
@@ -493,8 +581,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             <circle cx="176" cy="165" r="2.2" fill="#D4AF37" stroke="#2B231D" strokeWidth="1" />
 
             {/* Longitudinal seams (Năm thân ghép mí) */}
-            <line x1="130" y1="160" x2="130" y2="410" stroke="#722D1B" strokeWidth="1.2" strokeDasharray="5 3" />
-            <line x1="165" y1="180" x2="165" y2="410" stroke="#722D1B" strokeWidth="1.2" strokeDasharray="5 3" />
+            <line x1="130" y1="160" x2="130" y2="410" stroke={garmentSubtleSeamStroke} strokeWidth="1.2" strokeDasharray="5 3" style={fabricTransitionStyle} />
+            <line x1="165" y1="180" x2="165" y2="410" stroke={garmentSubtleSeamStroke} strokeWidth="1.2" strokeDasharray="5 3" style={fabricTransitionStyle} />
           </g>
         );
     }
@@ -746,9 +834,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           <span className="text-xs font-medium text-[#7A6E63]">{core.name}</span>
         </div>
 
-        {/* Core garment palette indicators */}
+        {/* Core garment / active concept palette indicators */}
         <div className="flex items-center gap-1.5">
-          {core.palette.map((c, i) => (
+          {displayPalette.map((c, i) => (
             <span
               key={i}
               className="w-3 h-3 rounded-full border border-black/15 shadow-2xs"

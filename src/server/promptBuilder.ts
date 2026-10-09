@@ -4,6 +4,7 @@ import {
   OCCASIONS,
   LOCATIONS,
   PREFERRED_COLOR_OPTIONS,
+  resolveCoreGarmentColor,
 } from '../data/mockFashionData';
 import { CoreItem, SupportOption, CoreVietPhucId } from '../types';
 
@@ -145,10 +146,17 @@ export function buildFashionEditorialPrompt(selection: ValidatedOutfitSelection)
     garmentSilhouetteGuides[core.id] ||
     `${core.name} (${core.era}), authentic Vietnamese traditional silhouette.`;
 
+  const resolvedFabricColor = resolveCoreGarmentColor(core.id, preferredColor);
+
+  const primaryGarmentColorInstruction =
+    core.id === 'ao-tu-than'
+      ? `The main fabric of the primary Vietnamese traditional garment (${core.name}) must be predominantly ${resolvedFabricColor.englishName} (reference HEX: ${resolvedFabricColor.hex}). Apply this color strictly to the outer four-panel robe and sleeves only, while preserving the inner yếm bodice and waist sash in their traditional contrasting colors. Keep the pants, bag, footwear, accessories, and background visually distinct from the primary garment fabric color.`
+      : `The main fabric of the primary Vietnamese traditional garment (${core.name}) must be predominantly ${resolvedFabricColor.englishName} (reference HEX: ${resolvedFabricColor.hex}). Apply this color to the main body and sleeves/outer fabric only. Preserve the traditional collar, decorative trim, buttons, embroidery, and culturally distinctive details in their original colors. Keep the pants, bag, footwear, accessories, and background visually distinct from the primary garment fabric color.`;
+
   const colorHint =
     preferredColor && preferredColor !== 'Để hệ thống gợi ý'
-      ? `Main color accent theme: ${preferredColor}. `
-      : `Palette inspired by traditional Vietnamese pigments: ${core.palette.map((p) => p.name).join(', ')}. `;
+      ? `Main color accent theme: ${preferredColor} (${resolvedFabricColor.englishName}, ${resolvedFabricColor.hex}) on the primary traditional garment, paired with harmonious heritage tones (${core.palette.map((p) => p.name).join(', ')}). `
+      : `Primary garment fabric in ${resolvedFabricColor.englishName} (${resolvedFabricColor.hex}), accompanied by traditional Vietnamese pigments (${core.palette.map((p) => p.name).join(', ')}). `;
 
   let accentSection: string;
   if (!accent) {
@@ -167,7 +175,7 @@ export function buildFashionEditorialPrompt(selection: ValidatedOutfitSelection)
   return [
     'A high-end contemporary fashion editorial portrait illustration.',
     'Subject: ONE full-body, front-facing model standing in a confident, elegant fashion pose wearing a complete hybrid Vietnamese heritage remix outfit.',
-    `Primary Core Garment: ${core.name}. ${garmentSilhouette}`,
+    `Primary Core Garment: ${core.name}. ${garmentSilhouette} ${primaryGarmentColorInstruction}`,
     `Bottom Wear: ${bottom.name} - ${bottom.material}, ${bottom.editorialNote}. Seamlessly coordinated beneath the core tunic.`,
     `Footwear: ${shoes.name} - ${shoes.material}, ${shoes.editorialNote}. Visible on feet on the floor.`,
     `Bag / Carry: ${bag.name} - ${bag.material}, ${bag.editorialNote}. Styled naturally with the ensemble.`,

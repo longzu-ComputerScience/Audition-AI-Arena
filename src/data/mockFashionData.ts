@@ -653,6 +653,127 @@ const GLOBAL_FALLBACK_SWATCHES = [
   { name: 'Hoàng Cúc', hex: '#D4A359' },
 ];
 
+// English color descriptions keyed by normalized HEX for Gemini prompt accuracy
+const HEX_ENGLISH_COLOR_NAMES: Record<string, string> = {
+  '#c23b22': 'vermilion crimson red (Đỏ son)',
+  '#1d4e89': 'royal cobalt blue (Xanh lam)',
+  '#267365': 'emerald jade green (Xanh ngọc)',
+  '#f5efeb': 'warm ivory cream white (Trắng kem)',
+  '#d98282': 'soft dusty rose pink (Hồng dịu)',
+  '#1a1817': 'deep charcoal obsidian black (Đen)',
+  '#d4af37': 'imperial golden yellow (Vàng hoàng yến)',
+  '#683363': 'imperial Hue plum purple (Tím Huế)',
+  '#4b5842': 'antique olive moss green (Xanh rêu cổ kính)',
+  '#543d2b': 'deep espresso earth brown (Nâu trầm)',
+  '#8c2d19': 'imperial deep crimson red (Đỏ Thắm Hoàng Gia)',
+  '#633b26': 'warm amber chestnut brown (Nâu Hổ Phách)',
+  '#f4ece1': 'warm silk ivory cream (Ngà Kem)',
+  '#4e3629': 'rustic earth tuber brown (Nâu Củ Nâu)',
+  '#8c3b24': 'terracotta sandstone red-brown (Đỏ Sa Thạch)',
+};
+
+export interface ResolvedGarmentColor {
+  hex: string;
+  name: string;
+  englishName: string;
+}
+
+/**
+ * Computes the deterministic 3-color concept palette for a given core garment and preferred color.
+ * Shared between Page 2 (ConceptReveal), Page 3 (MannequinCanvas), and Gemini prompt builder.
+ */
+export function resolveCorePalette(
+  coreGarment: CoreVietPhucId,
+  preferredColor?: string
+): { name: string; hex: string }[] {
+  const core = CORE_ITEMS[coreGarment] || CORE_ITEMS['ao-ngu-than'];
+  const palette: { name: string; hex: string }[] = [];
+  const usedHexes = new Set<string>();
+
+  const isAuto =
+    !preferredColor ||
+    preferredColor === 'Để hệ thống gợi ý' ||
+    !COLOR_MAP[preferredColor];
+
+  if (isAuto) {
+    // Rule A: Automatic Color -> garment-specific curated default palette
+    const garmentDefaults = DEFAULT_GARMENT_PALETTES[core.id] || core.palette;
+    for (const swatch of garmentDefaults) {
+      if (palette.length >= 3) break;
+      const lower = swatch.hex.toLowerCase();
+      if (!usedHexes.has(lower)) {
+        palette.push({ name: swatch.name, hex: swatch.hex });
+        usedHexes.add(lower);
+      }
+    }
+  } else {
+    // Rule B: Selected preferredColor
+    // Slot 1: Exact selected preferred color from COLOR_MAP
+    const prefConfig = COLOR_MAP[preferredColor];
+    if (prefConfig) {
+      palette.push({ name: prefConfig.name, hex: prefConfig.hex });
+      usedHexes.add(prefConfig.hex.toLowerCase());
+    }
+
+    // Slots 2 & 3: Selected garment's curated harmony pair for this color
+    const garmentHarmony = COLOR_HARMONY_MAP[core.id]?.[preferredColor];
+    if (garmentHarmony) {
+      for (const comp of garmentHarmony) {
+        if (palette.length >= 3) break;
+        const lower = comp.hex.toLowerCase();
+        if (!usedHexes.has(lower)) {
+          palette.push({ name: comp.name, hex: comp.hex });
+          usedHexes.add(lower);
+        }
+      }
+    }
+
+    // If still < 3, check core garment palette
+    for (const swatch of core.palette) {
+      if (palette.length >= 3) break;
+      const lower = swatch.hex.toLowerCase();
+      if (!usedHexes.has(lower)) {
+        palette.push({ name: swatch.name, hex: swatch.hex });
+        usedHexes.add(lower);
+      }
+    }
+  }
+
+  // Rule C: Diversity Guarantee — fallback if fewer than 3 unique hexes
+  for (const fb of GLOBAL_FALLBACK_SWATCHES) {
+    if (palette.length >= 3) break;
+    const lower = fb.hex.toLowerCase();
+    if (!usedHexes.has(lower)) {
+      palette.push({ name: fb.name, hex: fb.hex });
+      usedHexes.add(lower);
+    }
+  }
+
+  return palette;
+}
+
+/**
+ * Resolves the primary fabric color for a core Việt phục garment so that
+ * Page 2 concept.palette[0], Page 3 Mannequin SVG, and Gemini Image Generation
+ * always share the exact same color source.
+ */
+export function resolveCoreGarmentColor(
+  coreGarment: CoreVietPhucId,
+  preferredColor?: string
+): ResolvedGarmentColor {
+  const palette = resolveCorePalette(coreGarment, preferredColor);
+  const primarySwatch = palette[0] || { name: 'Đỏ Sa Thạch', hex: '#8C3B24' };
+  const englishName =
+    HEX_ENGLISH_COLOR_NAMES[primarySwatch.hex.toLowerCase()] ||
+    `${primarySwatch.name} (${primarySwatch.hex})`;
+
+  return {
+    hex: primarySwatch.hex,
+    name: primarySwatch.name,
+    englishName,
+  };
+}
+
 // Local Concept Generator based on setup inputs
 export function generateConcept(setup: SetupData): ConceptData {
   const core = CORE_ITEMS[setup.coreGarment] || CORE_ITEMS['ao-ngu-than'];
@@ -688,64 +809,7 @@ export function generateConcept(setup: SetupData): ConceptData {
   const rationale = `Ý tưởng kết hợp ${core.name} cho dịp ${setup.occasion.toLowerCase()} tại ${setup.location}, mang định hướng ${setup.style.toLowerCase()}${colorNote}. Bản phối tôn vinh cấu trúc nguyên bản của di sản, đồng thời tạo nét phóng khoáng hài hòa cho nhịp sống hiện đại.`;
 
   // Deterministic 3-Color Palette Generation (Rules A, B, C)
-  const palette: { name: string; hex: string }[] = [];
-  const usedHexes = new Set<string>();
-
-  const isAuto = !setup.preferredColor || setup.preferredColor === 'Để hệ thống gợi ý';
-
-  if (isAuto) {
-    // Rule A: Automatic Color -> garment-specific curated default palette
-    const garmentDefaults = DEFAULT_GARMENT_PALETTES[setup.coreGarment] || core.palette;
-    for (const swatch of garmentDefaults) {
-      if (palette.length >= 3) break;
-      const lower = swatch.hex.toLowerCase();
-      if (!usedHexes.has(lower)) {
-        palette.push({ name: swatch.name, hex: swatch.hex });
-        usedHexes.add(lower);
-      }
-    }
-  } else {
-    // Rule B: Selected preferredColor
-    // Slot 1: Exact selected preferred color
-    const prefConfig = COLOR_MAP[setup.preferredColor];
-    if (prefConfig) {
-      palette.push({ name: prefConfig.name, hex: prefConfig.hex });
-      usedHexes.add(prefConfig.hex.toLowerCase());
-    }
-
-    // Slots 2 & 3: Selected garment's curated harmony pair for this color
-    const garmentHarmony = COLOR_HARMONY_MAP[setup.coreGarment]?.[setup.preferredColor];
-    if (garmentHarmony) {
-      for (const comp of garmentHarmony) {
-        if (palette.length >= 3) break;
-        const lower = comp.hex.toLowerCase();
-        if (!usedHexes.has(lower)) {
-          palette.push({ name: comp.name, hex: comp.hex });
-          usedHexes.add(lower);
-        }
-      }
-    }
-
-    // If still < 3, check core garment palette
-    for (const swatch of core.palette) {
-      if (palette.length >= 3) break;
-      const lower = swatch.hex.toLowerCase();
-      if (!usedHexes.has(lower)) {
-        palette.push({ name: swatch.name, hex: swatch.hex });
-        usedHexes.add(lower);
-      }
-    }
-  }
-
-  // Rule C: Diversity Guarantee — fallback if fewer than 3 unique hexes
-  for (const fb of GLOBAL_FALLBACK_SWATCHES) {
-    if (palette.length >= 3) break;
-    const lower = fb.hex.toLowerCase();
-    if (!usedHexes.has(lower)) {
-      palette.push({ name: fb.name, hex: fb.hex });
-      usedHexes.add(lower);
-    }
-  }
+  const palette = resolveCorePalette(setup.coreGarment, setup.preferredColor);
 
   return {
     title,

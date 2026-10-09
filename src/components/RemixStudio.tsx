@@ -9,7 +9,11 @@ import {
   SetupData,
   AIStatusInfo,
 } from '../types';
-import { SUPPORT_ITEMS } from '../data/mockFashionData';
+import {
+  SUPPORT_ITEMS,
+  resolveCoreGarmentColor,
+  resolveCorePalette,
+} from '../data/mockFashionData';
 import { MannequinCanvas } from './MannequinCanvas';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
@@ -66,6 +70,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   const [isAIModalOpen, setIsAIModalOpen] = useState<boolean>(false);
   const [aiSnapshot, setAiSnapshot] = useState<OutfitSnapshot | null>(null);
 
+  const resolvedColor = resolveCoreGarmentColor(core.id, setupData.preferredColor);
+  const resolvedPalette = resolveCorePalette(core.id, setupData.preferredColor);
+
   const handleOpenAIModal = () => {
     if (!aiStatus.isAvailable) return;
     // Capture immutable snapshot of current styling selections
@@ -116,6 +123,8 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
           <MannequinCanvas
             core={core}
             items={supportItems}
+            fabricColor={resolvedColor.hex}
+            palette={resolvedPalette}
             onOpenCoreDetail={onOpenCoreDetail}
           />
         </div>
