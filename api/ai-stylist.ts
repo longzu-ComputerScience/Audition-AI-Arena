@@ -17,12 +17,15 @@ export async function POST(request: Request): Promise<Response> {
   try {
     // Preview-only A/B timing, never enabled for production users.
     const requestedVariant = process.env.VERCEL_ENV === 'preview' ? request.headers.get('x-stylist-bench') : null;
-    const variant = ['baseline', 'minimal', 'lite-first', 'fast-safe'].includes(requestedVariant ?? '') ? requestedVariant : null;
+    const variant = ['baseline', 'minimal', 'lite-first', 'fast-safe', 'low', 'bounded', 'low-bounded', 'lite-bounded'].includes(requestedVariant ?? '') ? requestedVariant : null;
     const trace: NonNullable<StylistBenchmarkOptions['trace']> = [];
     const options: StylistBenchmarkOptions | undefined = variant ? { trace } : undefined;
     if (variant === 'minimal') options!.thinkingLevel = 'minimal';
     if (variant === 'lite-first') options!.candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
     if (variant === 'fast-safe') { options!.thinkingLevel = 'minimal'; options!.timeoutMs = 12_000; }
+    if (variant === 'low' || variant === 'low-bounded') options!.thinkingLevel = 'low';
+    if (variant === 'bounded' || variant === 'low-bounded' || variant === 'lite-bounded') options!.timeoutMs = 12_000;
+    if (variant === 'lite-bounded') options!.candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
     const started = performance.now();
     const result = await generateStylistAdvice(parsed.body, options);
     if (!variant) return jsonResponse(result);

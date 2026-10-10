@@ -264,7 +264,7 @@ export interface StylistBenchmarkOptions {
   candidateModels?: string[];
   thinkingLevel?: 'minimal' | 'low';
   timeoutMs?: number;
-  trace?: Array<{ model: string; elapsedMs: number; outcome: string }>;
+  trace?: Array<{ model: string; elapsedMs: number; outcome: string; status?: number; errorName?: string; errorHint?: string }>;
 }
 
 export async function generateStylistAdvice(
@@ -392,7 +392,14 @@ export async function generateStylistAdvice(
     } catch (err: unknown) {
       lastError = err instanceof Error ? err.message : String(err);
       const outcome = /429|RESOURCE_EXHAUSTED|quota/i.test(lastError) ? 'quota' : /timed? ?out|abort/i.test(lastError) ? 'timeout' : /404|NOT_FOUND/i.test(lastError) ? 'model_not_found' : 'error';
-      benchmark?.trace?.push({ model, elapsedMs: Math.round(performance.now() - startedAt), outcome });
+      const apiError = err as { status?: unknown; name?: unknown };
+      const rawStatus = typeof apiError.status === 'number' ? apiError.status : Number(lastError.match(/(?:HTTP |status[=: ]+)(4\d\d|5\d\d)/i)?.[1]);
+      const errorHint = lastError.match(/INVALID_ARGUMENT|RESOURCE_EXHAUSTED|NOT_FOUND|UNAVAILABLE|DEADLINE_EXCEEDED|INTERNAL|429|404|503|400/i)?.[0];
+      benchmark?.trace?.push({ model, elapsedMs: Math.round(performance.now() - startedAt), outcome,
+        status: Number.isFinite(rawStatus) && rawStatus > 0 ? rawStatus : undefined,
+        errorName: typeof apiError.name === 'string' ? apiError.name : undefined,
+        errorHint: errorHint?.toUpperCase(),
+      });
       console.warn(`[AI Stylist] Model ${model} failed, attempting next candidate:`, lastError);
     }
   }
