@@ -13,6 +13,9 @@ playwright-report/
 .cache/
 .eslintcache
 
+# Vercel CLI project links and generated local state
+.vercel/
+
 # Local environment and secrets (commit only the sanitized example)
 .env*
 !.env.example

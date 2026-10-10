@@ -71,7 +71,7 @@ Do not commit `.env` or API keys, and do not put the key in `VITE_*` client-side
 
 ## Build and run in production
 
-A **Node.js runtime is required** for the built app **and its API routes**. Static hosting of `dist/` alone does not provide the Gemini endpoints.
+For a traditional Node.js host, **Node.js is required** for the built app and its Express API routes. On **Vercel**, the Vite frontend is served from `dist/` and the four `api/*.ts` entry points run as Vercel Functions; Vercel does not run `server.ts` as a persistent process.
 
 ```bash
 npm ci
@@ -91,7 +91,20 @@ npm start
 NODE_ENV=production npm start
 ```
 
-The server serves the Vite-built `dist/` directory and the `/api/*` routes on `0.0.0.0:$PORT`. Configure your hosting provider's port and production environment variables. You can check the process via `GET /api/health`.
+The Express server serves the Vite-built `dist/` directory and the `/api/*` routes on `0.0.0.0:$PORT` for traditional Node.js hosting. Configure the host's port and production environment variables. You can check the server via `GET /api/health`.
+
+### Vercel deployment
+
+The Vercel project should use **Framework Preset: Vite**, repository root as the **Root Directory**, `npm run build` as the build command, and `dist` as the output directory. Vercel discovers the following TypeScript functions automatically, with no custom rewrite or `vercel.json` needed:
+
+- `api/health.ts` → `GET /api/health`
+- `api/ai-status.ts` → `GET /api/ai-status`
+- `api/ai-stylist.ts` → `POST /api/ai-stylist`
+- `api/generate-outfit-image.ts` → `POST /api/generate-outfit-image`
+
+Configure **`GEMINI_API_KEY` as a server-side environment variable** in the Vercel project for Production (and Preview if needed). After adding or changing environment variables, trigger a fresh deployment. Never prefix this key with `VITE_` or expose it in frontend code. The client continues calling relative `/api/*` URLs; no frontend or API URL changes are required.
+
+**Validation:** `GET /api/health` and `GET /api/ai-status` returning `hasApiKey: true` confirm only key presence, not model access. Follow with real API requests to verify model availability, permissions and quota. Check Vercel Function logs if requests fail. The image route returns an explicit error if its JSON/Base64 payload exceeds the platform response-size safety threshold (4 MB); larger images need object storage and URL responses. The AI Stylist and image generation are optional; local outfit recommendations do not rely on these functions. Test in a Vercel Preview before promoting to Production.
 
 ### API routes
 
@@ -129,8 +142,9 @@ src/
   components/         # Existing discovery, concept, and remix UI
   data/               # Garment catalogs, metadata, and photo fitting
   utils/              # Outfit ranking, state, color, and image processing
-  server/             # Gemini request validation and service logic
+  server/             # Gemini request validation, HTTP adapters, and service logic
   services/           # Client API adapters
+api/                 # Four Vercel serverless API entry points
 public/images/         # Images served by the frontend
 assets/sources/        # Preserved source imagery and reproducibility inputs
 tools/                 # Asset preparation and diagnostic scripts
@@ -151,7 +165,7 @@ The Python image-preparation dependencies are **not needed to serve the producti
 
 ## Deployment and project notes
 
-- The current deployment path is an Express-hosted Vite build. Other hosts (including static-only or serverless platforms) may require an adapter and separate API deployment.
+- Vercel deploys the Vite frontend and `api/*.ts` functions together; the standalone Express `server.ts` remains available for local development and non-serverless Node.js hosts.
 - The heritage garment is not structurally altered by the local recommendation algorithm; cultural notes and warnings are informational.
 - `IMPLEMENTATION_REPORT.md` and `STABILIZATION_REPORT.md` are **historical QA snapshots**. Some recorded weights, branch names, and screenshots describe earlier development states; use the current source and test suite for live behavior.
 - Source assets have their own provenance records. Check rights and redistribution terms before reusing them outside this project.
