@@ -152,7 +152,7 @@ export function resolveStylistGuardrail(
     status:useLocal?local.status:aiStatus,
     reason:useLocal?local.message:typeof assessment?.reason==='string'?assessment.reason:local.message,
     checklist:Array.isArray(assessment?.checklist)?assessment.checklist.filter((s):s is string=>typeof s==='string'):
-      ['Bảo toàn cổ áo và hàng khuy nguyên bản','Phom dáng và độ rủ tà áo chuẩn mực','Phù hợp tính tôn nghiêm của bối cảnh'],
+      ['Bảo toàn cổ áo và hàng khuy nguyên bản','Form dáng và độ rủ tà áo chuẩn mực','Phù hợp tính tôn nghiêm của bối cảnh'],
   };
 }
 
@@ -194,13 +194,13 @@ Danh mục các món đồ có sẵn trong tủ đồ để bạn có thể đ�
   * "accent-y2k-shades": Kính Mát Gọng Bạc Slim Y2K (Titan mạ bạc, Modernity 95)
 `;
 
-  return `Bạn là Chuyên gia Tư vấn Thời trang Cấp cao & Nhà Nghiên cứu Di sản Y phục Việt Nam (Haute Couture Fashion Stylist & Heritage Costume Consultant) cho dự án "Việt Phục Remix".
+  return `Bạn là Chuyên gia Tư vấn Thời trang Cấp cao & Nhà Nghiên cứu Di sản Y phục Việt Nam (Haute Couture Fashion Stylist & Heritage Costume Consultant) cho dự án "Sắc Việt".
 
 Nhiệm vụ: Cung cấp nhận định thời trang sâu sắc, tinh tế, giàu tính ứng dụng và chuẩn mực văn hóa cho người dùng.
 
 THÔNG TIN BẢN PHỐI HIỆN TẠI:
 - Y phục di sản cốt lõi: ${core.vietnameseTitle} (${core.era})
-  * Phom dáng: ${core.silhouette}
+  * Form dáng: ${core.silhouette}
   * Chất liệu: ${core.material}
   * Chi tiết di sản DNA: ${core.heritageDna.join('; ')}
 - Lớp đồ hiện đại phối kèm:
@@ -227,6 +227,8 @@ NGUYÊN TẮC TƯ VẤN:
 3. Nhận định độ phù hợp với dịp "${occasion}" và địa điểm "${location}".
 4. Đưa ra 2-3 gợi ý hành động thiết thực. Nếu nhận thấy việc đổi 1 món trong tủ đồ (bottom, shoes, bag, accent) sẽ giúp bản phối thăng hoa hơn, hãy đưa vào "suggestedItems" với chính xác ID trong danh mục trên.
 
+5. Dùng thống nhất thuật ngữ "form" khi mô tả dáng hoặc kết cấu trang phục.
+
 ĐỊNH DẠNG ĐÁP ỨNG:
 Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm giải thích markdown trước hoặc sau):
 {
@@ -250,7 +252,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm giải thích m
     "reason": "Giải thích ngắn vì sao bản phối đạt chuẩn mực di sản hoặc cần lưu ý",
     "checklist": [
       "Bảo toàn cổ áo và hàng khuy nguyên bản",
-      "Phom dáng và độ rủ tà áo chuẩn mực",
+      "Form dáng và độ rủ tà áo chuẩn mực",
       "Phù hợp tính tôn nghiêm của bối cảnh"
     ]
   }
@@ -365,7 +367,7 @@ export async function generateStylistAdvice(
           recommendations: Array.isArray(parsed.recommendations)
             ? parsed.recommendations
             : [
-                'Giữ nguyên phom dáng và cổ áo chuẩn mực của trang phục cổ.',
+                'Giữ nguyên form dáng và cổ áo chuẩn mực của trang phục cổ.',
                 'Chọn tông màu phụ kiện tương đồng với màu áo chính để tạo chiều sâu.',
               ],
           suggestedItems: cleanSuggestions,
@@ -435,13 +437,13 @@ export function generateHeuristicExpertStyling(
     review,
     recommendations,
     suggestedItems,
-    culturalHighlight: `Kết cấu ${core.heritageDna[0] || 'phom dáng nguyên bản'} của ${core.name} là tâm điểm thị giác. Hãy gìn giữ sự ngay ngắn của cổ áo và hàng khuy cài để tôn trọn phong thái tiền nhân.`,
+    culturalHighlight: `Kết cấu ${core.heritageDna[0] || 'form dáng nguyên bản'} của ${core.name} là tâm điểm thị giác. Hãy gìn giữ sự ngay ngắn của cổ áo và hàng khuy cài để tôn trọn phong thái tiền nhân.`,
     guardrailAssessment: {
       status: guardrail.status,
       reason: guardrail.message,
       checklist: [
         'Giữ trọn vẹn cổ áo và hàng khuy nguyên bản',
-        'Phom dáng và tà áo buông rủ tự nhiên',
+        'Form dáng và tà áo buông rủ tự nhiên',
         'Tôn trọng không khí văn hóa của bối cảnh',
       ],
     },

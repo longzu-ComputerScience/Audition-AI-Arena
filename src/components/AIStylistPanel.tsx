@@ -27,7 +27,7 @@ import {
 import { SUPPORT_ITEMS, resolveCoreGarmentColor } from '../data/mockFashionData';
 import { requestStylistAdvice } from '../services/aiStylistApi';
 
-interface AIStylistPanelProps {
+export interface AIStylistPanelProps {
   core: CoreItem;
   supportItems: ActiveSupportItems;
   setupData: SetupData;
@@ -37,6 +37,7 @@ interface AIStylistPanelProps {
   onSelectSupportItem: (category: SupportCategoryId, item: SupportOption) => void;
   onApplyRefinementText: (text: string) => void;
   currentRefinementText?: string;
+  embedded?: boolean;
 }
 
 export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
@@ -49,6 +50,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
   onSelectSupportItem,
   onApplyRefinementText,
   currentRefinementText = '',
+  embedded = false,
 }) => {
   const [query, setQuery] = useState<string>(currentRefinementText);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -130,10 +132,10 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
   };
 
   return (
-    <section className="bg-[#FDFBF7] border border-[#E8DCCB] ring-1 ring-[#B3261E]/10 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+    <section className={embedded ? "ai-stylist-embedded p-4 space-y-4" : "bg-[#FDFBF7] border border-[#E8DCCB] ring-1 ring-[#B3261E]/10 rounded-xl p-4 sm:p-5 shadow-xs space-y-4"}>
       {/* Panel Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EFE8DC] pb-3">
-        <div className="flex items-center gap-2.5">
+      <div className={embedded ? "flex flex-wrap items-center justify-between gap-2 border-b border-[#EFE8DC] pb-3" : "flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EFE8DC] pb-3"}>
+        {!embedded && <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#FAF0EB] border border-[#F2C2B5] flex items-center justify-center shrink-0 shadow-2xs">
             <Sparkles className="w-4 h-4 text-[#B3261E]" />
           </div>
@@ -148,7 +150,12 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
               Cố vấn tạo mẫu thời trang & Chuẩn mực văn hóa di sản
             </p>
           </div>
-        </div>
+        </div>}
+        {embedded && (
+          <span className="text-[11px] font-mono px-2 py-1 rounded-md bg-[#F5ECE0] text-[#8C3428] border border-[#ECDCCB]">
+            {adviceResult?.modelUsed === 'Local Context Stylist' ? 'Gợi ý tại máy' : 'Gemini 3.8'}
+          </span>
+        )}
 
         {/* AI Status Pill */}
         <div className="flex items-center gap-1.5">
@@ -228,7 +235,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                 ? "Ví dụ: 'Nên chọn giày nào để bớt đứng tuổi?', 'Phối thêm phụ kiện ánh bạc'..."
                 : "Cần GEMINI_API_KEY để trò chuyện trực tiếp..."
             }
-            className="flex-1 bg-white border border-[#DDD0C0] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 rounded-lg px-3.5 py-2.5 text-xs text-[#241E1A] outline-none disabled:bg-[#F2EDE4] disabled:text-[#8C7E72] disabled:cursor-not-allowed transition-colors"
+            className="min-w-0 flex-1 bg-white border border-[#DDD0C0] focus:border-[#B3261E] focus:ring-1 focus:ring-[#B3261E]/30 rounded-lg px-3.5 py-2.5 text-xs text-[#241E1A] outline-none disabled:bg-[#F2EDE4] disabled:text-[#8C7E72] disabled:cursor-not-allowed transition-colors"
           />
 
           <button
@@ -258,7 +265,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
           <div className="space-y-0.5">
             <p className="font-semibold text-[#241E1A]">AI Stylist đang phân tích bản phối...</p>
             <p className="text-[11px] text-[#7A6E63] font-serif">
-              Đối chiếu phom dáng di sản {core.name} với tủ đồ đương đại và không gian {setupData.location}.
+              Đối chiếu form dáng di sản {core.name} với tủ đồ đương đại và không gian {setupData.location}.
             </p>
           </div>
         </div>
@@ -321,7 +328,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
                     return (
                       <div
                         key={idx}
-                        className="bg-white border border-[#E5DEC9] rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                        className={`bg-white border border-[#E5DEC9] rounded-lg p-3 flex flex-col justify-between gap-2.5 ${embedded ? '' : 'sm:flex-row sm:items-center'}`}
                       >
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">

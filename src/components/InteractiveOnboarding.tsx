@@ -8,11 +8,10 @@ import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import {
   ArrowLeft,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   Check,
   MapPin,
   Calendar,
+  BookOpen,
 } from 'lucide-react';
 
 export interface ConfirmedIntroFields {
@@ -27,6 +26,7 @@ interface InteractiveOnboardingProps {
   welcomeReady: boolean;
   restartFromGarmentSelection: boolean;
   onSelectCoreGarment: (id: CoreVietPhucId) => void;
+  onOpenCoreDetail: (id: CoreVietPhucId) => void;
   onSelectOccasion: (occasion: string) => void;
   onSelectLocation: (location: string) => void;
   onSkip: () => void;
@@ -40,6 +40,72 @@ const StepMountAligner: React.FC<{ sectionRef: React.RefObject<HTMLElement | nul
   return null;
 };
 
+
+// Pointer feedback is written at most once per animation frame, without React renders.
+function useExhibitPointer(enabled: boolean) {
+  const active = useRef<{ host: HTMLDivElement; surface: HTMLElement; maxTilt: number } | null>(null);
+  const pointer = useRef({ x: 0, y: 0 });
+  const frame = useRef<number | null>(null);
+  const mouseMedia = useRef<MediaQueryList | null>(null);
+  const reset = React.useCallback(() => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = null;
+    if (active.current) {
+      for (const name of ['--tilt-x', '--tilt-y', '--highlight-x', '--highlight-y', '--highlight-visible']) {
+        active.current.surface.style.removeProperty(name);
+      }
+    }
+    active.current = null;
+  }, []);
+
+  React.useEffect(() => {
+    const media = window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
+    mouseMedia.current = media;
+    const handleChange = () => reset();
+    media.addEventListener('change', handleChange);
+    if (!enabled) reset();
+    return () => {
+      media.removeEventListener('change', handleChange);
+      mouseMedia.current = null;
+      reset();
+    };
+  }, [enabled, reset]);
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!enabled || event.pointerType !== 'mouse' || !mouseMedia.current?.matches) return;
+    const host = event.currentTarget;
+    if (active.current?.host !== host) {
+      reset();
+      const surface = host.querySelector<HTMLElement>('.heritage-card');
+      if (!surface) return;
+      const configuredTilt = parseFloat(getComputedStyle(surface).getPropertyValue('--exhibit-tilt-max'));
+      active.current = { host, surface, maxTilt: Math.min(3, Math.max(0, configuredTilt || 0)) };
+    }
+    pointer.current = { x: event.clientX, y: event.clientY };
+    if (frame.current !== null) return;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = null;
+      const current = active.current;
+      if (!current?.host.isConnected) return;
+      // Measure the un-tilted host to avoid feedback from the moving surface.
+      const bounds = current.host.getBoundingClientRect();
+      const photo = current.host.querySelector<HTMLElement>('.heritage-photo-frame')?.getBoundingClientRect();
+      if (!bounds.width || !bounds.height || !photo?.width || !photo.height) return;
+      const clamp = (value: number) => Math.max(0, Math.min(1, value));
+      const x = clamp((pointer.current.x - bounds.left) / bounds.width);
+      const y = clamp((pointer.current.y - bounds.top) / bounds.height);
+      const highlightX = clamp((pointer.current.x - photo.left) / photo.width);
+      const highlightY = clamp((pointer.current.y - photo.top) / photo.height);
+      current.surface.style.setProperty('--tilt-x', `${(0.5 - y) * 2 * current.maxTilt}deg`);
+      current.surface.style.setProperty('--tilt-y', `${(x - 0.5) * 2 * current.maxTilt}deg`);
+      current.surface.style.setProperty('--highlight-x', `${highlightX * 100}%`);
+      current.surface.style.setProperty('--highlight-y', `${highlightY * 100}%`);
+      current.surface.style.setProperty('--highlight-visible', '1');
+    });
+  };
+  return { onPointerMove, onPointerLeave: reset };
+}
+
 const ORDERED_CORE_GARMENT_IDS: CoreVietPhucId[] = [
   'ao-nhat-binh',
   'ao-tac',
@@ -49,7 +115,7 @@ const ORDERED_CORE_GARMENT_IDS: CoreVietPhucId[] = [
 ];
 
 const OCCASION_SUBTITLES: Record<string, string> = {
-  'Chụp ảnh kỷ niệm / Lookbook': 'Tôn vinh thần thái và phom dáng cổ phục qua từng khung hình nghệ thuật',
+  'Chụp ảnh kỷ niệm / Lookbook': 'Tôn vinh thần thái và form dáng cổ phục qua từng khung hình nghệ thuật',
   'Sự kiện trang trọng': 'Phong thái đĩnh đạc, chỉn chu cho những buổi lễ và gặp gỡ trang nghiêm',
   'Lễ hội ở trường': 'Trẻ trung, nổi bật và giàu bản sắc văn hóa trong không gian học đường',
   'Đi chơi cuối tuần': 'Phóng khoáng, thoải mái dạo phố, thưởng trà hoặc cà phê cùng bạn bè',
@@ -64,6 +130,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
   welcomeReady,
   restartFromGarmentSelection,
   onSelectCoreGarment,
+  onOpenCoreDetail,
   onSelectOccasion,
   onSelectLocation,
   onSkip,
@@ -77,6 +144,8 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
     if (confirmedFields.coreGarment) return 2;
     return 1;
   });
+
+  const exhibitPointer = useExhibitPointer(introStep === 1 && !shouldReduceMotion);
 
   const step1SectionRef = useRef<HTMLElement | null>(null);
   const step2SectionRef = useRef<HTMLElement | null>(null);
@@ -96,9 +165,6 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
       alignElementBelowStickyHeader(step1SectionRef.current, 0);
     }
   }, [welcomeReady]);
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
-  const [canScrollRight, setCanScrollRight] = useState<boolean>(true);
   const [failedGarmentImages, setFailedGarmentImages] = useState<Record<string, boolean>>({});
 
   // Track user-initiated step transitions so keyboard focus moves cleanly to the new step heading
@@ -118,51 +184,6 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
       });
     }
   }, []);
-
-  const updateCarouselScrollState = React.useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const maxScrollLeft = el.scrollWidth - el.clientWidth;
-    setCanScrollLeft(el.scrollLeft > 6);
-    setCanScrollRight(maxScrollLeft - el.scrollLeft > 6);
-  }, []);
-
-  React.useEffect(() => {
-    if (introStep !== 1) return;
-    const el = carouselRef.current;
-    if (!el) return;
-
-    updateCarouselScrollState();
-    const observer = new ResizeObserver(updateCarouselScrollState);
-    observer.observe(el);
-    window.addEventListener('resize', updateCarouselScrollState);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updateCarouselScrollState);
-    };
-  }, [introStep, updateCarouselScrollState]);
-
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    const el = carouselRef.current;
-    if (!el) return;
-
-    const cards = Array.from(el.querySelectorAll<HTMLElement>('[data-garment-card="true"]'));
-    let stepWidth = 264;
-    if (cards.length >= 2) {
-      const measuredDelta = cards[1].offsetLeft - cards[0].offsetLeft;
-      if (measuredDelta > 0) {
-        stepWidth = measuredDelta;
-      }
-    } else if (cards.length === 1) {
-      stepWidth = cards[0].getBoundingClientRect().width + 16;
-    }
-
-    el.scrollBy({
-      left: direction === 'left' ? -stepWidth : stepWidth,
-      behavior: shouldReduceMotion ? 'auto' : 'smooth',
-    });
-  };
 
   const selectedCoreItem = CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
 
@@ -192,10 +213,11 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
       transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
-      className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 overflow-x-hidden"
+      className={introStep === 1 ? 'heritage-gallery-shell' : undefined}
     >
-      {/* Top Bar: Step Progress Breadcrumb & Prominent "Bỏ qua giới thiệu" Action */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE3D6] pb-4">
+      <div className={`max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 ${introStep === 1 ? 'heritage-gallery-content' : 'overflow-x-hidden'}`}>
+      {/* Top Bar: Step Progress Breadcrumb & Prominent "Bỏ qua mở đầu" Action */}
+      <div className="heritage-intro-navigation flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE3D6] pb-4">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {introStep > 1 && (
             <button
@@ -282,7 +304,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
           onClick={onSkip}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#5A4F46] hover:text-[#B3261E] bg-[#FFFDF9] hover:bg-[#FAF3EB] border border-[#DDD0C0] hover:border-[#B3261E] rounded-lg transition-colors cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
         >
-          <span>Bỏ qua giới thiệu</span>
+          <span>Bỏ qua mở đầu</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -297,11 +319,11 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }}
             transition={stepTransition}
-            className="space-y-4 sm:space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
+            className="heritage-garment-step space-y-4 sm:space-y-5 min-h-[calc(100dvh-4.75rem)] pt-1"
           >
             <StepMountAligner sectionRef={step1SectionRef} />
             {/* Editorial Welcome Hero */}
-            <div className="max-w-3xl mx-auto text-center space-y-3">
+            <div className="heritage-garment-welcome max-w-3xl mx-auto text-center space-y-3">
               <motion.span
                 key={welcomeReady ? 'intro-label-ready' : 'intro-label-modal'}
                 initial={playWelcomeEntrance ? { opacity: 0, y: 5 } : false}
@@ -334,78 +356,35 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
               </motion.p>
             </div>
 
-            {/* Mobile/Tablet Carousel Controls & Hint (< lg) */}
-            <div className="flex lg:hidden items-center justify-between gap-2 px-1">
-              <span className="text-xs text-[#7A6E63] font-serif italic">
-                Vuốt ngang để xem cả 5 bộ Việt phục →
-              </span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  disabled={!canScrollLeft}
-                  onClick={() => scrollCarousel('left')}
-                  aria-label="Xem áo trước"
-                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] disabled:opacity-40 disabled:hover:border-[#DDD0C0] disabled:cursor-not-allowed text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  disabled={!canScrollRight}
-                  onClick={() => scrollCarousel('right')}
-                  aria-label="Xem áo tiếp theo"
-                  className="w-8 h-8 rounded-lg bg-[#FFFDF9] border border-[#DDD0C0] hover:border-[#B3261E] disabled:opacity-40 disabled:hover:border-[#DDD0C0] disabled:cursor-not-allowed text-[#4E433C] flex items-center justify-center cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* 5 Core Việt Phục Collection Showcase:
-                - Desktop (lg+): 5-column side-by-side collection gallery
-                - Mobile/Tablet (< lg): Horizontal touch-scroll snap carousel */}
-            <div
-              ref={carouselRef}
-              onScroll={updateCarouselScrollState}
-              className="flex lg:grid lg:grid-cols-5 gap-3.5 sm:gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory pb-3 lg:pb-0 no-scrollbar -mx-1 px-1 scroll-px-1"
-            >
+            {/* One card per row on mobile/tablet; the desktop collection stays five columns. */}
+            <div className="heritage-collection grid grid-cols-1 lg:grid-cols-5 gap-5 lg:gap-4">
               {ORDERED_CORE_GARMENT_IDS.map((garmentId, index) => {
                 const item = CORE_ITEMS[garmentId];
                 const isExplicitlySelected =
                   confirmedFields.coreGarment && setupData.coreGarment === item.id;
 
                 return (
-                  <motion.button
+                  <motion.div
                     key={`${item.id}-${welcomeReady ? 'ready' : 'modal'}`}
-                    type="button"
                     initial={playWelcomeEntrance ? { opacity: 0, y: 10 } : false}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: playWelcomeEntrance ? 0.19 + index * 0.055 : 0, ease: 'easeOut' }}
                     data-garment-card="true"
-                    onClick={() => handlePickGarment(item.id)}
-                    className={`group snap-start shrink-0 w-[236px] min-[375px]:w-[252px] sm:w-[264px] lg:w-auto text-left rounded-xl p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] ${
-                      isExplicitlySelected
-                        ? 'bg-[#FFFDF9] border-2 border-[#B3261E] shadow-md'
-                        : 'bg-[#FFFDF9] border border-[#E3D9CC] hover:border-[#B3261E] hover:shadow-sm'
-                    }`}
+                    {...exhibitPointer}
+                    className="group relative min-w-0 w-full"
                   >
-                    {/* Card Top Metadata: Index + Era + Palette Dots */}
-                    <div className="w-full flex items-center justify-between gap-2 border-b border-[#EFE8DC] pb-2.5 mb-3">
-                      <span className="text-[11px] font-mono text-[#8C7E72] truncate">
-                        0{index + 1} · {item.archiveCode}
-                      </span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {item.palette.map((swatch, idx) => (
-                          <span
-                            key={idx}
-                            className="w-2.5 h-2.5 rounded-full border border-black/15"
-                            style={{ backgroundColor: swatch.hex }}
-                            title={swatch.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
+                    <div
+                      className="heritage-card relative h-full text-left rounded-xl p-4 flex flex-col justify-between"
+                      data-selected={isExplicitlySelected}
+                    >
+                    {/* A full-card selection button and a separate profile button above it. */}
+                    <button
+                      type="button"
+                      aria-label={`Chọn ${item.name}`}
+                      aria-pressed={isExplicitlySelected}
+                      onClick={() => handlePickGarment(item.id)}
+                      className="absolute inset-0 z-10 rounded-xl cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF7EE]"
+                    />
                     {/* Isolated garment photograph with fallback to the existing silhouette SVG */}
                     {(() => {
                       const demoMedia = getGarmentLayerPreview(item.id);
@@ -413,9 +392,9 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                       const hasValidPhoto = Boolean(photoSrc && !failedGarmentImages[item.id]);
 
                       return (
-                        <div className="relative w-full h-[205px] sm:h-[220px] bg-[#FAF7EE]/75 group-hover:bg-[#FAF3EB]/80 rounded-lg border border-[#EAE3D6]/80 flex items-center justify-center p-2.5 my-1 transition-colors overflow-hidden">
+                        <div className="heritage-photo-frame relative w-full h-[205px] sm:h-[220px] rounded-lg flex items-center justify-center p-2.5 my-1 overflow-hidden">
                           {hasValidPhoto ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
+                            <div className="relative z-[1] w-full h-full flex items-center justify-center">
                               <img
                                 src={photoSrc}
                                 alt={`Ảnh tách nền trang phục ${item.name}`}
@@ -423,7 +402,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                                   setFailedGarmentImages((prev) => ({ ...prev, [item.id]: true }))
                                 }
                                 loading="lazy"
-                                className="w-full h-full object-contain object-center transition-transform duration-200 group-hover:scale-[1.03]"
+                                className="w-full h-full object-contain object-center"
                               />
                               <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[9px] font-mono tracking-tight text-[#7A6E63] bg-[#FFFDF9]/90 backdrop-blur-[2px] rounded-xs border border-[#E5DEC9]">
                                 Trang phục
@@ -432,7 +411,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                           ) : (
                             <GarmentSilhouetteSvg
                               coreGarment={item.id}
-                              className="w-full h-full max-h-[195px] mx-auto select-none transition-transform duration-200 group-hover:scale-[1.03]"
+                              className="relative z-[1] w-full h-full max-h-[195px] mx-auto select-none"
                             />
                           )}
                         </div>
@@ -440,7 +419,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                     })()}
 
                     {/* Garment Title & Short Description */}
-                    <div className="mt-3.5 space-y-1.5 w-full">
+                    <div className="heritage-card-copy mt-3.5 space-y-1.5 w-full">
                       <div className="flex items-baseline justify-between gap-2">
                         <h2 className="text-base sm:text-lg font-editorial font-bold text-[#2B231D] group-hover:text-[#B3261E] transition-colors">
                           {item.name}
@@ -452,21 +431,32 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                         )}
                       </div>
 
-                      <p className="text-xs font-medium text-[#8C3B24]">
+                      <p className="text-xs font-medium text-[#5A4F46]">
                         {item.subTitle}
                       </p>
 
-                      <p className="text-xs text-[#6E6257] leading-relaxed line-clamp-2 font-serif pt-0.5">
-                        {item.editorialDescription}
-                      </p>
+                      <button
+                        type="button"
+                        aria-label={`Hồ sơ cổ phục: ${item.name}`}
+                        aria-haspopup="dialog"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onOpenCoreDetail(item.id);
+                        }}
+                        className="relative z-20 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#DDD0C0] bg-[#FAF7EE] px-3 py-2 text-xs font-semibold text-[#B3261E] transition-colors hover:border-[#B3261E] hover:bg-[#FAF3EB] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFDF9] cursor-pointer"
+                      >
+                        <BookOpen aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                        <span>Hồ sơ cổ phục</span>
+                      </button>
                     </div>
 
                     {/* Action Prompt Footer */}
-                    <div className="mt-4 pt-2.5 border-t border-[#EFE8DC] w-full flex items-center justify-between text-xs font-semibold text-[#B3261E]">
+                    <div className="heritage-card-action mt-4 pt-2.5 border-t border-[#EFE8DC] w-full flex items-center justify-between text-xs font-semibold text-[#B3261E]">
                       <span>{isExplicitlySelected ? 'Tiếp tục với áo này' : 'Chọn dáng áo này'}</span>
                       <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
                     </div>
-                  </motion.button>
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -686,6 +676,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
           </motion.section>
         )}
       </AnimatePresence>
+      </div>
     </motion.div>
   );
 };

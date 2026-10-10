@@ -181,3 +181,17 @@ test('full setup matrix covers five garments, seven occasions, eleven locations,
     }
   assert.equal(count,21175);
 });
+
+
+test('silhouette spelling keeps the existing structural guardrail for old and new user input',()=>{
+  const state=createStylingState();
+  const core=CORE_ITEMS[state.setupData.coreGarment];
+  const actual=computeActualRemix(state.items);
+  const assess=(text:string)=>evaluateGuardrail(text,core,state.items,state.setupData,actual);
+  const result=assess('biến dạng form dáng');
+  assert.equal(result.status,'orange');
+  for(const input of ['biến dạng phom dáng','BIẾN DẠNG PHOM DÁNG','BIẾN DẠNG FORM DÁNG']){
+    assert.deepEqual(assess(input),result);
+  }
+  assert.doesNotMatch(JSON.stringify(result),/\bphom\b/i);
+});

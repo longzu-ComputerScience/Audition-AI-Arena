@@ -17,6 +17,9 @@ import {
 import { recolorGarmentImage, peekRecoloredGarmentImage, retainRecoloredImage } from '../utils/fabricRecolor';
 import { usePhotoImage, retryPhotoImage } from '../utils/photoImageCache';
 import { getOutfitLayerConfig } from '../data/photoLayerFitting';
+import { AccessoryPositions, AccessoryPoint, AccessoryBounds, MovableCategory } from '../utils/accessoryPlacement';
+import { TECHWEAR_VISIBLE_CONTOUR } from '../utils/accessoryHitShape';
+import { MovableAccessory } from './MovableAccessory';
 import {
   Layers,
   Pin,
@@ -29,6 +32,7 @@ import {
   Trash2,
   Sliders,
   ChevronDown,
+  RotateCcw,
 } from 'lucide-react';
 
 interface MannequinCanvasProps {
@@ -42,6 +46,9 @@ interface MannequinCanvasProps {
   onOpenCoreDetail?: () => void;
   onSelectFabricColor?: (hex: string) => void;
   displayMode?: 'svg' | 'photo';
+  accessoryPositions: AccessoryPositions;
+  onMoveAccessory: (category: MovableCategory, point: AccessoryPoint) => void;
+  onResetAccessoryPositions: () => void;
 }
 
 function parseHexRgb(hex: string): [number, number, number] {
@@ -82,6 +89,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   onOpenCoreDetail,
   onSelectFabricColor,
   displayMode,
+  accessoryPositions,
+  onMoveAccessory,
+  onResetAccessoryPositions,
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const necklaceClipId = `necklace-${useId().replace(/:/g, '')}`;
@@ -120,6 +130,39 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   });
   const stageRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const bagNodeRef = useRef<SVGGElement>(null);
+  const accentNodeRef = useRef<SVGGElement>(null);
+  const [selectedAccessory, setSelectedAccessory] = useState<MovableCategory | null>(null);
+  const [accessoryOffsets, setAccessoryOffsets] = useState<Record<MovableCategory, AccessoryPoint & { anchor?: AccessoryPoint }>>({ bag: { x: 0, y: 0 }, accent: { x: 0, y: 0 } });
+  const updateAccessoryOffset = useCallback((category: MovableCategory, offset: AccessoryPoint, bounds: AccessoryBounds | null) => {
+    const anchor = bounds ? { x: bounds.x + offset.x + (category === 'bag' ? bounds.width + 8 : -8), y: bounds.y + offset.y + bounds.height / 2 } : undefined;
+    setAccessoryOffsets(previous => previous[category].x === offset.x && previous[category].y === offset.y
+      && previous[category].anchor?.x === anchor?.x && previous[category].anchor?.y === anchor?.y
+      ? previous : { ...previous, [category]: { ...offset, anchor } });
+  }, []);
+  useEffect(() => { setSelectedAccessory(null); }, [core.id, items.bag.id, items.accent?.id]);
+
+  useEffect(() => {
+    if (!selectedAccessory) return;
+    const dismissAccessorySelection = (event: Event) => {
+      const nodes = [bagNodeRef.current, accentNodeRef.current];
+      const path = event.composedPath();
+      const target = event.target instanceof Element ? event.target : null;
+      // Keep selecting either item/control possible, and never interrupt a captured drag.
+      if (nodes.some(node => node && path.includes(node)) || target?.closest('[data-accessory-select]')) return;
+      if (nodes.some(node => node?.dataset.dragging === 'true')) return;
+      setSelectedAccessory(null);
+      // Clicking a non-focusable background must also end arrow-key movement.
+      nodes.forEach(node => { if (node && document.activeElement === node) node.blur(); });
+    };
+    document.addEventListener('pointerdown', dismissAccessorySelection, true);
+    document.addEventListener('focusin', dismissAccessorySelection);
+    return () => {
+      document.removeEventListener('pointerdown', dismissAccessorySelection, true);
+      document.removeEventListener('focusin', dismissAccessorySelection);
+    };
+  }, [selectedAccessory]);
+
   const trayRef = useRef<HTMLDivElement | null>(null);
   const desktopPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -329,8 +372,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       if (btnRect.width <= 0 || btnRect.height <= 0) continue;
 
       const anchor = getMannequinAnchorPoint(category);
-      const rawStartX = svgOriginX + anchor.vx * scale;
-      const startY = svgOriginY + anchor.vy * scale;
+      const geometry = category === 'bag' || (category === 'accent' && items.accent) ? accessoryOffsets[category as MovableCategory] : undefined;
+      const rawStartX = svgOriginX + (geometry?.anchor?.x ?? anchor.vx) * scale;
+      const startY = svgOriginY + (geometry?.anchor?.y ?? anchor.vy) * scale;
 
       const endX =
         side === 'left'
@@ -339,7 +383,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       const endY = btnRect.top - stageRect.top + btnRect.height / 2;
 
       // Ensure startX always stays on the mannequin side of endX with at least 14px span
-      const startX =
+      const startX = category === 'bag' || category === 'accent' ? rawStartX :
         side === 'left'
           ? Math.max(endX + 14, rawStartX)
           : Math.min(endX - 14, rawStartX);
@@ -357,7 +401,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
     setStageDimensions(previous => previous.width === stageRect.width && previous.height === stageRect.height ? previous : { width: stageRect.width, height: stageRect.height });
     setLeaderLines(previous => JSON.stringify(previous) === JSON.stringify(computed) ? previous : computed);
-  }, [getMannequinAnchorPoint]);
+  }, [getMannequinAnchorPoint, accessoryOffsets, items.accent]);
 
   useLayoutEffect(() => {
     updateLeaderLines();
@@ -1169,7 +1213,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     const bagPhotoConfig = getOutfitLayerConfig(core.id, 'bag', items.bag?.id);
     if (isPhotoModeActive && bagPhotoConfig && bagStatus === 'loading') return <g data-pending-layer="bag" />;
     if (isPhotoModeActive && bagPhotoConfig && bagStatus === 'ready') {
-      const carry = corePhotoConfig?.bagCarryAnchor ?? [36,294];
       return (
         <g id="photo-layer-bag" className="select-none pointer-events-none">
           {items.bag.id === 'bag-techwear-crossbody' && (
@@ -1180,7 +1223,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               <mask id={`${necklaceClipId}-strap-mask`} maskUnits="userSpaceOnUse"
                 maskContentUnits="userSpaceOnUse" x="0" y="0" width="300" height="600">
                 <g transform={`translate(${bagPhotoConfig.svgPlacement.x} ${bagPhotoConfig.svgPlacement.y}) scale(${bagPhotoConfig.svgPlacement.width / bagPhotoConfig.sourceDimensions.width})`}>
-                  <path d="M510 0 L540 120 L535 240 L512 340 L442 402 L346 441 L0 465 L0 800 L644 800 L644 0 Z" fill="white" />
+                  <path d={TECHWEAR_VISIBLE_CONTOUR} fill="white" />
                 </g>
               </mask>
             </defs>
@@ -1194,9 +1237,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             preserveAspectRatio={bagPhotoConfig.preserveAspectRatio}
             mask={items.bag.id === 'bag-techwear-crossbody' ? `url(#${necklaceClipId}-strap-mask)` : undefined}
           />
-          {items.bag.id === 'bag-gam-vintage' && (
-            <path transform={`translate(${carry[0]-36} ${carry[1]-294})`} d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" />
-          )}
+
         </g>
       );
     }
@@ -1890,7 +1931,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               const arrowPath = `M ${line.endX + arrowDir * 5} ${line.endY - 3} L ${line.endX} ${line.endY} L ${line.endX + arrowDir * 5} ${line.endY + 3}`;
 
               return (
-                <g key={`leader-${line.category}`} opacity={strokeOpacity}>
+                <g key={`leader-${line.category}`} data-leader-category={line.category} opacity={strokeOpacity}>
                   {/* Delicate editorial origin dot in the open air near the garment */}
                   <circle
                     cx={line.startX}
@@ -2041,6 +2082,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
         <svg
           ref={svgRef}
+          role="group"
           viewBox="0 0 300 600"
           className="w-full max-w-[340px] h-auto max-h-[min(410px,55dvh)] sm:max-h-[min(480px,60dvh)] lg:max-h-[min(470px,calc(100vh-270px))] xl:max-h-[min(520px,calc(100vh-260px))] mx-auto select-none drop-shadow-xs"
           preserveAspectRatio="xMidYMid meet"
@@ -2074,7 +2116,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
           {/* 4. Selected Core Việt Phục (Dominant piece, crossfade on core change) */}
           {/* Nhật Bình's embroidered collar occludes necklace chains beside its real opening. */}
-          {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive && renderAccent()}
+          {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive && accentStatus === 'ready' && !accessoryPositions.accent && selectedAccessory !== 'accent' && renderAccent()}
           <motion.g
             key={`core-${core.id}`}
             initial={{ opacity: 0 }}
@@ -2084,26 +2126,55 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {renderCoreGarment()}
           </motion.g>
 
-          {/* 5. Selected Bag (Crossfade on bag change) */}
-          <motion.g
-            key={`bag-${items.bag.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={layerTransition}
-          >
-            {renderBag()}
-          </motion.g>
+          {/* Movable layers keep the original artwork/size. The selected layer is painted last. */}
+          {(['bag', 'accent'] as MovableCategory[]).sort((a, b) => Number(a === selectedAccessory) - Number(b === selectedAccessory)).map(category => {
+            const item = items[category];
+            if (!item) return null;
+            const status = category === 'bag' ? bagStatus : accentStatus;
+            const config = getOutfitLayerConfig(core.id, category, item.id, items.bag.id);
+            const necklaceBehindCore = category === 'accent' && core.id === 'ao-nhat-binh' && item.id === 'accent-silver-jewelry'
+              && isPhotoModeActive && accentStatus === 'ready' && !accessoryPositions.accent && selectedAccessory !== 'accent';
+            return <MovableAccessory key={category} category={category} itemId={item.id} name={item.name} coreId={core.id}
+              photoConfig={config} photoReady={isPhotoModeActive && status === 'ready'} pending={isPhotoModeActive && status === 'loading'}
+              position={accessoryPositions[category]} selected={selectedAccessory === category}
+              nodeRef={category === 'bag' ? bagNodeRef : accentNodeRef}
+              clipTop={category === 'accent' && item.id === 'accent-silver-jewelry' && isPhotoModeActive ? 116 : undefined}
+              onSelect={setSelectedAccessory} onMove={onMoveAccessory} onOffset={updateAccessoryOffset}>
+              <motion.g key={`${category}-${item.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={layerTransition}>
+                {category === 'bag' ? renderBag() : necklaceBehindCore ? null : renderAccent()}
+              </motion.g>
+            </MovableAccessory>;
+          })}
+          {/* This hand detail belongs to the mannequin, not the draggable bag. */}
+          {isPhotoModeActive && bagStatus === 'ready' && items.bag.id === 'bag-gam-vintage' && (() => {
+            const carry = corePhotoConfig?.bagCarryAnchor ?? [36, 294];
+            return <path data-fixed-hand-detail transform={`translate(${carry[0]-36} ${carry[1]-294})`}
+              d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" pointerEvents="none" />;
+          })()}
 
-          {/* 6. Optional Accent (Crossfade on accent change) */}
-          <motion.g
-            key={`accent-${items.accent ? items.accent.id : 'none'}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={layerTransition}
-          >
-            {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive ? null : renderAccent()}
-          </motion.g>
         </svg>
+      </div>
+
+      {/* Explicit selection also reaches either accessory when their images overlap. */}
+      <div className="mt-3 space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {(['bag', 'accent'] as MovableCategory[]).map(category => (
+            <button key={category} type="button" disabled={!items[category] || (isPhotoModeActive && (category === 'bag' ? bagStatus : accentStatus) === 'loading')}
+              data-accessory-select={category}
+              aria-label={`Chọn để di chuyển ${category === 'bag' ? 'túi' : 'phụ kiện'}`} aria-pressed={selectedAccessory === category}
+              onClick={() => { setSelectedAccessory(category); (category === 'bag' ? bagNodeRef : accentNodeRef).current?.focus({ preventScroll: true }); }}
+              className="accessory-position-action inline-flex items-center gap-1.5">
+              {category === 'bag' ? <ShoppingBag aria-hidden="true" className="w-3.5 h-3.5" /> : <Sparkles aria-hidden="true" className="w-3.5 h-3.5" />}
+              {category === 'bag' ? 'Di chuyển túi' : 'Di chuyển phụ kiện'}
+            </button>
+          ))}
+          <button type="button" onClick={onResetAccessoryPositions} className="accessory-position-action inline-flex items-center gap-1.5">
+            <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" /> Đặt lại vị trí phụ kiện
+          </button>
+        </div>
+        <p id="accessory-move-help" className="text-[11px] leading-relaxed text-[#7A6E63]">
+          Kéo túi/phụ kiện để di chuyển, hoặc chọn món và dùng phím mũi tên. Giữ Shift để dịch nhanh hơn.
+        </p>
       </div>
 
       {/* Footer Info Strip with Outfit Composition & Detail Action */}
@@ -2216,6 +2287,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   {/* Compact Bottom Sheet Tray */}
                   <motion.div
                     ref={trayRef}
+                    data-quick-tray
                     role="dialog"
                     aria-modal="false"
                     aria-label={`Khay chọn nhanh ${activeCategoryConfig.fullTitle}`}

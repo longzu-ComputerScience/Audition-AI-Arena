@@ -91,7 +91,7 @@ export const AIResultModal: React.FC<AIResultModalProps> = ({
     if (!result?.imageUrl) return;
     const link = document.createElement('a');
     link.href = result.imageUrl;
-    link.download = `viet-phuc-remix-${activeSnapshot?.core.id || 'editorial'}.png`;
+    link.download = `sac-viet-${activeSnapshot?.core.id || 'editorial'}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -257,19 +257,12 @@ export const AIResultModal: React.FC<AIResultModalProps> = ({
                     Không thể tạo bản minh họa AI
                   </h3>
                   <p className="text-xs text-[#7A6E63] leading-relaxed bg-[#FAF7EE] border border-[#EAE3D6] p-3 rounded-xs text-left">
-                    {result?.error ||
-                      'Đã xảy ra lỗi không xác định trong quá trình gọi mô hình tạo ảnh. Vui lòng thử lại.'}
+                    {result?.errorCode === 'QUOTA_EXCEEDED' || result?.errorCode === 'PERMISSION_DENIED'
+                      ? 'Cấu hình API hiện tại chưa hỗ trợ tạo ảnh. Vui lòng đổi sang API key có quyền tạo ảnh.'
+                      : result?.error || 'Đã xảy ra lỗi không xác định trong quá trình gọi mô hình tạo ảnh. Vui lòng thử lại.'}
                   </p>
                 </div>
 
-                {/* Quota / Billing explanation note */}
-                {result?.errorCode === 'QUOTA_EXCEEDED' && (
-                  <p className="text-[11px] text-[#8C7E72] max-w-md text-left">
-                    * Lưu ý: Mô hình tạo ảnh `gemini-3.1-flash-lite-image` yêu cầu dự án
-                    sử dụng khóa API có hạn mức hình ảnh (Paid Key). Bạn có thể cấu hình
-                    lại API key trong mục <strong>Settings &gt; Secrets</strong> trên AI Studio.
-                  </p>
-                )}
               </div>
             )}
           </div>

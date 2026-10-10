@@ -125,7 +125,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(
-      `[Việt Phục Remix Server] listening on http://0.0.0.0:${PORT} (${isProd ? 'production' : 'development'})`
+      `[Sắc Việt Server] listening on http://0.0.0.0:${PORT} (${isProd ? 'production' : 'development'})`
     );
   });
 }

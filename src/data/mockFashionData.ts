@@ -28,7 +28,7 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
     heritageDna: [
       'Viền cổ hình chữ nhật (Nhật Bình) đính hoa văn chỉ vàng',
       'Dải ngũ sắc tượng trưng ngũ hành trước ngực áo',
-      'Phom dáng thụ rộng tôn phong thái đoan trang lễ nghi',
+      'Form dáng thụ rộng tôn phong thái đoan trang lễ nghi',
     ],
     heritageStory:
       'Áo Nhật Bình vốn là thường phục của bậc hậu phi, công chúa và là lễ phục của hàng mệnh phụ triều Nguyễn. Tên gọi bắt nguồn từ viền cổ áo hình chữ nhật ghép dải ngũ sắc cân xứng trước ngực, tượng trưng cho nét đẹp trang trọng chốn hoàng cung xưa.',
@@ -65,7 +65,7 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
   'ao-dai': {
     id: 'ao-dai',
     name: 'Áo Dài',
-    vietnameseTitle: 'Áo Dài Phom Suông Tân Thời',
+    vietnameseTitle: 'Áo Dài Form Suông Tân Thời',
     subTitle: 'Biểu tượng giao thoa thế kỷ 20',
     archiveCode: 'VPR-AD-1930',
     era: 'Thế kỷ 20 · Giao thời hiện đại',
@@ -85,7 +85,7 @@ export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
     heritageStory:
       'Phát triển từ áo ngũ thân truyền thống qua những cải tiến thẩm mỹ đầu thế kỷ 20, tà Áo Dài tinh giản còn hai vạt buông thướt tha. Trang phục trở thành biểu tượng giao thoa văn hóa, kết hợp giữa vẻ kín đáo truyền thống và tinh thần tự do thanh lịch đương thời.',
     editorialDescription:
-      'Dáng áo thân quen của thẩm mỹ Việt Nam với hai vạt buông bay bổng. Phiên bản phom suông tối giản mang lại sự thoải mái trong sinh hoạt hiện đại.',
+      'Dáng áo thân quen của thẩm mỹ Việt Nam với hai vạt buông bay bổng. Phiên bản form suông tối giản mang lại sự thoải mái trong sinh hoạt hiện đại.',
     patternType: 'lotus-imperial',
   },
   'ao-tu-than': {
@@ -190,7 +190,7 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorHex: '#F2EDE4',
       accentHex: '#C5B59E',
       badgeLabel: 'Truyền Thống',
-      editorialNote: 'Phom quần suông xẻ tà kinh điển, giữ độ bồng bềnh nguyên bản khi chuyển động.',
+      editorialNote: 'Form quần suông xẻ tà kinh điển, giữ độ bồng bềnh nguyên bản khi chuyển động.',
       patternType: 'stripes',
     },
     {
@@ -198,13 +198,13 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       name: 'Quần Tây',
       category: 'bottom',
       categoryLabel: 'Phần Dưới · Bottom',
-      material: 'Vải âu dệt cao cấp màu be cát đứng phom',
+      material: 'Vải âu dệt cao cấp màu be cát đứng form',
       modernityScore: 62,
       colorName: 'Be Cát Cổ Điển',
       colorHex: '#DDD3C4',
       accentHex: '#9E886D',
       badgeLabel: 'Cân Bằng',
-      editorialNote: 'Đường ly ủi sắc nét cùng phom ống suông thanh lịch, tạo điểm tựa đĩnh đạc cân bằng giữa di sản và âu phục đương đại.',
+      editorialNote: 'Đường ly ủi sắc nét cùng form ống suông thanh lịch, tạo điểm tựa đĩnh đạc cân bằng giữa di sản và âu phục đương đại.',
       patternType: 'geometric',
     },
     {
@@ -292,7 +292,7 @@ export const SUPPORT_ITEMS: Record<SupportCategoryId, SupportOption[]> = {
       colorHex: '#D6C8B4',
       accentHex: '#9E886D',
       badgeLabel: 'Tối Giản',
-      editorialNote: 'Túi tote phom chữ nhật mộc mạc, tiện dụng cho các buổi dạo phố và cà phê.',
+      editorialNote: 'Túi tote form chữ nhật mộc mạc, tiện dụng cho các buổi dạo phố và cà phê.',
       patternType: 'stripes',
     },
     {

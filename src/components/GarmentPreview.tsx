@@ -339,7 +339,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
       <div className="border-b border-[#EAE3D6] pb-3 flex items-baseline justify-between">
         <div>
           <span className="text-[11px] font-semibold text-[#B3261E] tracking-wider uppercase block">
-            Phom Dáng Minh Họa
+            Form Dáng Minh Họa
           </span>
           <h3 className="text-base sm:text-lg font-bold text-[#2B231D] mt-0.5">
             {currentCore.name}
@@ -381,7 +381,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
       {/* Caption & Defining Attributes */}
       <div className="space-y-2 pt-2 border-t border-[#EAE3D6]">
         <p className="text-xs text-[#7A6E63] text-center italic font-normal">
-          {showRealPhoto ? 'Ảnh tách nền trang phục' : 'Minh họa phom dáng 2D cơ bản'}
+          {showRealPhoto ? 'Ảnh tách nền trang phục' : 'Minh họa form dáng 2D cơ bản'}
         </p>
 
         {/* Bullet points of defining silhouette features */}

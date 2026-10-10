@@ -1,5 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { motion } from 'motion/react';
+import { createPortal } from 'react-dom';
 import {
   CoreItem,
   ActiveSupportItems,
@@ -19,7 +20,8 @@ import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import { RecommendationTrace } from '../utils/stylingState';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
-import { AIStylistPanel } from './AIStylistPanel';
+import { FloatingAIStylist } from './FloatingAIStylist';
+import { AccessoryPositions, AccessoryPoint, MovableCategory } from '../utils/accessoryPlacement';
 import {
   Sliders,
   Sparkles,
@@ -31,6 +33,9 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
+// Shared surface for the wardrobe and heritage cards.
+const wardrobeSurfaceClassName = 'bg-[#FFFDF9] border border-[#E5DEC9] shadow-2xs';
+
 interface RemixStudioProps {
   core: CoreItem;
   supportItems: ActiveSupportItems;
@@ -40,6 +45,10 @@ interface RemixStudioProps {
   refinementText: string;
   guardrailResult: GuardrailResult;
   aiStatus: AIStatusInfo;
+  isOverlayOpen?: boolean;
+  accessoryPositions: AccessoryPositions;
+  onMoveAccessory: (category: MovableCategory, point: AccessoryPoint) => void;
+  onResetAccessoryPositions: () => void;
   onRemixDialChange: (value: number) => void;
   onSelectSupportItem: (category: SupportCategoryId, item: SupportOption) => void;
   onAddAccent: () => void;
@@ -61,6 +70,10 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   refinementText,
   guardrailResult,
   aiStatus,
+  isOverlayOpen = false,
+  accessoryPositions,
+  onMoveAccessory,
+  onResetAccessoryPositions,
   onRemixDialChange,
   onSelectSupportItem,
   onAddAccent,
@@ -110,7 +123,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5"
+      className="remix-stage max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5"
     >
       {/* Studio Header & Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D6] pb-4">
@@ -142,6 +155,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
           <MannequinCanvas
             core={core}
             items={supportItems}
+            accessoryPositions={accessoryPositions}
+            onMoveAccessory={onMoveAccessory}
+            onResetAccessoryPositions={onResetAccessoryPositions}
             fabricColor={resolvedColor.hex}
             palette={resolvedPalette}
             remixDialValue={remixDialValue}
@@ -153,7 +169,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
         </div>
 
         {/* Right Side: Wardrobe & Styling Controls (~40% -> lg:col-span-5) */}
-        <div className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
+        <div data-remix-controls className="lg:col-span-5 xl:col-span-5 w-full space-y-5 order-2 lg:order-2">
           {/* Controls Stack: Mức độ Remix always visible on top, Tủ Đồ Phối Kèm as a collapsible secondary accordion on all devices */}
           <div className="flex flex-col gap-4">
             {/* A. Mức độ Remix — Always visible outside the accordion on all devices */}
@@ -205,7 +221,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </section>
 
             {/* B. Tủ Đồ Phối Kèm — Secondary collapsible accordion on all devices (collapsed by default to focus on mannequin) */}
-            <section className="bg-[#FFFDF9] border border-[#E5DEC9] rounded-xl p-4 sm:p-5 shadow-2xs">
+            <section className={`${wardrobeSurfaceClassName} rounded-xl p-4 sm:p-5`}>
               <button
                 type="button"
                 onClick={() => {
@@ -326,55 +342,42 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             </section>
           </div>
 
-          {/* 2. Prominent AI Stylist Consultation Panel */}
-          <AIStylistPanel
-            core={core}
-            supportItems={supportItems}
-            setupData={setupData}
-            targetRemix={remixDialValue}
-            actualRemix={actualRemix}
-            aiStatus={aiStatus}
-            onSelectSupportItem={onSelectSupportItem}
-            onApplyRefinementText={onApplyRefinement}
-            currentRefinementText={refinementText}
-          />
-
           {/* 3. Góc Nhìn Di Sản (Storytelling & Cultural Context) */}
-          <section className="bg-[#FFFDF9] border border-[#E8DEC9] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
-            <div className="flex items-center gap-2 border-b border-[#EFE8DC] pb-2">
-              <BookOpen className="w-4 h-4 text-[#B3261E]" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#241E1A]">
+          <section data-heritage-panel aria-labelledby="remix-heritage-title" className={`${wardrobeSurfaceClassName} rounded-xl p-4 sm:p-5 space-y-4`}>
+            <div className="flex items-center gap-2.5 border-b border-[#C9AD7B]/45 pb-3">
+              <BookOpen aria-hidden="true" className="w-5 h-5 text-[#8F2925]" />
+              <h3 id="remix-heritage-title" className="text-base sm:text-lg font-bold uppercase tracking-wide text-[#8F2925]">
                 Góc Nhìn Di Sản
               </h3>
             </div>
 
             {/* A. Heritage Origin & Cultural Story */}
-            <div className="space-y-1.5">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-sm font-bold text-[#241E1A]">
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <h4 className="text-lg sm:text-xl font-bold text-[#352A23] leading-snug">
                   {core.vietnameseTitle || core.name}
-                </span>
-                <span className="text-xs text-[#8C7E72] font-serif">
+                </h4>
+                <span className="block text-xs text-[#695B4E] font-serif leading-relaxed">
                   ({core.era})
                 </span>
               </div>
 
               {core.heritageStory && (
-                <p className="text-xs text-[#4E433C] leading-relaxed font-serif">
+                <p className="text-sm text-[#4E433C] leading-7 font-serif">
                   {core.heritageStory}
                 </p>
               )}
 
-              <p className="text-[11px] text-[#7A6E63] leading-relaxed">
-                <span className="font-medium text-[#4E433C]">Đặc trưng phom dáng:</span> {core.silhouette}
+              <p className="border-t border-[#C9AD7B]/35 pt-3 text-sm text-[#5A4F46] leading-6">
+                <span className="font-medium text-[#4E433C]">Đặc trưng form dáng:</span> {core.silhouette}
               </p>
             </div>
 
             {/* B. Practical style etiquette - ngắn gọn */}
             {guardrailResult.etiquetteTip && (
-              <div className="bg-[#FAF7EE] border border-[#EAE3D6] rounded-lg p-2.5 flex items-start gap-2 text-xs text-[#5A4F46]">
-                <Info className="w-3.5 h-3.5 text-[#B3261E] shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
+              <div className="bg-[#FFF8ED] border border-[#D5C0A4] rounded-lg p-3 flex items-start gap-2 text-sm text-[#5A4F46]">
+                <Info className="w-4 h-4 text-[#8F2925] shrink-0 mt-1" />
+                <p className="text-sm leading-6">
                   <span className="font-semibold text-[#241E1A]">Chuẩn mực:</span> {guardrailResult.etiquetteTip}
                 </p>
               </div>
@@ -407,7 +410,7 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
           </section>
 
           {/* 5. Final AI Image Generation Action (Connected to shared AI availability) */}
-          <div className="pt-1 space-y-2">
+          <div className="remix-image-action pt-1 space-y-2">
             <button
               type="button"
               disabled={!aiStatus.isAvailable}
@@ -440,12 +443,29 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
         </div>
       </div>
 
-      {/* AI Image Generation Result Modal */}
-      <AIResultModal
-        isOpen={isAIModalOpen}
-        snapshot={aiSnapshot}
-        onClose={() => setIsAIModalOpen(false)}
+      {/* Floating consultation stays outside the controls layout. */}
+      <FloatingAIStylist
+        obscured={isAIModalOpen || isOverlayOpen}
+        core={core}
+        supportItems={supportItems}
+        setupData={setupData}
+        targetRemix={remixDialValue}
+        actualRemix={actualRemix}
+        aiStatus={aiStatus}
+        onSelectSupportItem={onSelectSupportItem}
+        onApplyRefinementText={onApplyRefinement}
+        currentRefinementText={refinementText}
       />
+
+      {/* Both portals use viewport positioning; image modal stays above the chat. */}
+      {createPortal(
+        <AIResultModal
+          isOpen={isAIModalOpen}
+          snapshot={aiSnapshot}
+          onClose={() => setIsAIModalOpen(false)}
+        />,
+        document.body,
+      )}
     </motion.section>
   );
 };

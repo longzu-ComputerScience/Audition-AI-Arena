@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { CoreItem } from '../types';
 import { PatternMotif } from './PatternMotif';
 import { getCoreGarmentDemoMedia, getCoreGarmentLookbook } from '../data/demoImageMap';
@@ -11,6 +11,9 @@ interface LookbookModalProps {
 }
 
 export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onClose }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
   const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
   const [failedSrcs, setFailedSrcs] = useState<Record<string, boolean>>({});
   const [lookbookError, setLookbookError] = useState<boolean>(false);
@@ -19,6 +22,50 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
     setActivePhotoIndex(0);
     setLookbookError(false);
   }, [core?.id, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !core) return;
+
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${parseFloat(getComputedStyle(document.body).paddingRight) + scrollbarWidth}px`;
+    }
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const buttons = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not([disabled])') ?? [])
+        .filter(button => button.getClientRects().length > 0);
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (!first || !last) return;
+      if (!dialogRef.current?.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [isOpen, core?.id, onClose]);
 
   if (!isOpen || !core) return null;
 
@@ -33,30 +80,31 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#181412]/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-8 bg-[#181412]/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="bg-[#FFFDF9] border border-[#D5C7B4] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative"
+        ref={dialogRef}
+        className="heritage-profile-modal bg-[#FFFDF9] border border-[#D5C7B4] rounded-sm w-full max-w-[1100px] max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl relative"
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
       >
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           type="button"
-          className="absolute top-5 right-5 p-1.5 text-[#7A6A5C] hover:text-[#241E1A] hover:bg-[#F2EBE0] rounded-xs transition-colors cursor-pointer"
+          className="absolute top-3 right-3 z-10 w-11 h-11 inline-flex items-center justify-center text-[#7A6A5C] hover:text-[#241E1A] hover:bg-[#F2EBE0] rounded-xs transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E]"
           aria-label="Đóng bảng chi tiết"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="border-b border-[#EFE8DC] pb-4 mb-5">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#B7410E]">
+        <div className="shrink-0 border-b border-[#EFE8DC] p-4 pr-16 sm:p-6 sm:pr-16">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#B7410E]">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Hồ Sơ Di Sản // Cổ Vật Học</span>
-            <span aria-hidden="true" className="text-[#C8BCAC]">·</span>
-            <span className="text-[#655A52]">{core.archiveCode}</span>
+            <span>HỒ SƠ CỔ PHỤC</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-editorial font-bold text-[#241E1A] mt-1">
+          <h2 id={titleId} className="text-2xl sm:text-3xl font-editorial font-bold text-[#241E1A] mt-1">
             {core.vietnameseTitle}
           </h2>
           <p className="text-sm font-serif italic text-[#7D7065] mt-0.5">
@@ -64,10 +112,12 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           </p>
         </div>
 
+        <div className="heritage-profile-content min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
+        <div className={validGallery.length > 0 ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start' : undefined}>
         {/* Editorial Heritage Photo Gallery (when real photographs are available for this garment) */}
         {validGallery.length > 0 && currentPhoto && (
-          <div className="mb-6 bg-[#FAF7F2] border border-[#E7DECE] rounded-xs p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
+          <div className="heritage-profile-gallery min-w-0 bg-[#FAF7F2] border border-[#E7DECE] rounded-xs p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-2">
               <span className="text-xs font-mono uppercase tracking-wider text-[#B7410E] inline-flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5" />
                 <span>Tư Liệu Hình Ảnh Thực Tế</span>
@@ -78,7 +128,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
             </div>
 
             {/* Main Selected Photograph */}
-            <div className="w-full h-[300px] sm:h-[360px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-2">
+            <div className="w-full h-[300px] sm:h-[360px] lg:h-[420px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-2">
               <img
                 src={currentPhoto.src}
                 alt={currentPhoto.alt}
@@ -97,7 +147,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
                     type="button"
                     onClick={() => setActivePhotoIndex(idx)}
                     aria-pressed={isSelected}
-                    className={`flex items-center gap-2.5 p-1.5 rounded-xs border text-left transition-all cursor-pointer ${
+                    className={`flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 p-1.5 rounded-xs border text-left transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-[#FFFDF9] border-[#B7410E] ring-1 ring-[#B7410E]/30 shadow-2xs'
                         : 'bg-[#FFFDF9]/70 hover:bg-[#FFFDF9] border-[#DED3C2] opacity-80 hover:opacity-100'
@@ -108,7 +158,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
                         src={photo.src}
                         alt={photo.alt}
                         onError={() => handleImageError(photo.src)}
-                        className="w-full h-full object-cover select-none"
+                        className="w-full h-full object-contain select-none"
                       />
                     </div>
                     <div className="min-w-0">
@@ -126,6 +176,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           </div>
         )}
 
+        <div className="heritage-profile-details min-w-0">
         {/* Graphic & Provenance */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center bg-[#FAF7F2] p-5 rounded-xs border border-[#E7DECE] mb-6">
           <div className="w-28 h-28 mx-auto rounded-full bg-[#FFFDF9] border border-[#D5C7B4] flex items-center justify-center p-4 shadow-inner">
@@ -159,6 +210,29 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           </div>
         </div>
 
+        {/* Material & Tailoring Notes */}
+        <div className="mt-6 pt-5 border-t border-[#EFE8DC] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="bg-[#FAF7F2] p-3 rounded-xs border border-[#E7DECE]">
+            <span className="font-mono uppercase text-[#8C7E72] block text-[10px] mb-1">
+              Quy Chuẩn Form Cắt
+            </span>
+            <p className="text-[#3A3029] font-medium leading-relaxed">
+              {core.silhouette}
+            </p>
+          </div>
+          <div className="bg-[#FAF7F2] p-3 rounded-xs border border-[#E7DECE]">
+            <span className="font-mono uppercase text-[#8C7E72] block text-[10px] mb-1">
+              Chất Liệu Dệt Khuyên Dùng
+            </span>
+            <p className="text-[#3A3029] font-medium leading-relaxed">
+              {core.material}
+            </p>
+          </div>
+        </div>
+
+        </div>
+        </div>
+
         {/* Editorial Styling Reference / Lookbook Section */}
         {lookbookMedia && !lookbookError && (
           <div className="mt-6 bg-[#FAF7F2] border border-[#E7DECE] rounded-xs p-4 sm:p-5 space-y-3">
@@ -174,8 +248,8 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-              <div className="sm:col-span-5 aspect-[3/4] max-h-[300px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-1.5 shadow-2xs">
+            <div className="heritage-lookbook-layout grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              <div className="heritage-lookbook-photo sm:col-span-5 aspect-[3/4] max-h-[300px] bg-[#FFFDF9] border border-[#E2D8C8] rounded-xs overflow-hidden flex items-center justify-center p-1.5 shadow-2xs">
                 <img
                   src={lookbookMedia.src}
                   alt={lookbookMedia.alt}
@@ -185,7 +259,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
                 />
               </div>
 
-              <div className="sm:col-span-7 space-y-2.5 text-xs sm:text-sm text-[#4E433C]">
+              <div className="heritage-lookbook-caption sm:col-span-7 space-y-2.5 text-xs sm:text-sm text-[#4E433C]">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#B7410E] block mb-0.5">
                     Lookbook Phong Cách
@@ -205,26 +279,6 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           </div>
         )}
 
-        {/* Material & Tailoring Notes */}
-        <div className="mt-6 pt-5 border-t border-[#EFE8DC] grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div className="bg-[#FAF7F2] p-3 rounded-xs border border-[#E7DECE]">
-            <span className="font-mono uppercase text-[#8C7E72] block text-[10px] mb-1">
-              Quy Chuẩn Phom Cắt
-            </span>
-            <p className="text-[#3A3029] font-medium leading-relaxed">
-              {core.silhouette}
-            </p>
-          </div>
-          <div className="bg-[#FAF7F2] p-3 rounded-xs border border-[#E7DECE]">
-            <span className="font-mono uppercase text-[#8C7E72] block text-[10px] mb-1">
-              Chất Liệu Dệt Khuyên Dùng
-            </span>
-            <p className="text-[#3A3029] font-medium leading-relaxed">
-              {core.material}
-            </p>
-          </div>
-        </div>
-
         <div className="mt-6 pt-4 border-t border-[#EFE8DC] flex justify-end">
           <button
             onClick={onClose}
@@ -233,6 +287,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({ core, isOpen, onCl
           >
             Đóng Hồ Sơ
           </button>
+        </div>
         </div>
       </div>
     </div>

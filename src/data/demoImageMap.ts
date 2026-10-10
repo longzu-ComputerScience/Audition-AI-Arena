@@ -160,7 +160,7 @@ export const CORE_GARMENT_LOOKBOOK_IMAGES: Record<CoreVietPhucId, CoreGarmentLoo
     src: '/images/catalog/lookbook/ao-dai.webp',
     alt: 'Lookbook gợi ý phối đồ Áo Dài truyền thống duyên dáng',
     title: 'Áo Dài · Dáng Nét Thanh Xuân',
-    caption: 'Hai tà áo bay nhẹ nhàng cùng phom dáng chuẩn mực bất biến qua thời gian.',
+    caption: 'Hai tà áo bay nhẹ nhàng cùng form dáng chuẩn mực bất biến qua thời gian.',
   },
   'ao-tu-than': {
     src: '/images/catalog/lookbook/ao-tu-than.webp',
@@ -172,7 +172,7 @@ export const CORE_GARMENT_LOOKBOOK_IMAGES: Record<CoreVietPhucId, CoreGarmentLoo
     src: '/images/catalog/lookbook/ao-ngu-than.webp',
     alt: 'Lookbook gợi ý phối đồ Áo Ngũ Thân lịch lãm thời thượng',
     title: 'Áo Ngũ Thân · Chuẩn Mực Tri Thức',
-    caption: 'Hàng năm khuy cài đoan trang và phom dáng kín đáo toát lên thần thái lịch thiệp.',
+    caption: 'Hàng năm khuy cài đoan trang và form dáng kín đáo toát lên thần thái lịch thiệp.',
   },
 };
 

@@ -4,6 +4,7 @@ interface HeaderProps {
   currentStep: 1 | 2 | 3;
   maxUnlockedStep: 1 | 2 | 3;
   onStepClick: (step: 1 | 2 | 3) => void;
+  onBrandClick: () => void;
   onOpenAbout?: () => void;
 }
 
@@ -11,6 +12,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentStep,
   maxUnlockedStep,
   onStepClick,
+  onBrandClick,
   onOpenAbout,
 }) => {
   const steps: { number: 1 | 2 | 3; code: string; label: string }[] = [
@@ -20,16 +22,16 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="border-b border-[#EAE3D6] bg-[#FAF7EE]/95 backdrop-blur-sm sticky top-0 z-40 transition-colors">
+    <header className="border-b border-[#D5C0A4] bg-[#F0E5D4] shadow-[0_2px_8px_rgba(53,42,35,0.08)] backdrop-blur-sm sticky top-0 z-40 transition-colors">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Wordmark */}
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => onStepClick(1)}
+            onClick={onBrandClick}
             className="text-left text-xl sm:text-2xl font-bold tracking-tight text-[#2B231D] hover:text-[#B3261E] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B3261E] rounded"
           >
-            Việt Phục Remix
+            Sắc Việt
           </button>
         </div>
 
@@ -58,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
                       ? 'text-[#B3261E] font-semibold border-b-2 border-[#B3261E] pb-0.5 cursor-default'
                       : isUnlocked
                       ? 'text-[#5A4F46] hover:text-[#2B231D] cursor-pointer'
-                      : 'text-[#B0A495] cursor-not-allowed opacity-50'
+                      : 'text-[#6B5C50] cursor-not-allowed'
                   }`}
                   aria-current={isActive ? 'step' : undefined}
                   aria-disabled={!isUnlocked}

@@ -41,7 +41,8 @@ export function evaluateGuardrail(
   setupData?: SetupData,
   actualRemix?: number
 ): GuardrailResult {
-  const text = (refinementText || '').toLowerCase().trim();
+  // Accept the legacy spelling in user input while keeping displayed terms consistent.
+  const text = (refinementText || '').toLowerCase().trim().replace(/\bphom\b/g, 'form');
   const occasion = setupData?.occasion || 'Dạo phố cuối tuần';
 
   // Specific garment heritage details
@@ -51,19 +52,19 @@ export function evaluateGuardrail(
   > = {
     'ao-nhat-binh': {
       collarName: 'Cổ áo chữ nhật to bản viền thêu ngũ hoa',
-      silhouetteName: 'Phom áo thụng buông dài qua gối, không chiết eo',
+      silhouetteName: 'Form áo thụng buông dài qua gối, không chiết eo',
       etiquetteNote:
         'Áo Nhật Bình vốn là lễ phục quý tộc thời Nguyễn; khi mặc cần giữ cổ áo ngay ngắn và không cắt ngắn vạt áo.',
     },
     'ao-tac': {
       collarName: 'Cổ lập lĩnh cao 3.5cm cài 5 khuy hữu nhậm',
-      silhouetteName: 'Tay thụng rộng che kín ngón tay, phom năm thân trang trọng',
+      silhouetteName: 'Tay thụng rộng che kín ngón tay, form năm thân trang trọng',
       etiquetteNote:
         'Áo Tấc là quốc phục đại lễ truyền thống; tay thụng rộng thể hiện sự khiêm nhường, đoan chính của người mặc.',
     },
     'ao-ngu-than': {
       collarName: 'Cổ lập lĩnh đứng cứng cáp cài 5 khuy ngũ thường',
-      silhouetteName: 'Phom năm thân ghép mí khép kín, tà áo thẳng tắp',
+      silhouetteName: 'Form năm thân ghép mí khép kín, tà áo thẳng tắp',
       etiquetteNote:
         'Áo Ngũ Thân tượng trưng cho đạo làm người (nhân, lễ, nghĩa, trí, tín); trang phục cần phẳng phiu, kín đáo.',
     },
@@ -83,7 +84,7 @@ export function evaluateGuardrail(
 
   const rule = garmentRules[core.id] || {
     collarName: 'Cổ áo truyền thống nguyên bản',
-    silhouetteName: 'Phom dáng di sản chuẩn mực',
+    silhouetteName: 'Form dáng di sản chuẩn mực',
     etiquetteNote: 'Giữ trọn vẹn kết cấu nguyên bản của y phục cổ phong.',
   };
 
@@ -96,9 +97,9 @@ export function evaluateGuardrail(
     { kw: 'khoét ngực', reason: 'Khoét ngực hở sâu xung đột với tính kín đáo, đoan trang của y phục truyền thống.' },
     { kw: 'hở bạo', reason: 'Trang phục cổ phong chú trọng vẻ thanh tao đoan chính; phong cách hở bạo phá vỡ chuẩn mực.' },
     { kw: 'xuyên thấu hoàn toàn', reason: 'Chất liệu xuyên thấu toàn bộ không phù hợp với chuẩn mực cổ phục Việt.' },
-    { kw: 'biến dạng phom', reason: 'Biến dạng phom dáng cơ bản làm mất đi tính nguyên bản của di sản y phục.' },
+    { kw: 'biến dạng form', reason: 'Biến dạng form dáng cơ bản làm mất đi tính nguyên bản của di sản y phục.' },
     { kw: 'bỏ ngũ thân', reason: 'Kết cấu 5 thân tượng trưng cho đạo lý gia đình; không thể lược bỏ ngũ thân.' },
-    { kw: 'may bó sát ngực', reason: 'Cổ phục truyền thống có phom đứng thẳng đĩnh đạc, không may bó sát cơ thể.' },
+    { kw: 'may bó sát ngực', reason: 'Cổ phục truyền thống có form đứng thẳng đĩnh đạc, không may bó sát cơ thể.' },
   ];
 
   for (const c of fatalConflicts) {
@@ -112,7 +113,7 @@ export function evaluateGuardrail(
         },
         {
           id: 'silhouette',
-          label: 'Phom dáng & Tà áo cốt lõi',
+          label: 'Form dáng & Tà áo cốt lõi',
           status: 'violation',
           description: c.reason,
         },
@@ -133,11 +134,11 @@ export function evaluateGuardrail(
       return {
         status: 'orange',
         message: `Xung đột cốt lõi: Yêu cầu can thiệp sâu làm tổn hại kết cấu di sản của ${core.name}.`,
-        detailedAnalysis: `${c.reason} Trong triết lý Việt Phục Remix, trang phục cốt lõi luôn được bảo toàn nguyên vẹn 100% về phom dáng, cổ áo và kỹ thuật may đo di sản; mọi sự cách tân chỉ diễn ra ở các lớp bổ trợ hiện đại.`,
+        detailedAnalysis: `${c.reason} Trong triết lý Sắc Việt, trang phục cốt lõi luôn được bảo toàn nguyên vẹn 100% về form dáng, cổ áo và kỹ thuật may đo di sản; mọi sự cách tân chỉ diễn ra ở các lớp bổ trợ hiện đại.`,
         heritageChecks,
         etiquetteTip: rule.etiquetteNote,
         recommendations: [
-          `Giữ trọn vẹn ${rule.collarName} và phom dáng nguyên bản của ${core.name}.`,
+          `Giữ trọn vẹn ${rule.collarName} và form dáng nguyên bản của ${core.name}.`,
           'Thay vì can thiệp vào thân áo, hãy tinh chỉnh phụ kiện túi, giày hoặc trang sức đương đại.',
           'Chọn màu sắc tương phản tinh tế để tạo nét hiện đại mà không làm biến dạng y phục.',
         ],
@@ -168,7 +169,7 @@ export function evaluateGuardrail(
         },
         {
           id: 'silhouette',
-          label: 'Phom dáng & Tà áo cốt lõi',
+          label: 'Form dáng & Tà áo cốt lõi',
           status: 'warning',
           description: `Cần đảm bảo ${rule.silhouetteName} không bị phá vỡ tỷ lệ.`,
         },
@@ -214,7 +215,7 @@ export function evaluateGuardrail(
       },
       {
         id: 'silhouette',
-        label: 'Phom dáng & Tà áo cốt lõi',
+        label: 'Form dáng & Tà áo cốt lõi',
         status: 'passed',
         description: `Giữ vững ${rule.silhouetteName}.`,
       },
@@ -255,7 +256,7 @@ export function evaluateGuardrail(
     },
     {
       id: 'silhouette',
-      label: 'Phom dáng & Tà áo cốt lõi',
+      label: 'Form dáng & Tà áo cốt lõi',
       status: 'passed',
       description: `Giữ vững ${rule.silhouetteName}.`,
     },
@@ -299,7 +300,7 @@ export function computeCompactDna(
   actualRemix: number
 ): CompactDna {
   const preservedPoints = [
-    core.heritageDna[0] || `Cấu trúc phom dáng ${core.name} nguyên bản`,
+    core.heritageDna[0] || `Cấu trúc form dáng ${core.name} nguyên bản`,
     core.heritageDna[1] || `Chi tiết cổ áo và đường xẻ vạt đặc trưng`,
   ];
 

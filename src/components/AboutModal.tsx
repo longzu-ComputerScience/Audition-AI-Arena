@@ -37,7 +37,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
         <div className="space-y-4 text-xs sm:text-sm text-[#4E433C] leading-relaxed">
           <p>
-            <strong>Việt Phục Remix</strong> ra đời với một câu hỏi cốt lõi: <em>Làm thế nào để cổ phục không chỉ nằm trong bảo tàng hay dịp lễ hội, mà bước thẳng vào đời sống thường nhật của giới trẻ hôm nay?</em>
+            <strong>Sắc Việt</strong> ra đời với một câu hỏi cốt lõi: <em>Làm thế nào để cổ phục không chỉ nằm trong bảo tàng hay dịp lễ hội, mà bước thẳng vào đời sống thường nhật của giới trẻ hôm nay?</em>
           </p>
           <p>
             Chúng tôi tin rằng bảo tồn di sản không đồng nghĩa với việc đóng băng nó trong quá khứ. Bằng cách giữ nguyên cấu trúc trụ cột (cổ đứng lập lĩnh, khuy cài ngũ thường, đường lượn tà áo) và táo bạo kết hợp với raw denim, chunky loafer, túi techwear hay sneaker năng động, chiếc áo Việt tìm lại được nhịp đập hiện đại.

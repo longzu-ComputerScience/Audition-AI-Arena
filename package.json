@@ -10,7 +10,7 @@
     "start": "tsx server.ts",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "node --import tsx --test tests/recommendation.test.ts tests/fabric.test.ts tests/ai-contract.test.ts",
+    "test": "node --import tsx --test tests/recommendation.test.ts tests/fabric.test.ts tests/ai-contract.test.ts tests/accessoryPlacement.test.ts",
     "test:assets": "node --import tsx tools/validate-photo-assets.ts",
     "test:e2e": "playwright test",
     "test:visual": "node tools/capture-photo-matrix.mjs",

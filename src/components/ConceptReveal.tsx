@@ -249,7 +249,7 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
 
           <div className="p-2.5 bg-[#FAF7EE] rounded-lg border border-[#EAE3D6] text-xs text-[#5A4F46] space-y-0.5">
             <div className="font-semibold text-[#2B231D]">
-              Đặc trưng phom dáng di sản:
+              Đặc trưng form dáng di sản:
             </div>
             <p className="leading-relaxed">
               {core.silhouette}

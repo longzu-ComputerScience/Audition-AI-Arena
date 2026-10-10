@@ -62,3 +62,463 @@ input[type="range"]::-moz-range-thumb {
   scrollbar-width: none;
 }
 
+
+/* Shared content backdrop: all screens reuse the opening palette and gradient. */
+.heritage-page-background,
+.heritage-gallery-shell {
+  /* Palette and gradient strength (percentages control the corner shading). */
+  --exhibit-cream: #FAF7EE;
+  --exhibit-pearl: #FFFDF8;
+  --exhibit-champagne: #EADCC6;
+  --exhibit-depth: #D5C0A4;
+  --exhibit-corner-strength: 65%;
+  --exhibit-center-strength: 85%;
+  background:
+    radial-gradient(ellipse 75% 55% at 50% 0%, var(--exhibit-pearl), transparent 85%),
+    radial-gradient(ellipse 65% 60% at 50% 42%, color-mix(in srgb, var(--exhibit-pearl) var(--exhibit-center-strength), transparent), transparent 85%),
+    radial-gradient(ellipse 65% 80% at 0% 100%, color-mix(in srgb, var(--exhibit-depth) var(--exhibit-corner-strength), transparent), transparent 85%),
+    radial-gradient(ellipse 65% 80% at 100% 100%, color-mix(in srgb, var(--exhibit-depth) var(--exhibit-corner-strength), transparent), transparent 85%),
+    linear-gradient(150deg, var(--exhibit-cream), var(--exhibit-champagne) 70%, var(--exhibit-cream));
+}
+
+/* Garment selection only. Tune the exhibit here; values inherit into all five cards. */
+.heritage-gallery-shell {
+  --exhibit-frame-border: #C9AD7B;
+  --exhibit-selected: #8F2925;
+  /* Lighting, shadows and motion. Tilt is degrees, clamped to 3 in the pointer handler. */
+  --exhibit-highlight-strength: 36%;
+  --exhibit-ambient-opacity: 0.35;
+  --exhibit-shadow-rest: 0 7px 18px color-mix(in srgb, var(--exhibit-depth) 35%, transparent);
+  --exhibit-shadow-hover: 0 14px 26px color-mix(in srgb, var(--exhibit-depth) 55%, transparent);
+  --exhibit-shadow-inset: inset 0 3px 10px color-mix(in srgb, var(--exhibit-depth) 34%, transparent), inset 0 -1px 3px #FFFDF8;
+  --exhibit-hover-lift: -4px;
+  --exhibit-tilt-max: 2.5;
+  --exhibit-perspective: 1100px;
+  --exhibit-background-duration: 28s;
+  --exhibit-return-duration: 360ms;
+  /* Collection breathing room protects shadows and keyboard focus rings. */
+  --exhibit-shadow-gutter: 28px;
+
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+
+}
+
+/* Decorative light stays behind the content and cannot intercept either card action. */
+.heritage-gallery-shell::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--exhibit-ambient-opacity);
+  background: radial-gradient(ellipse 45% 60% at 45% 28%, var(--exhibit-pearl), transparent 75%);
+  animation: heritage-ambient-light var(--exhibit-background-duration) ease-in-out infinite;
+}
+
+.heritage-gallery-content {
+  position: relative;
+  z-index: 1;
+}
+
+.heritage-gallery-shell .heritage-collection {
+  margin-inline: calc(-1 * var(--exhibit-shadow-gutter));
+  padding: 28px var(--exhibit-shadow-gutter) 48px;
+}
+
+.heritage-gallery-shell .heritage-card {
+  border: 1px solid color-mix(in srgb, var(--exhibit-frame-border) 65%, var(--exhibit-pearl));
+  background: linear-gradient(155deg, var(--exhibit-pearl), var(--exhibit-cream) 80%, color-mix(in srgb, var(--exhibit-champagne) 65%, var(--exhibit-pearl)));
+  box-shadow: var(--exhibit-shadow-rest);
+  transform: none;
+  transition: transform var(--exhibit-return-duration) ease, box-shadow 240ms ease, border-color 240ms ease;
+}
+
+.heritage-gallery-shell .heritage-card[data-selected="true"] {
+  border-color: var(--exhibit-selected);
+  box-shadow: 0 0 0 1px var(--exhibit-selected), 0 0 18px color-mix(in srgb, var(--exhibit-selected) 12%, transparent), var(--exhibit-shadow-rest);
+}
+
+.heritage-gallery-shell .heritage-photo-frame {
+  border: 1px solid var(--exhibit-frame-border);
+  background: radial-gradient(ellipse at 50% 42%, var(--exhibit-pearl) 15%, var(--exhibit-cream) 52%, var(--exhibit-champagne) 85%, color-mix(in srgb, var(--exhibit-depth) 65%, var(--exhibit-champagne)));
+  box-shadow: var(--exhibit-shadow-inset);
+}
+
+/* The moving highlight is BELOW the unfiltered image, so garment pixels retain their color. */
+.heritage-gallery-shell .heritage-photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--highlight-visible, 0);
+  background: radial-gradient(circle 110px at var(--highlight-x, 50%) var(--highlight-y, 35%), color-mix(in srgb, white var(--exhibit-highlight-strength), transparent), transparent 75%);
+  transition: opacity 240ms ease;
+}
+
+@keyframes heritage-ambient-light {
+  0%, 100% { transform: translate(-3%, -1%); }
+  50% { transform: translate(3%, 1%); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .heritage-gallery-shell .heritage-card:hover {
+    border-color: var(--exhibit-frame-border);
+    box-shadow: var(--exhibit-shadow-hover);
+  }
+  .heritage-gallery-shell .heritage-card[data-selected="true"]:hover {
+    border-color: var(--exhibit-selected);
+    box-shadow: 0 0 0 1px var(--exhibit-selected), 0 0 18px color-mix(in srgb, var(--exhibit-selected) 12%, transparent), var(--exhibit-shadow-hover);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .heritage-gallery-shell .heritage-card:hover {
+    transform: perspective(var(--exhibit-perspective)) translateY(var(--exhibit-hover-lift)) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 100ms ease-out, box-shadow 240ms ease, border-color 240ms ease;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .heritage-gallery-shell .heritage-card:active {
+    transform: scale(0.99);
+    box-shadow: var(--exhibit-shadow-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heritage-gallery-shell::before {
+    animation: none;
+  }
+  .heritage-gallery-shell .heritage-card,
+  .heritage-gallery-shell .heritage-card:hover,
+  .heritage-gallery-shell .heritage-card:active {
+    transform: none;
+    transition: none;
+  }
+  .heritage-gallery-shell .heritage-photo-frame::before {
+    transition: none;
+  }
+}
+
+/* Desktop sizing only: mobile/tablet retain their existing card and lookbook sizes. */
+@media (min-width: 1024px) {
+  .heritage-gallery-shell {
+    --exhibit-desktop-max-width: 1600px;
+    --exhibit-desktop-page-padding: 24px;
+    /* Reserve 560px for header, navigation, welcome text, card actions and gaps.
+       Keep the photo above the original 220px size; short viewports scroll naturally. */
+    --exhibit-desktop-photo-height: clamp(260px, calc(100dvh - 560px), 440px);
+    --exhibit-desktop-padding-block: 20px;
+    --exhibit-desktop-section-gap: 16px;
+    --exhibit-desktop-welcome-gap: 10px;
+    --exhibit-desktop-collection-padding-top: 20px;
+    --exhibit-desktop-card-padding-block: 16px;
+  }
+
+  .heritage-gallery-shell .heritage-gallery-content {
+    max-width: var(--exhibit-desktop-max-width);
+    padding-inline: var(--exhibit-desktop-page-padding);
+    padding-block: var(--exhibit-desktop-padding-block);
+  }
+
+  .heritage-gallery-shell .heritage-gallery-content,
+  .heritage-gallery-shell .heritage-garment-step,
+  .heritage-gallery-shell .heritage-garment-welcome {
+    display: flex;
+    flex-direction: column;
+    gap: var(--exhibit-desktop-section-gap);
+  }
+
+  .heritage-gallery-shell .heritage-gallery-content > *,
+  .heritage-gallery-shell .heritage-garment-step > *,
+  .heritage-gallery-shell .heritage-garment-welcome > * {
+    margin-block: 0;
+  }
+
+  .heritage-gallery-shell .heritage-garment-step {
+    min-height: 0;
+  }
+
+  .heritage-gallery-shell .heritage-garment-welcome {
+    gap: var(--exhibit-desktop-welcome-gap);
+  }
+
+  .heritage-gallery-shell .heritage-collection {
+    padding-top: var(--exhibit-desktop-collection-padding-top);
+    padding-bottom: 32px;
+  }
+
+  .heritage-gallery-shell .heritage-card {
+    padding-block: var(--exhibit-desktop-card-padding-block);
+  }
+
+  .heritage-gallery-shell .heritage-photo-frame {
+    height: var(--exhibit-desktop-photo-height);
+    flex-shrink: 0;
+  }
+
+  .heritage-gallery-shell .heritage-photo-frame svg {
+    max-height: none;
+  }
+
+  /* Widen the outfit reference, not the main heritage photograph above it.
+     Remove the old aspect/300px cap so the contained image also grows. */
+  .heritage-profile-modal {
+    --lookbook-desktop-photo-height: clamp(400px, 65dvh, 680px);
+  }
+
+  .heritage-profile-modal .heritage-lookbook-layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .heritage-profile-modal .heritage-lookbook-photo {
+    grid-column: auto;
+    width: 100%;
+    height: var(--lookbook-desktop-photo-height);
+    max-height: none;
+    aspect-ratio: auto;
+    min-width: 0;
+  }
+
+  .heritage-profile-modal .heritage-lookbook-caption {
+    grid-column: auto;
+    min-width: 0;
+  }
+}
+
+/* Compact only vertical spacing on shorter desktop viewports, including laptops. */
+@media (min-width: 1024px) and (max-height: 800px) {
+  .heritage-gallery-shell {
+    --exhibit-desktop-padding-block: 12px;
+    --exhibit-desktop-section-gap: 12px;
+    --exhibit-desktop-welcome-gap: 8px;
+    --exhibit-desktop-collection-padding-top: 12px;
+    --exhibit-desktop-card-padding-block: 12px;
+  }
+
+  .heritage-gallery-shell .heritage-intro-navigation {
+    padding-bottom: 8px;
+  }
+
+  .heritage-gallery-shell .heritage-card-copy {
+    margin-top: 10px;
+  }
+
+  .heritage-gallery-shell .heritage-card-action {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+}
+
+
+/* Remix floating assistant. Keep dimensions here; no background styles affect other pages. */
+.remix-stage {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
+/* Leave a clear lane for the 64px launcher beside the final image action. */
+.remix-image-action {
+  padding-right: 80px;
+}
+
+.floating-ai-root {
+  --ai-edge-right: max(16px, env(safe-area-inset-right));
+  --ai-edge-left: max(16px, env(safe-area-inset-left));
+  --ai-edge-bottom: max(16px, env(safe-area-inset-bottom));
+  --ai-tray-lift: 0px;
+  position: fixed;
+  z-index: 45;
+  right: calc(var(--ai-edge-right) + var(--ai-viewport-right, 0px));
+  bottom: calc(var(--ai-edge-bottom) + var(--ai-viewport-bottom, 0px) + var(--ai-tray-lift));
+  pointer-events: none;
+}
+
+.floating-ai-panel {
+  position: absolute;
+  right: 0;
+  bottom: 64px;
+  width: min(420px, calc(var(--ai-viewport-width, 100vw) - var(--ai-edge-left) - var(--ai-edge-right)));
+  max-height: min(680px, calc(var(--ai-viewport-height, 100dvh) - 65px - max(16px, env(safe-area-inset-top)) - 64px - var(--ai-edge-bottom) - var(--ai-tray-lift)));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #C9AD7B;
+  border-radius: 16px;
+  background: #FFFDF8;
+  box-shadow: 0 12px 36px rgb(53 42 35 / 20%);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.floating-ai-panel[hidden],
+.floating-ai-root[hidden] {
+  display: none;
+}
+
+.floating-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #D5C0A4;
+  background: #F3E7D3;
+}
+
+.floating-ai-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  color: #695B4E;
+  cursor: pointer;
+}
+
+.floating-ai-close:hover {
+  background: #FFF8ED;
+  color: #8F2925;
+}
+
+.floating-ai-scroll {
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+
+.floating-ai-launcher {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 64px;
+  height: 52px;
+  border: 1px solid #8F2925;
+  border-radius: 18px;
+  background: #8F2925;
+  color: #FFF8ED;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgb(53 42 35 / 16%);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* Only the decorative halo pulses; the icon and label are always opaque. */
+.floating-ai-launcher::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 1px solid rgb(143 41 37 / 40%);
+  box-shadow: 0 0 6px rgb(143 41 37 / 18%);
+  border-radius: inherit;
+  animation: ai-soft-glow 3s ease-out infinite;
+  pointer-events: none;
+}
+
+.floating-ai-launcher:hover,
+.floating-ai-launcher:focus-visible,
+.floating-ai-root[data-open="true"] .floating-ai-launcher {
+  background: #782321;
+  box-shadow: 0 6px 16px rgb(143 41 37 / 24%);
+}
+
+.floating-ai-root[data-open="true"] .floating-ai-launcher::before {
+  animation: none;
+  opacity: 0;
+}
+
+.floating-ai-launcher:focus-visible,
+.floating-ai-close:focus-visible {
+  outline: 2px solid #8F2925;
+  outline-offset: 3px;
+}
+
+.floating-ai-tooltip {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 12px);
+  transform: translateY(-50%);
+  width: max-content;
+  max-width: 240px;
+  border: 1px solid #D5C0A4;
+  border-radius: 8px;
+  background: #FFF8ED;
+  color: #695B4E;
+  padding: 8px 12px;
+  font-size: 12px;
+  box-shadow: 0 3px 10px rgb(53 42 35 / 10%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.floating-ai-launcher:hover + .floating-ai-tooltip,
+.floating-ai-launcher:focus-visible + .floating-ai-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.floating-ai-root[data-open="true"] .floating-ai-tooltip {
+  display: none;
+}
+
+@keyframes ai-soft-glow {
+  0% { transform: scale(1); opacity: 0; }
+  15% { opacity: 0.65; }
+  70%, 100% { transform: scale(1.3); opacity: 0; }
+}
+
+@media (max-width: 1023px) {
+  /* Leave the mannequin's existing bottom selector and its close button unobstructed. */
+  body:has([data-quick-tray]) .floating-ai-root {
+    --ai-tray-lift: min(35dvh, 220px);
+  }
+}
+
+@media (max-width: 639px) {
+  /* Prevent iOS from zooming the viewport when the chat input receives focus. */
+  .ai-stylist-embedded input { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-ai-launcher::before { animation: none; }
+  .floating-ai-launcher, .floating-ai-tooltip { transition: none; }
+}
+
+
+/* Only the painted accessory hit contours block touch scrolling; the rest of the SVG stays scrollable. */
+.movable-accessory { pointer-events: none; outline: none; }
+.movable-accessory .accessory-hit-area,
+.movable-accessory-vector > g {
+  pointer-events: visiblePainted;
+  touch-action: none;
+  cursor: grab;
+}
+.movable-accessory[data-dragging="true"] .accessory-hit-area,
+.movable-accessory-vector[data-dragging="true"] > g { cursor: grabbing; }
+.movable-accessory:focus-visible [data-accessory-selection] { stroke-width: 2.5px; }
+.accessory-position-action {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #DDD0C0;
+  border-radius: 8px;
+  background: #FFFDF9;
+  color: #5A4F46;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.accessory-position-action:hover,
+.accessory-position-action[aria-pressed="true"] { background: #FAF3EB; border-color: #8F2925; color: #8F2925; }
+.accessory-position-action:focus-visible { outline: 2px solid #8F2925; outline-offset: 2px; }
+.accessory-position-action:disabled { color: #8C7E72; cursor: not-allowed; }

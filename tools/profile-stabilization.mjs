@@ -40,7 +40,7 @@ await page.addInitScript(()=>{
 async function enter(){
   await page.goto('http://127.0.0.1:3000/');
   await page.getByRole('button',{name:'Đã Hiểu',exact:true}).click();
-  await page.getByRole('button',{name:'Bỏ qua giới thiệu',exact:true}).click();
+  await page.getByRole('button',{name:'Bỏ qua mở đầu',exact:true}).click();
   await page.locator('#select-core-garment').selectOption('ao-nhat-binh');
   await page.getByRole('button',{name:/Tiếp tục chọn phong cách/}).click();
   await page.getByRole('button',{name:'Vào Remix Studio',exact:true}).waitFor();

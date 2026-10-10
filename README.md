@@ -1,4 +1,4 @@
-# Việt Phục Remix
+# Sắc Việt
 
 An interactive Vietnamese heritage-fashion styling studio. Explore traditional garments, create context-aware outfits, and preview combinations on a 2D mannequin using real garment photo layers.
 
@@ -6,6 +6,7 @@ Outfit recommendations are **deterministic and run locally**. Gemini-powered sty
 
 ## Features
 
+- Click the **Sắc Việt** brand to return to the opening five-garment collection from any step, preserving your choices and unlocked steps. **Bỏ qua mở đầu** opens the existing discovery flow.
 - Explore five core garments: **Nhật Bình, Áo Tấc, Áo Dài, Áo Tứ Thân, and Áo Ngũ Thân**.
 - Personalize recommendations by **occasion, location, style, main fabric color, and Remix target**.
 - Customize trousers, footwear, bags, and accessories. An accessory is suggested by default; choosing not to use one is respected until the user opts back in.

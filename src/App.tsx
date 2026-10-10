@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useReducer } from 'react';
+import React, { useState, useMemo, useEffect, useReducer, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import {
   SetupData,
@@ -20,6 +20,7 @@ import {
 import { fetchAIStatus } from './services/aiStylistApi';
 import { createStylingState, stylingReducer } from './utils/stylingState';
 import { preparePhotoOutfit } from './utils/preparePhotoOutfit';
+import { useAccessoryPlacement } from './utils/accessoryPlacement';
 import { Header } from './components/Header';
 import { DiscoveryScreen } from './components/DiscoveryScreen';
 import {
@@ -48,6 +49,9 @@ export default function App() {
   // even when earlier onboarding choices have already been confirmed.
   const [restartIntroFromGarments, setRestartIntroFromGarments] = useState<boolean>(false);
 
+  // A fresh visit also resets the local onboarding sub-step when it is already mounted.
+  const [introVisit, setIntroVisit] = useState(0);
+
   // Navigate to step and remember the highest unlocked step
   const goToStep = (targetStep: 1 | 2 | 3) => {
     if (step === 1 && targetStep !== 1) setHasSeenIntro(true);
@@ -62,6 +66,7 @@ export default function App() {
   // Global Setup Data (Step 1 inputs)
   const [styling, dispatchStyling] = useReducer(stylingReducer, undefined, createStylingState);
   const { setupData, items: activeSupportItems, targetRemix: remixDialValue } = styling;
+  const accessoryPlacement = useAccessoryPlacement(setupData.coreGarment, activeSupportItems.bag.id, activeSupportItems.accent?.id ?? null);
 
   // Derived: Actual Remix MUST be a derived value, not stored in state!
   const actualRemix = useMemo(() => {
@@ -86,7 +91,9 @@ export default function App() {
   const [refinementText, setRefinementText] = useState<string>('');
 
   // Modals state
-  const [isLookbookOpen, setIsLookbookOpen] = useState<boolean>(false);
+  // Viewing a heritage profile must never change the garment selected for styling.
+  const [lookbookCoreId, setLookbookCoreId] = useState<CoreVietPhucId | null>(null);
+  const handleCloseLookbook = useCallback(() => setLookbookCoreId(null), []);
   // Show the existing project introduction first on every fresh app load.
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(true);
   // Separate from onboarding completion; used only to align/animate the welcome after dismissal.
@@ -203,11 +210,13 @@ export default function App() {
   };
 
   const handleReturnToInteractiveIntro = () => {
-    // This is a user-requested return from the classic Page 1, not the About modal.
+    // Return from any screen without reopening the About modal.
     // Keep setupData, confirmed fields, wardrobe selections and unlocked steps.
     setPendingSkipFocus(false);
     setRestartIntroFromGarments(true);
     setOnboardingState('active');
+    setIntroVisit((visit) => visit + 1);
+    goToStep(1);
   };
 
   return (
@@ -217,25 +226,27 @@ export default function App() {
         currentStep={step}
         maxUnlockedStep={maxUnlockedStep}
         onStepClick={(targetStep) => {
-          if (onboardingState === 'active' && targetStep === 1) {
+          if (step === 1 && onboardingState === 'active' && targetStep === 1) {
             return;
           }
           goToStep(targetStep);
         }}
+        onBrandClick={handleReturnToInteractiveIntro}
         onOpenAbout={() => setIsAboutOpen(true)}
       />
 
       {/* Main Multi-step Content (Preserving state across back/forward navigation) */}
-      <main className="flex-1 w-full relative" data-active-step={step}>
+      <main className="heritage-page-background flex-1 w-full relative" data-active-step={step}>
         <AnimatePresence mode="wait">
           {step === 1 && onboardingState === 'active' && (
             <InteractiveOnboarding
-              key="step-1-onboarding"
+              key={`step-1-onboarding-${introVisit}`}
               setupData={setupData}
               confirmedFields={confirmedIntroFields}
               welcomeReady={welcomeIntroReady}
               restartFromGarmentSelection={restartIntroFromGarments}
               onSelectCoreGarment={handleOnboardingSelectCore}
+              onOpenCoreDetail={setLookbookCoreId}
               onSelectOccasion={handleOnboardingSelectOccasion}
               onSelectLocation={handleOnboardingSelectLocation}
               onSkip={handleSkipOnboarding}
@@ -279,6 +290,10 @@ export default function App() {
               refinementText={refinementText}
               guardrailResult={guardrailResult}
               aiStatus={aiStatus}
+              isOverlayOpen={isAboutOpen || lookbookCoreId !== null}
+              accessoryPositions={accessoryPlacement.positions}
+              onMoveAccessory={accessoryPlacement.onMove}
+              onResetAccessoryPositions={accessoryPlacement.onReset}
               recommendationTrace={styling.trace}
               onRecommendAgain={() => dispatchStyling({ type:'refresh' })}
               onRemixDialChange={handleRemixDialChange}
@@ -287,7 +302,7 @@ export default function App() {
               onRemoveAccent={handleRemoveAccent}
               onApplyRefinement={handleApplyRefinement}
               onBackToConcept={() => goToStep(2)}
-              onOpenCoreDetail={() => setIsLookbookOpen(true)}
+              onOpenCoreDetail={() => setLookbookCoreId(currentCore.id)}
               onSelectFabricColor={(hex) => {
                 const preferredColor = preferredColorForHex(hex);
                 if (preferredColor) handleChangeSetup({ preferredColor });
@@ -299,35 +314,16 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-[#EAE3D6] py-6 px-4 sm:px-6 lg:px-8 text-center text-xs text-[#7A6E63] font-serif">
-        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>
-            Việt Phục Remix © 2026 · Fashion Editorial Styling Studio
-          </p>
-          <div className="flex items-center gap-4 text-xs font-mono text-[#B3261E]">
-            <button
-              type="button"
-              onClick={() => setIsAboutOpen(true)}
-              className="hover:underline cursor-pointer"
-            >
-              Triết lý thiết kế
-            </button>
-            <span aria-hidden="true" className="text-[#C8BCAC]">·</span>
-            <button
-              type="button"
-              onClick={() => setIsLookbookOpen(true)}
-              className="hover:underline cursor-pointer"
-            >
-              Hồ sơ cổ phục
-            </button>
-          </div>
-        </div>
+        <p className="max-w-[1440px] mx-auto">
+          Sắc Việt © 2026 · Fashion Editorial Styling Studio
+        </p>
       </footer>
 
       {/* Detail Modals */}
       <LookbookModal
-        core={currentCore}
-        isOpen={isLookbookOpen}
-        onClose={() => setIsLookbookOpen(false)}
+        core={lookbookCoreId ? CORE_ITEMS[lookbookCoreId] : null}
+        isOpen={lookbookCoreId !== null}
+        onClose={handleCloseLookbook}
       />
 
       <AboutModal

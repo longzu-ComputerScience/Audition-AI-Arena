@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-console.log('=== VIỆT PHỤC REMIX: CUTOUT GENERATOR ===\n');
+console.log('=== SẮC VIỆT: CUTOUT GENERATOR ===\n');
 
 // 1. Process Quần Lụa
 console.log('1. Processing Quần Lụa (bottom-silk-wide)...');

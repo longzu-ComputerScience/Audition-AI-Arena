@@ -9,7 +9,7 @@ const metadata=JSON.parse(fs.readFileSync(new URL('../../src/data/photoAssetMeta
 async function begin(page: Page, core='ao-nhat-binh', occasion?: string) {
   await page.goto('/');
   await page.getByRole('button',{name:'Đã Hiểu',exact:true}).click();
-  await page.getByRole('button',{name:'Bỏ qua giới thiệu',exact:true}).click();
+  await page.getByRole('button',{name:'Bỏ qua mở đầu',exact:true}).click();
   await page.locator('#select-core-garment').selectOption(core);
   if(occasion) await page.locator('#select-occasion').selectOption({label:occasion});
   await page.getByRole('button',{name:/Tiếp tục chọn phong cách/}).click();
