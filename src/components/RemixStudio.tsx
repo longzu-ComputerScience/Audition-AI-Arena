@@ -1,5 +1,5 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   CoreItem,
   ActiveSupportItems,
@@ -16,6 +16,7 @@ import {
 } from '../data/mockFashionData';
 import { MannequinCanvas } from './MannequinCanvas';
 import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
+import { RecommendationTrace } from '../utils/stylingState';
 import { WardrobeSlot } from './WardrobeSlot';
 import { AIResultModal, OutfitSnapshot } from './AIResultModal';
 import { AIStylistPanel } from './AIStylistPanel';
@@ -47,8 +48,8 @@ interface RemixStudioProps {
   onBackToConcept: () => void;
   onOpenCoreDetail?: () => void;
   onSelectFabricColor?: (hex: string) => void;
-  displayMode?: 'svg' | 'photo';
-  onDisplayModeChange?: (mode: 'svg' | 'photo') => void;
+  recommendationTrace?: RecommendationTrace;
+  onRecommendAgain?: () => void;
 }
 
 export const RemixStudio: React.FC<RemixStudioProps> = ({
@@ -68,9 +69,10 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   onBackToConcept,
   onOpenCoreDetail,
   onSelectFabricColor,
-  displayMode,
-  onDisplayModeChange,
+  recommendationTrace,
+  onRecommendAgain,
 }) => {
+  const reduceMotion = useReducedMotion();
   const workspaceAnchorRef = useRef<HTMLDivElement | null>(null);
 
   // Only one selector open at a time
@@ -104,10 +106,10 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: reduceMotion ? 1 : 0 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
+      exit={{ opacity: reduceMotion ? 1 : 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
       className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5"
     >
       {/* Studio Header & Back Button */}
@@ -147,8 +149,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             onRemoveAccent={onRemoveAccent}
             onOpenCoreDetail={onOpenCoreDetail}
             onSelectFabricColor={onSelectFabricColor}
-          displayMode={displayMode}
-          onDisplayModeChange={onDisplayModeChange}
           />
         </div>
 
@@ -189,6 +189,19 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
                 <span>Cân bằng (50%)</span>
                 <span>Hiện đại (100%)</span>
               </div>
+              {recommendationTrace && <div data-recommendation-trace={JSON.stringify(recommendationTrace)} className="border-t border-[#EAE3D6] pt-2.5 space-y-2">
+                <p className="text-[11px] leading-relaxed text-[#7A6E63]">
+                  {recommendationTrace.reason === 'manual'
+                    ? `Giữ món bạn chọn: ${(['bottom','shoes','bag','accent'] as const).filter(slot => recommendationTrace.locks[slot]).map(slot => supportItems[slot]?.name || 'không dùng phụ kiện').join(', ')}. Đổi bối cảnh chỉ phối lại các món còn lại.`
+                    : recommendationTrace.reason === 'hysteresis'
+                    ? 'Bối cảnh đã cập nhật; giữ bản phối hiện tại vì gợi ý mới chỉ khác rất ít.'
+                    : recommendationTrace.reason === 'same-best'
+                    ? 'Đã xét bối cảnh mới; bản phối này vẫn phù hợp nhất với mức Remix bạn chọn.'
+                    : 'Các món tự động được phối theo bối cảnh và mức Remix bạn chọn.'}
+                </p>
+                <button type="button" onClick={onRecommendAgain} className="text-xs font-semibold text-[#B3261E] underline underline-offset-4 cursor-pointer">Phối lại tự động</button>
+                {Object.values(recommendationTrace.locks).some(Boolean) && <span className="block text-[10px] text-[#7A6E63]">Thay các món đã chọn thủ công bằng gợi ý cho bối cảnh hiện tại.</span>}
+              </div>}
             </section>
 
             {/* B. Tủ Đồ Phối Kèm — Secondary collapsible accordion on all devices (collapsed by default to focus on mannequin) */}

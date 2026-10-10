@@ -316,16 +316,16 @@
   "shoes-guoc-moc": {
     "sourceDimensions": {
       "width": 800,
-      "height": 686
+      "height": 516
     },
     "visibleBounds": {
       "minX": 4,
-      "maxX": 794,
+      "maxX": 795,
       "minY": 5,
-      "maxY": 680,
-      "width": 791,
-      "height": 676,
-      "centerX": 399.0
+      "maxY": 511,
+      "width": 792,
+      "height": 507,
+      "centerX": 399.5
     },
     "imageSrc": "/images/layers/shoes/shoes-guoc-moc.png",
     "originalDimensions": {
@@ -333,13 +333,14 @@
       "height": 1254
     },
     "crop": [
-      139,
-      207,
-      1116,
-      1045
+      91,
+      372,
+      1162,
+      1063
     ],
-    "resizeScale": 0.8188331627430911,
-    "sha256": "ff40ecc48ac9c97d4d798d4f44effd907f8a8bff51cbb15838a4ec44914867cd"
+    "resizeScale": 0.7469654528478058,
+    "sha256": "810436c55f40ea790677ab9f03afca634ab9861b579fb86fef74eef7af4c1343",
+    "processingInput": "assets/sources/drive/guoc-moc-layer.png"
   },
   "shoes-chunky-loafer": {
     "sourceDimensions": {

@@ -21,11 +21,11 @@ const cases=[
 ];
 async function select(selection){
   await page.evaluate(s=>window.setTestOutfit(s),selection);
-  await page.waitForFunction(()=>{
+  await page.waitForFunction(selection=>{
     const image=document.querySelector('#photo-layer-core image');
     const notice=document.body.innerText;
-    return image?.getAttribute('href')?.startsWith('blob:')&&!notice.includes('Đang xử lý');
-  });
+    return image?.getAttribute('href')?.startsWith('blob:')&&image.getAttribute('data-garment-id')===selection.core&&!document.querySelector('[data-pending-layer]')&&!notice.includes('Đang xử lý');
+  },selection);
   await page.waitForTimeout(100);
 }
 for(let i=0;i<cases.length;i++){
@@ -40,6 +40,22 @@ for(const core of ['ao-nhat-binh','ao-tac','ao-dai','ao-tu-than','ao-ngu-than'])
 await page.setViewportSize({width:390,height:844});
 await select({...cases[8],color:'Xanh lam'});
 await page.screenshot({path:'artifacts/visual/mobile-photo.png',fullPage:true});
+fs.mkdirSync('artifacts/stabilization/visual',{recursive:true});
+const expanded=[];
+for(const [viewport,width,height] of [['desktop',1280,900],['laptop',1366,768],['mobile',390,844]]){
+  await page.setViewportSize({width,height});
+  let index=0;
+  for(const core of ['ao-nhat-binh','ao-tac','ao-dai','ao-tu-than','ao-ngu-than']){
+    for(const [bag,accent] of [[0,null],[1,null],[2,null],[0,0],[0,1],[0,2],[0,3],[1,1],[2,1]]){
+      const selection={core,bottom:index%3,shoes:index%3,bag,accent,color:'Để hệ thống gợi ý'};
+      await select(selection);
+      const file=`${viewport}-${core}-bag${bag}-accent${accent??'none'}.png`;
+      await page.locator('svg[aria-label^="Mannequin"]').screenshot({path:`artifacts/stabilization/visual/${file}`});
+      expanded.push({viewport,...selection,file});
+    }index++;
+  }
+}
+fs.writeFileSync('artifacts/stabilization/visual/matrix.json',JSON.stringify(expanded,null,2));
 if(errors.length)throw new Error(errors.join('\n'));
 await browser.close();
-console.log('Captured 11 reference outfits, 30 garment/colors, mobile; no browser exceptions.');
+console.log('Captured 11 reference outfits, 30 garment/colors, mobile, and 135 fitting views across desktop/laptop/mobile; no browser exceptions.');

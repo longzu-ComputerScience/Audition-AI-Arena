@@ -221,8 +221,11 @@
     "itemId": "shoes-guoc-moc",
     "rawPath": "public/images/catalog/sources/GuocMoc.png",
     "optimizedPath": "public/images/catalog/shoes/shoes-guoc-moc.webp",
-    "sizeBytes": 31570,
-    "status": "success"
+    "sizeBytes": 84760,
+    "status": "success",
+    "processingInput": "assets/sources/drive/guoc-moc-layer.png",
+    "sha256": "ed1200439f5af27dcf3c51c28d1184a5c3872f716292c0624a60b8ac7dc1fc00",
+    "note": "Thumbnail derived from the latest user-revised clog layer; original catalog source remains archived"
   },
   {
     "id": "1hSYspAxInXPg54xAPGerSBZDIUGlA_7s",
@@ -586,35 +589,36 @@
     "itemId": "shoes-guoc-moc",
     "target": "public/images/layers/shoes/shoes-guoc-moc.png",
     "rawPath": "assets/sources/drive/guoc-moc-layer.png",
-    "rawSha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9",
-    "processingInput": "assets/sources/baseline/shoes/shoes-guoc-moc.png",
-    "inputSha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9",
+    "rawSha256": "8e1aa4300717ea2f657a5cf5e9e52f3c47043474401995a4a662a86389191e4c",
+    "processingInput": "assets/sources/drive/guoc-moc-layer.png",
+    "inputSha256": "8e1aa4300717ea2f657a5cf5e9e52f3c47043474401995a4a662a86389191e4c",
     "optimizedPath": "public/images/layers/shoes/shoes-guoc-moc.png",
-    "sha256": "ff40ecc48ac9c97d4d798d4f44effd907f8a8bff51cbb15838a4ec44914867cd",
-    "sizeBytes": 900162,
+    "sha256": "810436c55f40ea790677ab9f03afca634ab9861b579fb86fef74eef7af4c1343",
+    "sizeBytes": 683125,
     "status": "success",
     "alphaValidated": true,
-    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "conversion": "User-revised transparent source; alpha crop; uniform resize; original colors retained",
     "sourceDimensions": {
       "width": 800,
-      "height": 686
+      "height": 516
     },
     "visibleBounds": {
       "minX": 4,
-      "maxX": 794,
+      "maxX": 795,
       "minY": 5,
-      "maxY": 680,
-      "width": 791,
-      "height": 676,
-      "centerX": 399.0
+      "maxY": 511,
+      "width": 792,
+      "height": 507,
+      "centerX": 399.5
     },
     "crop": [
-      139,
-      207,
-      1116,
-      1045
+      91,
+      372,
+      1162,
+      1063
     ],
-    "resizeScale": 0.8188331627430911
+    "resizeScale": 0.7469654528478058,
+    "localRevision": "User-provided replacement, preserved byte-for-byte; not a new Drive download"
   },
   {
     "id": "1o2RX9n-OcSjgoadkcg7XM0yJF46SqXlH",

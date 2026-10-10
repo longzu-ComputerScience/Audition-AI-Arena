@@ -1,6 +1,6 @@
 # Photo asset processing record
 
-Original Drive files are archived without modification. Runtime layers are separate derivatives. Editorial/Lookbook entries retain their original mappings.
+Drive files are archived separately from runtime derivatives. The user replaced `sources/drive/guoc-moc-layer.png`; its current bytes are preserved and the previous download hash/size remain recorded under `originalDownload`. This local revision is not represented as a new remote download. Editorial/Lookbook mappings remain intact.
 
 ## Exact downloads
 
@@ -18,7 +18,7 @@ Original Drive files are archived without modification. Runtime layers are separ
 | Images/Layer/Túi/bag-gam-layer.png | `1OZYstPbox2zlObAKX2kwc3LO82JoecJx` | 2778343 | [bag-gam-layer.png](sources/drive/bag-gam-layer.png) |
 | Images/Layer/Túi/bag-techwear-crossbody-layer.png | `13Lzs_gsWEAbccBGAkfT2L1oodRXdfYQo` | 583774 | [bag-techwear-crossbody-layer.png](sources/drive/bag-techwear-crossbody-layer.png) |
 | Images/Layer/Túi/bag-tote-linen-layer.png | `1NW8TKU6vV3Zbi_yO29-zU-5-d5Ok7Uho` | 758091 | [bag-tote-linen-layer.png](sources/drive/bag-tote-linen-layer.png) |
-| Images/Layer/Giày/guoc-moc-layer.png | `1qjVKXWP95aARS_KDLr29BHc0KBRNdc3w` | 1438104 | [guoc-moc-layer.png](sources/drive/guoc-moc-layer.png) |
+| Images/Layer/Giày/guoc-moc-layer.png | `1qjVKXWP95aARS_KDLr29BHc0KBRNdc3w` | 1274772 | [guoc-moc-layer.png](sources/drive/guoc-moc-layer.png) |
 | Images/Layer/Quần/quan-lua-layer.png | `1bTss4mq2Eqwaqp1-Vpb9nPTDJf_EDDgR` | 5136767 | [quan-lua-layer.png](sources/drive/quan-lua-layer.png) |
 | Images/Layer/Quần/QuanDenim-layer.png | `1sTkxS3FRSexyrIwGjWLs-21mE_luH9gs` | 1082116 | [QuanDenim-layer.png](sources/drive/QuanDenim-layer.png) |
 | Images/Layer/Quần/QuanTay-layer.png | `1yGIsXbKlNOjtq_hw7xXZx84mfrfEfamQ` | 5531524 | [QuanTay-layer.png](sources/drive/QuanTay-layer.png) |
@@ -28,7 +28,7 @@ Original Drive files are archived without modification. Runtime layers are separ
 
 ## Runtime derivatives
 
-Three JPEG garments were segmented offline. Two existing garment cutouts and thirteen support cutouts were reused, cropped by real alpha bounds and uniformly resized. Original masks for Nhật Bình and Tấc are also archived in `sources/baseline/masks/`.
+Three JPEG garments were segmented offline. Two existing garment cutouts and twelve baseline support cutouts were reused; the updated Guoc Moc layer is derived directly from the preserved user revision. Layers are cropped by real alpha bounds and uniformly resized. Original masks for Nhật Bình and Tấc and the original downloaded Guoc Moc are archived in `sources/baseline/`.
 
 | Catalog ID | PNG dimensions | Input | Recolor mask |
 |---|---|---|---|
@@ -40,7 +40,7 @@ Three JPEG garments were segmented offline. Two existing garment cutouts and thi
 | `bottom-silk-wide` | 363 × 800 | `assets/sources/baseline/quan-lua.png` | no |
 | `bottom-tailored-trousers` | 285 × 800 | `assets/sources/baseline/bottoms/bottom-tailored-trousers.png` | no |
 | `bottom-raw-denim` | 458 × 800 | `assets/sources/baseline/bottoms/bottom-raw-denim.png` | no |
-| `shoes-guoc-moc` | 800 × 686 | `assets/sources/baseline/shoes/shoes-guoc-moc.png` | no |
+| `shoes-guoc-moc` | 800 × 516 | `assets/sources/drive/guoc-moc-layer.png` | no |
 | `shoes-chunky-loafer` | 800 × 513 | `assets/sources/baseline/shoes/shoes-chunky-loafer.png` | no |
 | `shoes-retro-sneaker` | 800 × 524 | `assets/sources/baseline/shoes/shoes-retro-sneaker.png` | no |
 | `bag-gam-vintage` | 698 × 800 | `assets/sources/baseline/bags/bag-gam-vintage.png` | no |

@@ -14,7 +14,9 @@ import {
   isPhotoLayerSupported,
   getPhotoLayerConfig,
 } from '../data/layeredOutfitMap';
-import { recolorGarmentImage } from '../utils/fabricRecolor';
+import { recolorGarmentImage, peekRecoloredGarmentImage, retainRecoloredImage } from '../utils/fabricRecolor';
+import { usePhotoImage, retryPhotoImage } from '../utils/photoImageCache';
+import { getOutfitLayerConfig } from '../data/photoLayerFitting';
 import {
   Layers,
   Pin,
@@ -40,7 +42,6 @@ interface MannequinCanvasProps {
   onOpenCoreDetail?: () => void;
   onSelectFabricColor?: (hex: string) => void;
   displayMode?: 'svg' | 'photo';
-  onDisplayModeChange?: (mode: 'svg' | 'photo') => void;
 }
 
 function parseHexRgb(hex: string): [number, number, number] {
@@ -81,7 +82,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   onOpenCoreDetail,
   onSelectFabricColor,
   displayMode,
-  onDisplayModeChange,
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const necklaceClipId = `necklace-${useId().replace(/:/g, '')}`;
@@ -90,59 +90,26 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
   const [failedThumbIds, setFailedThumbIds] = useState<Record<string, boolean>>({});
 
-  // Prefer photography once selected layers and the matching recolor are ready.
-  const [internalRenderMode, setInternalRenderMode] = useState<'svg' | 'photo'>('photo');
-  const renderMode = displayMode ?? internalRenderMode;
-  const setRenderMode = (mode: 'svg' | 'photo') => onDisplayModeChange ? onDisplayModeChange(mode) : setInternalRenderMode(mode);
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
-  const [erroredImages, setErroredImages] = useState<Record<string, boolean>>({});
+  // Photography is standard. The prop remains an internal diagnostic override only.
+  const renderMode = displayMode ?? 'photo';
 
   // Photo fabric recoloring state
-  const [recoloredPhoto, setRecoloredPhoto] = useState<{ key: string; src: string } | null>(null);
-  const [isRecoloring, setIsRecoloring] = useState<boolean>(false);
-  const [recolorError, setRecolorError] = useState<boolean>(false);
+  const [, refreshRecolor] = useState(0);
+  const [failedRecolorKey, setFailedRecolorKey] = useState<string | null>(null);
 
   const selectedConfigs = [getPhotoLayerConfig('core', core.id), getPhotoLayerConfig('bottom', items.bottom.id),
     getPhotoLayerConfig('shoes', items.shoes.id), getPhotoLayerConfig('bag', items.bag.id), getPhotoLayerConfig('accent', items.accent?.id)];
-  const selectedImageKey = selectedConfigs.map(c => c?.imageSrc ?? '').join('|');
-  // Decode selected images only, not the entire high-resolution wardrobe on every mount.
-  useEffect(() => {
-    let isMounted = true;
-    const allConfigs = selectedConfigs.filter((c) => Boolean(c));
-
-    allConfigs.forEach((cfg) => {
-      if (!cfg) return;
-      const img = new Image();
-        img.onload = () => {
-          if (isMounted) setLoadedImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
-        };
-        img.onerror = () => {
-          if (isMounted) setErroredImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
-        };
-      img.src = cfg!.imageSrc;
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedImageKey]);
+  const bottomStatus = usePhotoImage(selectedConfigs[1]?.imageSrc);
+  const shoesStatus = usePhotoImage(selectedConfigs[2]?.imageSrc);
+  const bagStatus = usePhotoImage(selectedConfigs[3]?.imageSrc);
+  const accentStatus = usePhotoImage(selectedConfigs[4]?.imageSrc);
 
   const corePhotoConfig = getPhotoLayerConfig('core', core.id);
-  const bottomPhotoConfig = getPhotoLayerConfig('bottom', items.bottom?.id);
 
   const isSupportedCombination = isPhotoLayerSupported(core.id, items.bottom?.id);
 
-  // Photo readiness tracks actual selected garments: primary core and bottom layers must be ready
-  const isCoreImageLoaded = Boolean(
-    corePhotoConfig && loadedImages[corePhotoConfig.imageSrc] && !erroredImages[corePhotoConfig.imageSrc]
-  );
-  const isBottomImageLoaded = Boolean(
-    bottomPhotoConfig && loadedImages[bottomPhotoConfig.imageSrc] && !erroredImages[bottomPhotoConfig.imageSrc]
-  );
-  const primaryImagesReady = isCoreImageLoaded && isBottomImageLoaded && selectedConfigs.every(c => !c || (loadedImages[c.imageSrc] && !erroredImages[c.imageSrc]));
-
-  // Active ONLY when mode is 'photo', combination is supported, and primary photo assets are loaded cleanly
-  const isPhotoModeActive = renderMode === 'photo' && isSupportedCombination && primaryImagesReady;
+  // Availability is independent of readiness: a pending accessory never invalidates the core.
+  const isPhotoModeActive = renderMode === 'photo' && Boolean(corePhotoConfig?.validated);
 
   const lastOpenedCategoryRef = useRef<SupportCategoryId | null>(null);
   const hotspotButtonRefs = useRef<Record<SupportCategoryId, HTMLButtonElement | null>>({
@@ -325,7 +292,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           return { vx: isWideSilkBottom ? 208 : 195, vy: 546 };
       }
     },
-    [items, core.id]
+    [items.accent?.id, items.bag.id, items.bottom.id, items.shoes.id, core.id]
   );
 
   // Recalculate exact pixel coordinates linking SVG viewBox points to HTML buttons
@@ -388,8 +355,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       });
     }
 
-    setStageDimensions({ width: stageRect.width, height: stageRect.height });
-    setLeaderLines(computed);
+    setStageDimensions(previous => previous.width === stageRect.width && previous.height === stageRect.height ? previous : { width: stageRect.width, height: stageRect.height });
+    setLeaderLines(previous => JSON.stringify(previous) === JSON.stringify(computed) ? previous : computed);
   }, [getMannequinAnchorPoint]);
 
   useLayoutEffect(() => {
@@ -538,25 +505,28 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const [localColor, setLocalColor] = useState<{ context: string; hex: string } | null>(null);
   const primaryFabricColor = localColor?.context === colorContext ? localColor.hex : fabricColor || core.palette[0]?.hex || '#8C3B24';
   const recolorKey = `${core.id}|${primaryFabricColor}`;
-  const recoloredPhotoSrc = recoloredPhoto?.key === recolorKey ? recoloredPhoto.src : null;
+  const cachedRecolor = corePhotoConfig?.fabricMaskSrc && peekRecoloredGarmentImage(corePhotoConfig.imageSrc, corePhotoConfig.fabricMaskSrc, primaryFabricColor, corePhotoConfig.baseFabricLuminance);
+  // The cache owns URL lifetime; component state must never resurrect an evicted URL.
+  const recoloredPhotoSrc = cachedRecolor || null;
+  const recolorError = failedRecolorKey === recolorKey;
   const photoCoreReady = isPhotoModeActive && Boolean(recoloredPhotoSrc) && !recolorError;
   const displayPalette = palette && palette.length > 0 ? palette : core.palette;
   const fabricLuminance = getRelativeLuminance(primaryFabricColor);
 
-  // Dynamic in-browser photo fabric recoloring for Áo Nhật Bình
+  // Dynamic in-browser photo fabric recoloring for the selected garment.
   useEffect(() => {
     let isCancelled = false;
+    let releaseResult: (() => void) | undefined;
     const config = PHOTO_LAYER_CONFIG.core[core.id];
     if (!config?.isRecolorable || !config.fabricMaskSrc) {
-      setRecoloredPhoto(null);
-      setIsRecoloring(false);
-      setRecolorError(false);
+      setFailedRecolorKey(null);
       return;
     }
 
-    setIsRecoloring(true);
-    setRecolorError(false);
-    if (renderMode !== 'photo') { setIsRecoloring(false); return; }
+    setFailedRecolorKey(null);
+    if (renderMode !== 'photo') return;
+    retryPhotoImage(config.imageSrc);
+    retryPhotoImage(config.fabricMaskSrc);
 
     recolorGarmentImage(
       config.imageSrc,
@@ -566,22 +536,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     )
       .then((recoloredUrl) => {
         if (!isCancelled) {
-          setRecoloredPhoto({ key: recolorKey, src: recoloredUrl });
-          setIsRecoloring(false);
+          releaseResult = retainRecoloredImage(recoloredUrl);
+          refreshRecolor(revision => revision + 1);
         }
       })
       .catch((err) => {
-        console.error('[MannequinCanvas] Fabric recoloring failed:', err);
         if (!isCancelled) {
-          setRecolorError(true);
-          setIsRecoloring(false);
+          console.error('[MannequinCanvas] Fabric recoloring failed:', err);
+          setFailedRecolorKey(recolorKey);
         }
       });
 
     return () => {
       isCancelled = true;
+      releaseResult?.();
     };
   }, [core.id, primaryFabricColor, renderMode]);
+  useLayoutEffect(() => recoloredPhotoSrc ? retainRecoloredImage(recoloredPhotoSrc) : undefined, [recoloredPhotoSrc]);
 
   // Adaptive contrast strokes for internal garment pleats/seams on very dark or very light fabrics
   const isVeryDarkFabric = fabricLuminance < 0.035;
@@ -618,14 +589,15 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       <ellipse cx="150" cy="565" rx="48" ry="6" fill="#DDD0B8" opacity="0.8" />
 
       {/* Head Silhouette & Elegant Topknot / Hairline */}
+      <g transform="translate(0 8)">
       <path
-        d="M142 42 C142 34 146 28 150 28 C154 28 158 34 158 42 Z"
+        d="M145 41 C145 37 147 35 150 35 C153 35 155 37 155 41 Z"
         fill="#3D342C"
         stroke="#2E2620"
         strokeWidth="1.2"
       />
       {/* Hair bun pin / comb hint */}
-      <line x1="145" y1="38" x2="155" y2="34" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="147" y1="38" x2="153" y2="37" stroke="#D4AF37" strokeWidth="1" strokeLinecap="round" />
 
       {/* Refined Serene Head with Natural Jaw & Chin Contour */}
       <path
@@ -637,10 +609,11 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Stylized serene facial guidelines / nose bridge hint */}
       <path d="M150 63 L149 71 L153 71" stroke="#A89A88" strokeWidth="1.2" strokeLinecap="round" fill="none" />
       <line x1="147" y1="78" x2="153" y2="78" stroke="#9A8977" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
 
       {/* Smooth Neck transition from jawline into clavicle / collar base */}
       <path
-        d="M142 86 C142 94 140 106 139 116 L161 116 C160 106 158 94 158 86 Z"
+        d="M142 99 C142 104 140 110 139 116 L161 116 C160 110 158 104 158 99 Z"
         fill="#E8DCB8"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -657,7 +630,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Left Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
         d="M108 134 C99 145 79 181 66 208 C56 232 47 260 40 280 C37 284 32 291 32 295 C33 299 37 299 39 295 L45 283 C53 263 63 235 74 212 C87 185 101 160 110 147 Z"
-        visibility={photoCoreReady && corePhotoConfig?.hideArms ? 'hidden' : undefined}
+        visibility={isPhotoModeActive && !recolorError && corePhotoConfig?.hideArms ? 'hidden' : undefined}
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -667,7 +640,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Right Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
         d="M192 134 C201 145 221 181 234 208 C244 232 253 260 260 280 C263 284 268 291 268 295 C267 299 263 299 261 295 L255 283 C247 263 237 235 226 212 C213 185 199 160 190 147 Z"
-        visibility={photoCoreReady && corePhotoConfig?.hideArms ? 'hidden' : undefined}
+        visibility={isPhotoModeActive && !recolorError && corePhotoConfig?.hideArms ? 'hidden' : undefined}
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -699,7 +672,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const renderBottomGarment = () => {
     // Photographic Layer rendering for Bottoms
     const bottomPhotoConfig = getPhotoLayerConfig('bottom', items.bottom?.id);
-    if (isPhotoModeActive && bottomPhotoConfig && loadedImages[bottomPhotoConfig.imageSrc]) {
+    if (isPhotoModeActive && bottomPhotoConfig && bottomStatus === 'loading') return <g data-pending-layer="bottom" />;
+    if (isPhotoModeActive && bottomPhotoConfig && bottomStatus === 'ready') {
       return (
         <g id="photo-layer-bottom" className="select-none pointer-events-none">
           <image
@@ -834,7 +808,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const renderShoes = () => {
     // Photographic Layer rendering for Footwear
     const shoesPhotoConfig = getPhotoLayerConfig('shoes', items.shoes?.id);
-    if (isPhotoModeActive && shoesPhotoConfig && loadedImages[shoesPhotoConfig.imageSrc]) {
+    if (isPhotoModeActive && shoesPhotoConfig && shoesStatus === 'loading') return <g data-pending-layer="shoes" />;
+    if (isPhotoModeActive && shoesPhotoConfig && shoesStatus === 'ready') {
       return (
         <g id="photo-layer-shoes" className="select-none pointer-events-none">
           <image
@@ -946,7 +921,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               href={photoSrc}
               data-garment-id={core.id}
               data-fabric-color={primaryFabricColor}
-              onError={() => setRecolorError(true)}
+              onError={() => setFailedRecolorKey(recolorKey)}
               x={config.svgPlacement.x}
               y={config.svgPlacement.y}
               width={config.svgPlacement.width}
@@ -958,6 +933,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       }
     }
 
+    if (isPhotoModeActive && !recolorError) return <g data-pending-layer="core"><path d="M142 109 L107 134 L84 258 L110 265 L121 422 L179 422 L190 265 L216 258 L193 134 L158 109 Z" fill="#EAE3D6" opacity=".35" /></g>;
     switch (core.id) {
       case 'ao-nhat-binh':
         return (
@@ -1178,13 +1154,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   ------------------------------------------------------------- */
   const renderBag = () => {
     // Photographic Layer rendering for Bag
-    const bagPhotoConfig = getPhotoLayerConfig('bag', items.bag?.id);
-    if (isPhotoModeActive && bagPhotoConfig && loadedImages[bagPhotoConfig.imageSrc]) {
-      const carry = photoCoreReady && corePhotoConfig?.bagCarryAnchor;
-      const target = items.bag.id === 'bag-gam-vintage' && carry ? carry : [36,294];
-      const bagScale = photoCoreReady && core.id === 'ao-dai' && items.bag.id === 'bag-gam-vintage' ? .8 : 1;
+    const bagPhotoConfig = getOutfitLayerConfig(core.id, 'bag', items.bag?.id);
+    if (isPhotoModeActive && bagPhotoConfig && bagStatus === 'loading') return <g data-pending-layer="bag" />;
+    if (isPhotoModeActive && bagPhotoConfig && bagStatus === 'ready') {
+      const carry = corePhotoConfig?.bagCarryAnchor ?? [36,294];
       return (
-        <g id="photo-layer-bag" className="select-none pointer-events-none" transform={`translate(${target[0]} ${target[1]}) scale(${bagScale}) translate(-36 -294)`}>
+        <g id="photo-layer-bag" className="select-none pointer-events-none">
           <image
             href={bagPhotoConfig.imageSrc}
             x={bagPhotoConfig.svgPlacement.x}
@@ -1194,7 +1169,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             preserveAspectRatio={bagPhotoConfig.preserveAspectRatio}
           />
           {items.bag.id === 'bag-gam-vintage' && (
-            <path d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" />
+            <path transform={`translate(${carry[0]-36} ${carry[1]-294})`} d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" />
           )}
         </g>
       );
@@ -1308,10 +1283,17 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     if (!items.accent) return null;
 
     // Photographic Layer rendering for Accent
-    const accentPhotoConfig = getPhotoLayerConfig('accent', items.accent.id);
-    if (isPhotoModeActive && accentPhotoConfig && loadedImages[accentPhotoConfig.imageSrc]) {
+    const accentPhotoConfig = getOutfitLayerConfig(core.id, 'accent', items.accent.id, items.bag.id);
+    if (isPhotoModeActive && accentPhotoConfig && accentStatus === 'loading') return <g data-pending-layer="accent" />;
+    if (isPhotoModeActive && accentPhotoConfig && accentStatus === 'ready') {
       return (
         <g id="photo-layer-accent" className="select-none pointer-events-none" clipPath={items.accent.id === 'accent-silver-jewelry' ? `url(#${necklaceClipId})` : undefined}>
+          {items.accent.id === 'accent-quai-thao-mini' && (() => {
+            const p=accentPhotoConfig.svgPlacement, b=accentPhotoConfig.visibleBounds;
+            const x=p.x+b.centerX*p.width/accentPhotoConfig.sourceDimensions.width;
+            const y=p.y+b.minY*p.height/accentPhotoConfig.sourceDimensions.height;
+            return <path d={`M${x > 150 ? 175 : 125} 248 Q${x} ${(248+y)/2} ${x} ${y}`} fill="none" stroke="#7A3E32" strokeWidth="1" />;
+          })()}
           <image
             href={accentPhotoConfig.imageSrc}
             x={accentPhotoConfig.svgPlacement.x}
@@ -1327,7 +1309,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     switch (items.accent.id) {
       case 'accent-non-la':
         return (
-          <g id="accent-non-la" stroke="#5C4934" strokeWidth="1.3" strokeLinejoin="round">
+          <g id="accent-non-la" transform="translate(0 8)" stroke="#5C4934" strokeWidth="1.3" strokeLinejoin="round">
             {/* Traditional Vietnamese Conical Leaf Hat (Nón Lá) worn naturally on head */}
             {/* Back/inner brim side wings framing upper temples without covering face */}
             <path
@@ -1403,7 +1385,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
       case 'accent-y2k-shades':
         return (
-          <g id="accent-y2k-shades" stroke="#181615" strokeWidth="1.2" strokeLinejoin="round">
+          <g id="accent-y2k-shades" transform="translate(0 8)" stroke="#181615" strokeWidth="1.2" strokeLinejoin="round">
             {/* Futuristic Slim Y2K Sunglasses on face */}
             {/* Left lens */}
             <path d="M136 64 C136 62 147 62 148 65 C148 68 138 70 136 68 Z" fill="#3E3835" />
@@ -1788,7 +1770,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
   return (
     <div className="relative bg-[#FFFDF9] border border-[#E3D9CC] rounded-sm p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
-      {/* Header with Title, Mode Switch (SVG | Photo Layers), and Palette Swatches */}
+      {/* Title and active garment palette */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE3D6] pb-2.5 mb-2.5">
         <div className="flex items-center gap-2">
           <Pin className="w-3.5 h-3.5 rotate-45 text-[#B3261E]" />
@@ -1800,45 +1782,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5 self-end sm:self-auto">
-          {/* Mode Switch: SVG | Photo Layers (Demo) */}
-          <div
-            role="radiogroup"
-            aria-label="Chế độ hiển thị mannequin"
-            className="inline-flex items-center p-0.5 bg-[#EFE8DC]/80 rounded-md border border-[#DDD3C4] text-[11px] font-sans"
-          >
-            <button
-              type="button"
-              role="radio"
-              aria-checked={renderMode === 'svg'}
-              onClick={() => setRenderMode('svg')}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-medium ${
-                renderMode === 'svg'
-                  ? 'bg-[#FFFDF9] text-[#2B231D] shadow-2xs font-semibold'
-                  : 'text-[#6C6055] hover:text-[#2B231D]'
-              }`}
-            >
-              SVG
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={renderMode === 'photo'}
-              onClick={() => setRenderMode('photo')}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer font-medium flex items-center gap-1 ${
-                renderMode === 'photo'
-                  ? 'bg-[#B3261E] text-[#FFFDF9] shadow-2xs font-semibold'
-                  : 'text-[#6C6055] hover:text-[#2B231D]'
-              }`}
-              title={
-                isSupportedCombination
-                  ? `Xem thử nghiệm ghép ảnh thực tế ${core.name} và ${items.bottom.name}`
-                  : 'Ảnh ghép chưa có dữ liệu phù hợp; hiển thị SVG'
-              }
-            >
-              <span>Photo Layers (Demo)</span>
-            </button>
-          </div>
-
           {/* Core garment / active concept palette indicators */}
           <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Bảng màu trang phục">
             {displayPalette.map((c, i) => {
@@ -1869,34 +1812,16 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         </div>
       </div>
 
-      {/* Photo Layers notice when active */}
-      {isPhotoModeActive && !recolorError && (
-        <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>
-            {isRecoloring || !recoloredPhotoSrc
-              ? 'Đang xử lý nhuộm màu ảnh thực tế...'
-              : `Màu vải ảnh thực tế: ${
-                  displayPalette.find(
-                    (p) => p.hex.toLowerCase() === primaryFabricColor.toLowerCase()
-                  )?.name || primaryFabricColor
-                }`}
-          </span>
-          <span className="font-mono text-[10px] text-[#A65B53]">{core.name} · {items.bottom.name}</span>
-        </div>
-      )}
-
-      {renderMode === 'photo' && isSupportedCombination && recolorError && (
-        <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Chưa thể tải ảnh màu thực tế, đang hiển thị bản vẽ SVG tương ứng.</span>
-        </div>
-      )}
-
-      {/* Fallback notice if Photo mode is selected on an unsupported outfit */}
-      {renderMode === 'photo' && !isSupportedCombination && (
-        <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Ảnh ghép chưa có dữ liệu phù hợp; đang hiển thị bản vẽ SVG tương ứng.</span>
-        </div>
-      )}
+      {/* Reserve one line throughout loading, success and failure, including on mobile. */}
+      <div data-photo-status className="h-8 flex items-center text-[11px] leading-tight text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 rounded-sm mb-2 font-serif" role="status" aria-live="polite">
+        <span>{renderMode !== 'photo' ? 'Bản vẽ trang phục' : recolorError
+          ? 'Chưa thể tải ảnh màu thực tế, đang hiển thị bản vẽ tương ứng.'
+          : !isSupportedCombination ? 'Ảnh trang phục chưa có dữ liệu phù hợp.'
+          : !photoCoreReady ? 'Đang xử lý nhuộm màu ảnh thực tế…'
+          : [bottomStatus,shoesStatus,bagStatus,accentStatus].includes('error') ? 'Một món chưa tải được ảnh; các lớp còn lại giữ nguyên.'
+          : [bottomStatus,shoesStatus,bagStatus,accentStatus].includes('loading') ? 'Đang tải ảnh món vừa chọn…'
+          : `Màu vải ảnh thực tế: ${displayPalette.find(p => p.hex.toLowerCase() === primaryFabricColor.toLowerCase())?.name || primaryFabricColor}`}</span>
+      </div>
 
       {/* Main 2D Mannequin Canvas - Responsive horizontal breathing room on all devices so hotspots never overlap mannequin */}
       <div
@@ -2120,6 +2045,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           </motion.g>
 
           {/* 4. Selected Core Việt Phục (Dominant piece, crossfade on core change) */}
+          {/* Nhật Bình's embroidered collar occludes necklace chains beside its real opening. */}
+          {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive && renderAccent()}
           <motion.g
             key={`core-${core.id}`}
             initial={{ opacity: 0 }}
@@ -2146,7 +2073,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             animate={{ opacity: 1 }}
             transition={layerTransition}
           >
-            {renderAccent()}
+            {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive ? null : renderAccent()}
           </motion.g>
         </svg>
       </div>

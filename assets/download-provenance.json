@@ -88,8 +88,14 @@
       "id": "1qjVKXWP95aARS_KDLr29BHc0KBRNdc3w",
       "drivePath": "Images/Layer/Giày/guoc-moc-layer.png",
       "localPath": "assets/sources/drive/guoc-moc-layer.png",
-      "sizeBytes": 1438104,
-      "sha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9"
+      "sizeBytes": 1274772,
+      "sha256": "8e1aa4300717ea2f657a5cf5e9e52f3c47043474401995a4a662a86389191e4c",
+      "localRevision": "User-provided replacement, preserved byte-for-byte; not a new Drive download",
+      "originalDownload": {
+        "sizeBytes": 1438104,
+        "sha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9",
+        "archivedPath": "assets/sources/baseline/shoes/shoes-guoc-moc.png"
+      }
     },
     {
       "id": "1bTss4mq2Eqwaqp1-Vpb9nPTDJf_EDDgR",

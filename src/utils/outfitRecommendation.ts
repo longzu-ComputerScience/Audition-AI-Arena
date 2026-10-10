@@ -149,9 +149,13 @@ export function rankOutfits(context: RecommendationContext, current?: ActiveSupp
   return ranked.sort((a, b) => b.score - a.score || a.distance - b.distance || (outfitKey(a.items) < outfitKey(b.items) ? -1 : outfitKey(a.items) > outfitKey(b.items) ? 1 : 0));
 }
 export function recommendOutfit(context: RecommendationContext, current?: ActiveSupportItems, manual: ManualSlots = {}): RankedOutfit {
+  return recommendOutfitDecision(context,current,manual).chosen;
+}
+export function recommendOutfitDecision(context: RecommendationContext, current?: ActiveSupportItems, manual: ManualSlots = {}, useHysteresis=true) {
   const ranked = rankOutfits(context, current, manual);
   const best = ranked[0];
   const previous = current && ranked.find(r => outfitKey(r.items) === outfitKey(current));
   // 1.2 percentage points hysteresis: keep the current outfit for insignificant improvements.
-  return previous && best.score - previous.score <= .012 ? previous : best;
+  const keep = Boolean(useHysteresis && previous && best.score - previous.score <= .012);
+  return { chosen: keep ? previous! : best, best, ranked, keptByHysteresis: keep && outfitKey(previous!.items) !== outfitKey(best.items) };
 }

@@ -47,4 +47,9 @@ if provenance.exists():
         path=root/source['localPath']
         assert path.stat().st_size==source['sizeBytes']
         assert hashlib.sha256(path.read_bytes()).hexdigest()==source['sha256'], f'{path}: original download changed'
+        if source.get('originalDownload',{}).get('archivedPath'):
+            archived=source['originalDownload']
+            original=root/archived['archivedPath']
+            assert original.stat().st_size==archived['sizeBytes']
+            assert hashlib.sha256(original.read_bytes()).hexdigest()==archived['sha256'], 'Archived original changed'
 print(json.dumps(reports,indent=2))

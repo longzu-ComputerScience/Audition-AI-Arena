@@ -132,6 +132,23 @@ def save_asset(item, im, path, neck=None, target_neck=None, target_hem=None):
     return record
 
 def main():
+    if '--only-guoc' in sys.argv:
+        # The locally revised transparent source is authoritative. Do not touch any garment/mask.
+        metadata_path = ROOT/'src/data/photoAssetMetadata.json'
+        metadata = json.loads(metadata_path.read_text(encoding='utf-8'))
+        raw = SOURCES/'guoc-moc-layer.png'
+        im = Image.open(raw)
+        assert 'A' in im.getbands(), 'The revised source must retain genuine transparency'
+        path = LAYERS/'shoes/shoes-guoc-moc.png'
+        record = save_asset('shoes-guoc-moc', im.convert('RGBA'), path)
+        record['processingInput'] = raw.relative_to(ROOT).as_posix()
+        metadata['shoes-guoc-moc'] = record
+        metadata_path.write_text(json.dumps(metadata, indent=2), encoding='utf-8')
+        thumb = Image.open(path)
+        thumb.thumbnail((640,640), Image.Resampling.LANCZOS)
+        thumb.save(ROOT/'public/images/catalog/shoes/shoes-guoc-moc.webp', 'WEBP', quality=90, method=6)
+        print('Updated only Guoc Moc runtime and catalog derivatives from the preserved user revision.')
+        return
     metadata = {}
     specs = [
         ('ao-nhat-binh', 'ao-nhat-binh.png', None, [896,328], [150,105], 414),
@@ -175,7 +192,12 @@ def main():
         raw = baseline/name
         raw.parent.mkdir(parents=True,exist_ok=True)
         if not raw.exists(): raw.write_bytes((LAYERS/name).read_bytes())
+        prior_path = ROOT/'src/data/photoAssetMetadata.json'
+        prior = json.loads(prior_path.read_text(encoding='utf-8')) if prior_path.exists() else {}
+        revised_input = prior.get(item,{}).get('processingInput')
+        if revised_input: raw = ROOT/revised_input
         metadata[item] = save_asset(item, Image.open(raw).convert('RGBA'), LAYERS/name)
+        if revised_input: metadata[item]['processingInput'] = revised_input
     (ROOT/'src/data/photoAssetMetadata.json').write_text(json.dumps(metadata, indent=2),encoding='utf-8')
     print('Prepared', len(metadata), 'validated-candidate layers and five masks; run asset validator before use.')
 

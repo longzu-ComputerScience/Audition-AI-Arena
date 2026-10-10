@@ -2,7 +2,7 @@ import measuredAssets from './photoAssetMetadata.json';
 
 /** Shared canonical A-pose, in the existing 300 × 600 viewBox. */
 export const CANONICAL_MANNEQUIN_LANDMARKS = {
-  headCenter: [150, 65], neckBase: [150, 116], shoulderLeft: [108, 134], shoulderRight: [192, 134],
+  headCenter: [150, 73], neckBase: [150, 116], shoulderLeft: [108, 134], shoulderRight: [192, 134],
   elbowLeft: [66, 208], elbowRight: [234, 208], wristLeft: [44, 280], wristRight: [256, 280],
   handLeft: [36, 294], handRight: [264, 294], waist: [150, 248], hip: [150, 280],
   ankleLeft: [135, 535], ankleRight: [165, 535],
@@ -56,11 +56,11 @@ for (const [id, data] of Object.entries(measuredAssets)) {
     p = fit([b.centerX,b.minY],[198,138],94/b.width,d);
   } else if (id === 'bag-techwear-crossbody') {
     // Source strap actually runs upper-right to lower-left; anchor to right shoulder.
-    p = fit([b.minX+b.width*.7,b.minY],[192,134],156/b.height,d);
+    p = fit([b.minX+b.width*.83,b.minY],CANONICAL_MANNEQUIN_LANDMARKS.shoulderRight,164/b.height,d);
   } else if (id === 'accent-non-la') {
-    p = fit([b.centerX,b.minY],[150,2],108/b.width,d);
+    p = fit([b.centerX,b.minY],[150,10],108/b.width,d);
   } else if (id === 'accent-y2k-shades') {
-    p = fit([b.centerX,(b.minY+b.maxY)/2],[150,66],38/b.width,d);
+    p = fit([b.centerX,(b.minY+b.maxY)/2],[150,74],38/b.width,d);
   } else if (id === 'accent-silver-jewelry') {
     p = fit([b.centerX,b.minY],[150,110],38/b.width,d);
   } else {
@@ -77,6 +77,38 @@ export function getPhotoLayerConfig(category: Category, itemId?: string | null):
   if (!itemId) return undefined;
   // Legacy adapter at the asset boundary only; never emit this ID into the catalog.
   return PHOTO_LAYER_CONFIG[category][itemId==='bottom-cargo-linen'?'bottom-tailored-trousers':itemId];
+}
+/** Carry fitting and collision alternatives share measured alpha bounds and uniform scale. */
+export function getOutfitLayerConfig(coreId: string, category: Category, itemId?: string | null, bagId?: string): LayerPhotoItemConfig | undefined {
+  const config = getPhotoLayerConfig(category, itemId);
+  if (!config) return undefined;
+  const b = config.visibleBounds, d = config.sourceDimensions;
+  if (itemId === 'bag-gam-vintage') {
+    const carry = getPhotoLayerConfig('core', coreId)?.bagCarryAnchor ?? CANONICAL_MANNEQUIN_LANDMARKS.handLeft;
+    const scale = (coreId === 'ao-dai' ? .8 : 1) * 68/b.width;
+    return { ...config, svgPlacement: fit([b.centerX,b.minY],carry,scale,d) };
+  }
+  if (itemId === 'accent-quai-thao-mini') {
+    const bag = getOutfitLayerConfig(coreId, 'bag', bagId);
+    const p = config.svgPlacement;
+    const visible = (c: LayerPhotoItemConfig) => {
+      const s = c.svgPlacement.width/c.sourceDimensions.width, bounds=c.visibleBounds;
+      return { x:c.svgPlacement.x+bounds.minX*s, y:c.svgPlacement.y+bounds.minY*s, width:bounds.width*s, height:bounds.height*s };
+    };
+    const other=bag && visible(bag);
+    const collides = (candidate: LayerPhotoItemConfig) => {
+      const a=visible(candidate);
+      return other && a.x < other.x+other.width+6 && a.x+a.width+6 > other.x && a.y < other.y+other.height+6 && a.y+a.height+6 > other.y;
+    };
+    if (collides(config)) {
+      // Opposite hip for the hand bag; lower belt suspension when the crossbody spans both hips.
+      for(const target of [[190,264],[106,318],[190,318]]) {
+        const candidate={...config,svgPlacement:fit([b.centerX,b.minY],target,p.width/d.width,d)};
+        if(!collides(candidate)) return candidate;
+      }
+    }
+  }
+  return config;
 }
 export function isPhotoLayerSupported(coreId: string,bottomId?: string): boolean {
   return Boolean(getPhotoLayerConfig('core',coreId)?.validated && (!bottomId||getPhotoLayerConfig('bottom',bottomId)?.validated));

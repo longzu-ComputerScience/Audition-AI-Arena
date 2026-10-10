@@ -23,7 +23,7 @@ async function studio(page:Page) {
   await page.getByRole('button',{name:'Bỏ qua giới thiệu',exact:true}).click();
   await page.locator('#select-core-garment').selectOption('ao-dai');
   await page.locator('#select-occasion').selectOption({label:'Sự kiện trang trọng'});
-  await expect(page.locator('main img[alt^="Ảnh tách nền trang phục"]')).toHaveAttribute('src','/images/layers/ao-dai.png');
+  await expect(page.locator('[data-page="discovery"] img[alt^="Ảnh tách nền trang phục"]')).toHaveAttribute('src','/images/layers/ao-dai.png');
   await page.getByRole('button',{name:/Tiếp tục chọn phong cách/}).click();
   await page.getByRole('button',{name:'Vào Remix Studio',exact:true}).click();
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('href',/^blob:/);
@@ -48,13 +48,10 @@ test('existing journey, manual locks, dial, optional accent and navigation',asyn
   await page.locator('header nav button').nth(2).click();
   await expect(page.locator('#photo-layer-bottom image')).toHaveAttribute('href',/bottom-raw-denim/);
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('href',/^blob:/);
-  await page.getByRole('radio',{name:'SVG',exact:true}).click();
-  await expect(page.locator('#photo-layer-core')).toHaveCount(0);
+  await expect(page.getByRole('radiogroup',{name:'Chế độ hiển thị mannequin'})).toHaveCount(0);
+  await expect(page.getByText('Photo Layers (Demo)',{exact:true})).toHaveCount(0);
   await page.locator('header nav button').nth(1).click();
   await page.locator('header nav button').nth(2).click();
-  await expect(page.getByRole('radio',{name:'SVG',exact:true})).toHaveAttribute('aria-checked','true');
-  await expect(page.locator('#photo-layer-core')).toHaveCount(0);
-  await page.getByRole('radio',{name:'Photo Layers (Demo)',exact:true}).click();
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('href',/^blob:/);
   await page.locator('#remix-dial-slider').fill('100');
   await expect(page.locator('#photo-layer-bottom image')).toHaveAttribute('href',/bottom-raw-denim/);
@@ -81,7 +78,7 @@ test('all five Page 1 previews are isolated garments; galleries and Lookbook ret
   await page.getByRole('button',{name:'Bỏ qua giới thiệu',exact:true}).click();
   for(const core of Object.values(CORE_ITEMS)){
     await page.locator('#select-core-garment').selectOption(core.id);
-    const image=page.locator('main img[alt^="Ảnh tách nền trang phục"]');
+    const image=page.locator('[data-page="discovery"] img[alt^="Ảnh tách nền trang phục"]');
     await expect(image).toHaveAttribute('src',`/images/layers/${core.id}.png`);
     await expect.poll(()=>image.evaluate((i:HTMLImageElement)=>i.complete&&i.naturalWidth>0)).toBe(true);
     await screenshot(page,`artifacts/visual/preview-${core.id}-${info.project.name}.png`);

@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { SetupData, ConceptData, CoreItem } from '../types';
 import { CORE_ITEMS, STYLES, PREFERRED_COLOR_OPTIONS, COLOR_MAP } from '../data/mockFashionData';
 import { PatternMotif } from './PatternMotif';
@@ -21,16 +21,17 @@ export const ConceptReveal: React.FC<ConceptRevealProps> = ({
   onBack,
   onProceed,
 }) => {
+  const reduceMotion = useReducedMotion();
   const core: CoreItem = CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
 
   useLayoutEffect(() => { alignPageToTop(); }, []);
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: reduceMotion ? 1 : 0 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      exit={{ opacity: reduceMotion ? 1 : 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
       className="max-w-4xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6"
     >
       {/* Editorial Header */}

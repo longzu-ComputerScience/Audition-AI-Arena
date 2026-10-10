@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useReducer } from 'react';
-import { AnimatePresence } from 'motion/react';
+import React, { useState, useMemo, useEffect, useReducer, forwardRef } from 'react';
+import { AnimatePresence, motion, useReducedMotion, useIsPresent } from 'motion/react';
 import {
   SetupData,
   SupportOption,
@@ -11,6 +11,7 @@ import {
   CORE_ITEMS,
   generateConcept,
   preferredColorForHex,
+  resolveCoreGarmentColor,
 } from './data/mockFashionData';
 import {
   computeActualRemix,
@@ -18,6 +19,7 @@ import {
 } from './utils/fashionCalculations';
 import { fetchAIStatus } from './services/aiStylistApi';
 import { createStylingState, stylingReducer } from './utils/stylingState';
+import { preparePhotoOutfit } from './utils/preparePhotoOutfit';
 import { Header } from './components/Header';
 import { DiscoveryScreen } from './components/DiscoveryScreen';
 import {
@@ -29,7 +31,15 @@ import { RemixStudio } from './components/RemixStudio';
 import { LookbookModal } from './components/LookbookModal';
 import { AboutModal } from './components/AboutModal';
 
+// Forward the DOM ref for popLayout; exiting content must also leave the keyboard/accessibility tree.
+const PageTransition = forwardRef<HTMLDivElement, { page:string; reduceMotion:boolean; children:React.ReactNode }>(({page,reduceMotion,children},ref) => {
+  const present=useIsPresent();
+  return <motion.div ref={ref} data-page={page} className="w-full bg-[#FAF7EE]" inert={!present} aria-hidden={!present}
+    initial={false} animate={{opacity:1,pointerEvents:'auto'}} exit={{opacity:0,pointerEvents:'none'}} transition={{duration:reduceMotion?0:.12}}>{children}</motion.div>;
+});
+
 export default function App() {
+  const reduceMotion = useReducedMotion() ?? false;
   // Global Step State: 1 | 2 | 3
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState<1 | 2 | 3>(1);
@@ -48,9 +58,10 @@ export default function App() {
 
   // Navigate to step and remember the highest unlocked step
   const goToStep = (targetStep: 1 | 2 | 3) => {
+    if (step === 1 && targetStep !== 1) setHasSeenIntro(true);
     setStep(targetStep);
     setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
-    // Destination layout effects will align the incoming page after the old exit animation.
+    // Incoming layout aligns immediately; the old page leaves the flow during its fade.
   };
 
   // Intro text word-by-word animation play-only-once state for DiscoveryScreen
@@ -58,7 +69,6 @@ export default function App() {
 
   // Global Setup Data (Step 1 inputs)
   const [styling, dispatchStyling] = useReducer(stylingReducer, undefined, createStylingState);
-  const [mannequinDisplayMode, setMannequinDisplayMode] = useState<'svg' | 'photo'>('photo');
   const { setupData, items: activeSupportItems, targetRemix: remixDialValue } = styling;
 
   // Derived: Actual Remix MUST be a derived value, not stored in state!
@@ -98,6 +108,9 @@ export default function App() {
   const currentCore = useMemo(() => {
     return CORE_ITEMS[setupData.coreGarment] || CORE_ITEMS['ao-ngu-than'];
   }, [setupData.coreGarment]);
+  useEffect(() => {
+    if (step >= 2) void preparePhotoOutfit(currentCore.id, activeSupportItems, resolveCoreGarmentColor(currentCore.id, setupData.preferredColor).hex);
+  }, [step, currentCore.id, activeSupportItems, setupData.preferredColor]);
 
   // Derived: Concept Data for Step 2
   const concept = useMemo(() => {
@@ -221,9 +234,10 @@ export default function App() {
       />
 
       {/* Main Multi-step Content (Preserving state across back/forward navigation) */}
-      <main className="flex-1 w-full">
-        <AnimatePresence mode="wait">
+      <main className="flex-1 w-full relative" data-active-step={step}>
+        <AnimatePresence mode="popLayout">
           {step === 1 && onboardingState === 'active' && (
+            <PageTransition key="step-1-onboarding" page="onboarding" reduceMotion={reduceMotion}>
             <InteractiveOnboarding
               key="step-1-onboarding"
               setupData={setupData}
@@ -235,9 +249,11 @@ export default function App() {
               onSelectLocation={handleOnboardingSelectLocation}
               onSkip={handleSkipOnboarding}
             />
+            </PageTransition>
           )}
 
           {step === 1 && onboardingState !== 'active' && (
+            <PageTransition key="step-1-discovery" page="discovery" reduceMotion={reduceMotion}>
             <DiscoveryScreen
               key="step-1-discovery"
               setupData={setupData}
@@ -250,9 +266,11 @@ export default function App() {
               shouldFocusFirstUnconfirmed={pendingSkipFocus}
               onConsumedInitialFocus={() => setPendingSkipFocus(false)}
             />
+            </PageTransition>
           )}
 
           {step === 2 && (
+            <PageTransition key="step-2" page="concept" reduceMotion={reduceMotion}>
             <ConceptReveal
               key="step-2"
               setupData={setupData}
@@ -261,9 +279,11 @@ export default function App() {
               onBack={() => goToStep(1)}
               onProceed={() => goToStep(3)}
             />
+            </PageTransition>
           )}
 
           {step === 3 && (
+            <PageTransition key="step-3" page="remix" reduceMotion={reduceMotion}>
             <RemixStudio
               key="step-3"
               core={currentCore}
@@ -274,6 +294,8 @@ export default function App() {
               refinementText={refinementText}
               guardrailResult={guardrailResult}
               aiStatus={aiStatus}
+              recommendationTrace={styling.trace}
+              onRecommendAgain={() => dispatchStyling({ type:'refresh' })}
               onRemixDialChange={handleRemixDialChange}
               onSelectSupportItem={handleSelectSupportItem}
               onAddAccent={handleAddAccent}
@@ -281,13 +303,12 @@ export default function App() {
               onApplyRefinement={handleApplyRefinement}
               onBackToConcept={() => goToStep(2)}
               onOpenCoreDetail={() => setIsLookbookOpen(true)}
-              displayMode={mannequinDisplayMode}
-              onDisplayModeChange={setMannequinDisplayMode}
               onSelectFabricColor={(hex) => {
                 const preferredColor = preferredColorForHex(hex);
                 if (preferredColor) handleChangeSetup({ preferredColor });
               }}
             />
+            </PageTransition>
           )}
         </AnimatePresence>
       </main>

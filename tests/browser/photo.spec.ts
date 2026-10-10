@@ -69,7 +69,7 @@ test('real masks preserve alpha, protected decoration and folds for 30 recolors'
   fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/recolor-validation.json',JSON.stringify(reports,null,2));
 });
 
-test('rapid garment and color changes cannot display a stale recolor; SVG choice persists',async({page})=>{
+test('rapid garment and color changes cannot display a stale recolor; photos are the standard UI',async({page})=>{
   await page.goto('/tools/visual-fixture.html');
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-nhat-binh');
   await page.evaluate(async()=>{
@@ -81,10 +81,50 @@ test('rapid garment and color changes cannot display a stale recolor; SVG choice
   });
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-dai');
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-fabric-color','#C23B22');
-  await page.getByRole('radio',{name:'SVG',exact:true}).click();
+  await expect(page.getByRole('radiogroup',{name:'Chế độ hiển thị mannequin'})).toHaveCount(0);
   await page.evaluate(()=>window.setTestOutfit({core:'ao-tu-than',color:'Đen'}));
-  await expect(page.locator('#photo-layer-core')).toHaveCount(0);
-  await expect(page.getByRole('radio',{name:'SVG',exact:true})).toHaveAttribute('aria-checked','true');
+  await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-tu-than');
+  await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-fabric-color','#1A1817');
+});
+
+test('returning to an evicted color during an unfinished recolor never reuses a revoked URL',async({page})=>{
+  await page.goto('/tools/visual-fixture.html');
+  await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-nhat-binh');
+  const svgFrames=await page.evaluate(async()=>{
+    // Import the module already used by this renderer, including Vite's version query.
+    const moduleUrl=performance.getEntriesByType('resource').map(e=>e.name).find(n=>new URL(n).pathname==='/src/utils/fabricRecolor.ts')!;
+    const {recolorGarmentImage,peekRecoloredGarmentImage}=await import(moduleUrl);
+    const cfgUrl=performance.getEntriesByType('resource').map(e=>e.name).find(n=>new URL(n).pathname==='/src/data/photoLayerFitting.ts')!;
+    const {PHOTO_LAYER_CONFIG}=await import(cfgUrl);
+    const cfg=PHOTO_LAYER_CONFIG.core['ao-nhat-binh'];
+    const first=document.querySelector('#photo-layer-core image')!;
+    const originalColor=first.getAttribute('data-fabric-color')!;
+    const originalEncoder=HTMLCanvasElement.prototype.toBlob;
+    let finishEncoding: (()=>void)|undefined;
+    HTMLCanvasElement.prototype.toBlob=function(callback,...args){
+      HTMLCanvasElement.prototype.toBlob=originalEncoder;
+      finishEncoding=()=>originalEncoder.call(this,callback,...args);
+    };
+    window.setTestOutfit({color:'Xanh lam'});
+    while(!finishEncoding)await new Promise(requestAnimationFrame);
+    for(let i=0;i<9;i++)await recolorGarmentImage(cfg.imageSrc,cfg.fabricMaskSrc,`#${(0x345600+i*517).toString(16)}`,cfg.baseFabricLuminance);
+    if(peekRecoloredGarmentImage(cfg.imageSrc,cfg.fabricMaskSrc,originalColor,cfg.baseFabricLuminance))throw new Error('Test did not evict the original color');
+    let svgFrames=0;
+    const observer=new MutationObserver(()=>{if(document.querySelector('#core-ao-nhat-binh'))svgFrames++;});
+    observer.observe(document.body,{childList:true,subtree:true});
+    window.setTestOutfit({color:'Để hệ thống gợi ý'});
+    const deadline=Date.now()+10000;
+    while(true){
+      await new Promise(requestAnimationFrame);
+      const image=document.querySelector('#photo-layer-core image');
+      const url=peekRecoloredGarmentImage(cfg.imageSrc,cfg.fabricMaskSrc,originalColor,cfg.baseFabricLuminance);
+      if(url&&image?.getAttribute('href')===url)break;
+      if(Date.now()>deadline)throw new Error('Original color did not recover');
+    }
+    observer.disconnect();finishEncoding!();
+    return svgFrames;
+  });
+  expect(svgFrames).toBe(0);
 });
 
 for(const failure of ['source','mask'])test(`${failure} failure keeps a usable SVG garment`,async({page})=>{

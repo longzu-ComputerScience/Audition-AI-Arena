@@ -1,5 +1,7 @@
 # Việt Phục Remix — Báo cáo triển khai
 
+> Báo cáo lịch sử cho lượt triển khai trước. Trạng thái repository, bản Guốc Mộc người dùng thay, release gate và kết quả kiểm tra mới nhất nằm trong [STABILIZATION_REPORT.md](STABILIZATION_REPORT.md); các thông tin branch/HEAD bên dưới không mô tả working tree hiện tại.
+
 Ngày kiểm tra: 10/10/2026. Thư mục repository: `Audition-AI-Arena` trong workspace hiện tại.
 
 ## Repository

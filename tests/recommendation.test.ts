@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CORE_ITEMS, SUPPORT_ITEMS, OCCASIONS, LOCATIONS, STYLES, PREFERRED_COLOR_OPTIONS } from '../src/data/mockFashionData';
-import { recommendOutfit, rankOutfits, outfitKey, scoreOutfit, RecommendationContext } from '../src/utils/outfitRecommendation';
+import { recommendOutfit, recommendOutfitDecision, rankOutfits, outfitKey, scoreOutfit, RecommendationContext } from '../src/utils/outfitRecommendation';
 import { computeActualRemix, evaluateGuardrail } from '../src/utils/fashionCalculations';
 import { createStylingState, stylingReducer, DEFAULT_SETUP } from '../src/utils/stylingState';
 
@@ -76,6 +76,29 @@ test('actual Remix excludes core and null accent; catalog and guardrail stay con
   const r=recommendOutfit(c);
   assert.equal(r.caution,evaluateGuardrail('',CORE_ITEMS[c.coreGarment],r.items,c,r.actualRemix).status==='yellow');
   assert.equal(scoreOutfit({...base,preferredColor:'Xanh lam'},items).dimensions.color===scoreOutfit({...base,preferredColor:'Đỏ son'},items).dimensions.color,false);
+});
+test('context explanations distinguish unchanged optimum, hysteresis and manual intent; refresh is explicit',()=>{
+  let state=createStylingState();
+  const originalItems=state.items;
+  state=stylingReducer(state,{type:'setup',data:{location:'Tràng An'}});
+  assert.strictEqual(state.items,originalItems);assert.equal(state.trace.reason,'same-best');
+  state=stylingReducer(state,{type:'select',category:'bottom',item:SUPPORT_ITEMS.bottom[2]});
+  state=stylingReducer(state,{type:'setup',data:{occasion:'Sự kiện trang trọng'}});
+  assert.equal(state.trace.reason,'manual');assert.ok(state.manualSlots.bottom);
+  const target=state.targetRemix;
+  state=stylingReducer(state,{type:'refresh'});
+  assert.deepEqual(state.manualSlots,{});assert.equal(state.targetRemix,target);assert.equal(state.items.accent,null);
+  assert.equal(state.trace.chosenKey,state.trace.bestKey);
+  const again=stylingReducer(state,{type:'refresh'});assert.strictEqual(again.items,state.items);
+  let hysteresisFound=false;
+  for(let targetRemix=0;targetRemix<=100&&!hysteresisFound;targetRemix++){
+    const context={...base,targetRemix},current=recommendOutfit(context).items;
+    for(const style of STYLES){
+      const changed={...context,style},decision=recommendOutfitDecision(changed,current);
+      if(decision.keptByHysteresis){hysteresisFound=true;assert.equal(outfitKey(decision.chosen.items),outfitKey(current));assert.equal(outfitKey(recommendOutfitDecision(changed,current,{},false).chosen.items),outfitKey(decision.best.items));break;}
+    }
+  }
+  assert.ok(hysteresisFound);
 });
 test('full setup matrix covers five garments, seven occasions, eleven locations, five styles and eleven colors', () => {
   let count=0;
