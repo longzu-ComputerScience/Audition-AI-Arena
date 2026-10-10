@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import {
   CORE_ITEMS,
   SUPPORT_ITEMS,
@@ -260,8 +260,16 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm giải thích m
 /**
  * Executes the AI Stylist consultation.
  */
+export interface StylistBenchmarkOptions {
+  candidateModels?: string[];
+  thinkingLevel?: 'minimal' | 'low';
+  timeoutMs?: number;
+  trace?: Array<{ model: string; elapsedMs: number; outcome: string }>;
+}
+
 export async function generateStylistAdvice(
-  payload: unknown
+  payload: unknown,
+  benchmark?: StylistBenchmarkOptions
 ): Promise<StylistAdviceOutput> {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -310,10 +318,11 @@ export async function generateStylistAdvice(
     },
   });
 
-  const candidateModels = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  const candidateModels = benchmark?.candidateModels ?? ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
   let lastError: string = '';
 
   for (const model of candidateModels) {
+    const startedAt = performance.now();
     try {
       const response = await ai.models.generateContent({
         model,
@@ -321,11 +330,14 @@ export async function generateStylistAdvice(
         config: {
           responseMimeType: 'application/json',
           temperature: 0.6,
+          ...(benchmark?.thinkingLevel ? { thinkingConfig: { thinkingLevel: benchmark.thinkingLevel === 'minimal' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW } } : {}),
+          ...(benchmark?.timeoutMs ? { httpOptions: { timeout: benchmark.timeoutMs } } : {}),
         },
       });
 
       const responseText = response.text || '';
       if (!responseText.trim()) {
+        benchmark?.trace?.push({ model, elapsedMs: Math.round(performance.now() - startedAt), outcome: 'empty' });
         continue;
       }
 
@@ -340,6 +352,7 @@ export async function generateStylistAdvice(
       }
 
       if (parsed && typeof parsed.review === 'string') {
+        benchmark?.trace?.push({ model, elapsedMs: Math.round(performance.now() - startedAt), outcome: 'success' });
         // Validate suggestedItems match catalog
         const cleanSuggestions: StylistSuggestedItem[] = [];
         if (Array.isArray(parsed.suggestedItems)) {
@@ -378,6 +391,8 @@ export async function generateStylistAdvice(
       }
     } catch (err: unknown) {
       lastError = err instanceof Error ? err.message : String(err);
+      const outcome = /429|RESOURCE_EXHAUSTED|quota/i.test(lastError) ? 'quota' : /timed? ?out|abort/i.test(lastError) ? 'timeout' : /404|NOT_FOUND/i.test(lastError) ? 'model_not_found' : 'error';
+      benchmark?.trace?.push({ model, elapsedMs: Math.round(performance.now() - startedAt), outcome });
       console.warn(`[AI Stylist] Model ${model} failed, attempting next candidate:`, lastError);
     }
   }
