@@ -17,7 +17,7 @@ async function welcome(page:Page) {
   const previews=await page.locator('main img[alt^="Ảnh tách nền trang phục"]').evaluateAll(images=>images.map(i=>i.getAttribute('src')));
   expect(previews.every(p=>p?.startsWith('/images/layers/ao-'))).toBe(true);
 }
-async function studio(page:Page) {
+async function studio(page:Page, waitForImage = true) {
   await welcome(page);
   await expect(page.locator('header nav button').nth(1)).toBeDisabled();
   await page.getByRole('button',{name:'Bỏ qua mở đầu',exact:true}).click();
@@ -26,7 +26,7 @@ async function studio(page:Page) {
   await expect(page.locator('[data-page="discovery"] img[alt^="Ảnh tách nền trang phục"]')).toHaveAttribute('src','/images/layers/ao-dai.png');
   await page.getByRole('button',{name:/Tiếp tục chọn phong cách/}).click();
   await page.getByRole('button',{name:'Vào Remix Studio',exact:true}).click();
-  await expect(page.locator('#photo-layer-core image')).toHaveAttribute('href',/^blob:/);
+  if(waitForImage)await expect(page.locator('#photo-layer-core image')).toHaveAttribute('href',/^blob:/);
 }
 test('existing journey, manual locks, dial, optional accent and navigation',async({page},info)=>{
   const errors:string[]=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -1152,4 +1152,93 @@ test('silver necklace conceals its rear loop on all five garments with a moving 
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   }
   expect(errors).toEqual([]);
+});
+
+
+const attentionHint=(page:Page)=>page.locator('.floating-ai-hint');
+async function guardAttentionApis(page:Page){
+  let requests=0;
+  await page.route('**/api/**',route=>{
+    if(new URL(route.request().url()).pathname==='/api/ai-status')return route.fulfill({json:{isAvailable:true,hasApiKey:true}});
+    requests++;return route.fulfill({json:{success:false,error:'Attention QA: unexpected API request'}});
+  });
+  return ()=>requests;
+}
+async function attentionAnimations(launcher:Locator){
+  return launcher.evaluate(e=>({
+    before:getComputedStyle(e,'::before').animationName,
+    after:getComputedStyle(e,'::after').animationName,
+    icon:getComputedStyle(e.querySelector('svg')!).animationName,
+  }));
+}
+
+test('AI attention: two rings, icon rhythm, tooltip and once-per-tab hint',async({page},info)=>{
+  const requests=await guardAttentionApis(page);
+  await page.emulateMedia({reducedMotion:'no-preference'});await studio(page,false);await page.mouse.move(0,0);
+  const launcher=page.getByRole('button',{name:'Trợ Lý Phối Đồ AI',exact:true});
+  const geometry=await launcher.boundingBox();expect(geometry!.width).toBeGreaterThanOrEqual(44);expect(geometry!.height).toBeGreaterThanOrEqual(44);
+  expect(await attentionAnimations(launcher)).toEqual({before:'ai-soft-glow',after:'ai-soft-glow',icon:'ai-icon-breathe'});
+  const style=await launcher.evaluate(e=>({
+    period:getComputedStyle(e,'::before').animationDuration,delay:getComputedStyle(e,'::after').animationDelay,
+    pointer:getComputedStyle(e,'::after').pointerEvents,scale:getComputedStyle(e).getPropertyValue('--ai-pulse-scale').trim(),
+    iconFrames:e.querySelector('svg')!.getAnimations().flatMap(a=>(a.effect as KeyframeEffect).getKeyframes().map(k=>k.transform)),
+    opacity:getComputedStyle(e).opacity,labelOpacity:getComputedStyle(e.querySelector('span')!).opacity,
+  }));
+  expect(style).toMatchObject({period:'3s',delay:'1s',pointer:'none',scale:'1.4',opacity:'1',labelOpacity:'1'});
+  expect(style.iconFrames).toContain('scale(1.1)');
+  await expect(attentionHint(page)).toBeVisible({timeout:4000});
+  await expect(attentionHint(page)).toHaveText('Bạn muốn phối đồ đẹp hơn?');
+  const bounds=(await attentionHint(page).boundingBox())!,viewport=page.viewportSize()!;
+  expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(viewport.width);
+  expect(bounds.y).toBeGreaterThanOrEqual(0);expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.height);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  fs.mkdirSync('artifacts/visual',{recursive:true});
+  await page.screenshot({path:`artifacts/visual/floating-ai-attention-${info.project.name}.png`});
+  await launcher.hover();await expect(page.getByRole('tooltip')).toBeVisible();await expect(attentionHint(page)).toBeHidden();
+  if(info.project.name!=='mobile')await expect(launcher).toHaveCSS('transform','matrix(1, 0, 0, 1, 0, -3)');
+  await page.mouse.move(0,0);await page.keyboard.press('Tab');await launcher.focus();await expect(page.getByRole('tooltip')).toBeVisible();
+  await expect(attentionHint(page)).toBeHidden();await expect(launcher).toHaveCSS('outline-style','solid');
+  await page.keyboard.press('Shift+Tab');await page.mouse.move(0,0);
+  await expect(attentionHint(page)).toHaveCount(0,{timeout:7000});
+  await page.locator('header nav button').nth(1).click();await page.locator('header nav button').nth(2).click();
+  await expect(launcher).toBeVisible();await page.waitForTimeout(1800);await expect(attentionHint(page)).toHaveCount(0);
+  await studio(page,false);await page.waitForTimeout(1800);await expect(attentionHint(page)).toHaveCount(0);
+  expect(await page.evaluate(()=>sessionStorage.getItem('sac-viet:ai-launcher-hint-seen'))).toBe('1');
+  expect(requests()).toBe(0);
+});
+
+test('AI attention: opening chat early skips hint and tab visibility stops animation',async({page})=>{
+  const requests=await guardAttentionApis(page);
+  await page.emulateMedia({reducedMotion:'no-preference'});await studio(page,false);
+  const launcher=page.getByRole('button',{name:'Trợ Lý Phối Đồ AI',exact:true});
+  await expect(attentionHint(page)).toHaveCount(0);await launcher.click();
+  await expect(page.getByRole('dialog',{name:'Trợ Lý Phối Đồ AI',exact:true})).toBeVisible();
+  expect(await attentionAnimations(launcher)).toEqual({before:'none',after:'none',icon:'none'});
+  await page.locator('#ai-stylist-input').fill('Giữ bản nháp tư vấn');await page.keyboard.press('Escape');
+  await page.mouse.move(0,0);await page.waitForTimeout(1800);await expect(attentionHint(page)).toHaveCount(0);
+  await launcher.click();await expect(page.locator('#ai-stylist-input')).toHaveValue('Giữ bản nháp tư vấn');await page.keyboard.press('Escape');
+  // Simulate the visibility event explicitly; this is not a physical background-tab test.
+  await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'});document.dispatchEvent(new Event('visibilitychange'));});
+  await expect(page.locator('.floating-ai-root')).toHaveAttribute('data-motion-paused','true');
+  expect(await attentionAnimations(launcher)).toEqual({before:'none',after:'none',icon:'none'});
+  await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'visible'});document.dispatchEvent(new Event('visibilitychange'));});
+  await expect(page.locator('.floating-ai-root')).toHaveAttribute('data-motion-paused','false');
+  expect(await attentionAnimations(launcher)).toEqual({before:'ai-soft-glow',after:'ai-soft-glow',icon:'ai-icon-breathe'});
+  expect(requests()).toBe(0);
+});
+
+test('AI attention: overlay defers static reduced-motion hint and chat dismisses it',async({page})=>{
+  const requests=await guardAttentionApis(page);
+  await page.emulateMedia({reducedMotion:'reduce'});await studio(page,false);
+  const launcher=page.getByRole('button',{name:'Trợ Lý Phối Đồ AI',exact:true});
+  // Open the overlay before the hint delay, without waiting for unrelated photo decoding/scroll animation.
+  await page.getByRole('button',{name:'Hồ sơ chi tiết →',exact:true}).focus();await page.keyboard.press('Enter');
+  await expect(launcher).toBeHidden();await expect(page.locator('.floating-ai-root')).toHaveAttribute('data-motion-paused','true');
+  expect(await attentionAnimations(page.locator('.floating-ai-launcher'))).toEqual({before:'none',after:'none',icon:'none'});
+  await page.waitForTimeout(1800);await expect(attentionHint(page)).toHaveCount(0);await page.keyboard.press('Escape');
+  await expect(attentionHint(page)).toBeVisible({timeout:4000});
+  expect(await attentionAnimations(launcher)).toEqual({before:'none',after:'none',icon:'none'});
+  await launcher.hover();await expect(launcher).toHaveCSS('transform','none');await expect(page.getByRole('tooltip')).toBeVisible();
+  await launcher.click();await expect(attentionHint(page)).toHaveCount(0);await page.keyboard.press('Escape');
+  await page.waitForTimeout(1800);await expect(attentionHint(page)).toHaveCount(0);expect(requests()).toBe(0);
 });

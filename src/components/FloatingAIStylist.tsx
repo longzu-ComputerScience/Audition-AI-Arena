@@ -7,8 +7,27 @@ interface FloatingAIStylistProps extends Omit<AIStylistPanelProps, 'embedded'> {
   obscured?: boolean;
 }
 
+const hintSessionKey = 'sac-viet:ai-launcher-hint-seen';
+// Fallback for tabs where browser storage is unavailable; survives route remounts.
+let hintClaimedInTab = false;
+
+function claimFirstRemixHint(): boolean {
+  if (hintClaimedInTab) return false;
+  hintClaimedInTab = true;
+  try {
+    if (sessionStorage.getItem(hintSessionKey) === '1') return false;
+    sessionStorage.setItem(hintSessionKey, '1');
+  } catch {
+    // The in-memory flag still prevents repeated prompts in this tab.
+  }
+  return true;
+}
+
 export const FloatingAIStylist: React.FC<FloatingAIStylistProps> = ({ obscured = false, ...stylistProps }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(() => document.visibilityState === 'visible');
+  const [hintVisible, setHintVisible] = useState(false);
+  const hintPendingRef = useRef(false);
   const panelId = useId();
   const titleId = useId();
   const tooltipId = useId();
@@ -16,6 +35,32 @@ export const FloatingAIStylist: React.FC<FloatingAIStylistProps> = ({ obscured =
   const launcherRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    hintPendingRef.current = claimFirstRemixHint();
+    const updateVisibility = () => setIsTabVisible(document.visibilityState === 'visible');
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) hintPendingRef.current = false;
+    if (isOpen || obscured || !isTabVisible) {
+      setHintVisible(false);
+      return;
+    }
+    if (!hintPendingRef.current) return;
+    let hideTimer: number | undefined;
+    const showTimer = window.setTimeout(() => {
+      hintPendingRef.current = false;
+      setHintVisible(true);
+      hideTimer = window.setTimeout(() => setHintVisible(false), 5000);
+    }, 1500);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [isOpen, obscured, isTabVisible]);
 
   const close = () => {
     setIsOpen(false);
@@ -80,7 +125,7 @@ export const FloatingAIStylist: React.FC<FloatingAIStylistProps> = ({ obscured =
 
   // A portal keeps fixed positioning independent of the Studio's motion transform.
   return createPortal(
-    <div ref={rootRef} className="floating-ai-root" data-open={isOpen} hidden={obscured} inert={obscured}>
+    <div ref={rootRef} className="floating-ai-root" data-open={isOpen} data-motion-paused={isOpen || obscured || !isTabVisible} hidden={obscured} inert={obscured}>
       <section
         id={panelId}
         role="dialog"
@@ -113,10 +158,13 @@ export const FloatingAIStylist: React.FC<FloatingAIStylistProps> = ({ obscured =
         aria-describedby={!isOpen ? tooltipId : undefined}
         onClick={() => isOpen ? close() : setIsOpen(true)}
       >
-        <Sparkles aria-hidden="true" className="h-5 w-5" />
+        <Sparkles aria-hidden="true" className="floating-ai-launcher-icon h-5 w-5" />
         <span>AI</span>
       </button>
       <span id={tooltipId} role="tooltip" className="floating-ai-tooltip">Trợ Lý Phối Đồ AI</span>
+      {hintVisible && !isOpen && !obscured && isTabVisible && (
+        <span role="status" className="floating-ai-hint">Bạn muốn phối đồ đẹp hơn?</span>
+      )}
     </div>,
     document.body,
   );
