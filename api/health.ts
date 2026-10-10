@@ -10,3 +10,14 @@ export function GET(): Response {
     timestamp: new Date().toISOString(),
   });
 }
+
+// Explicit Fetch entry point for Vite's file-based Vercel Function adapter.
+// Keep the named GET export for compatibility and unit tests.
+export default {
+  fetch(request: Request): Response {
+    if (request.method !== 'GET') {
+      return jsonResponse({ error: 'Method Not Allowed' }, 405);
+    }
+    return GET();
+  },
+};
