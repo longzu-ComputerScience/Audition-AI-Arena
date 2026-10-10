@@ -47,7 +47,12 @@ for (const [id, data] of Object.entries(measuredAssets)) {
   if ('fittingAnchors' in data) {
     p = fit(data.fittingAnchors.neck, data.targetNeck, (data.targetHem-data.targetNeck[1])/(data.fittingAnchors.hem[1]-data.fittingAnchors.neck[1]),d);
   } else if (category === 'bottom') {
-    p = fit([b.centerX,b.minY], CANONICAL_MANNEQUIN_LANDMARKS.waist, (538-248)/(b.height-1),d);
+    // Denim is markedly wider than the other bottom photos. Fit it to the mannequin's
+    // two feet rather than scaling its full source height up to the waist (the core hides the rise).
+    const baseScale = (538-248)/(b.height-1);
+    p = id === 'bottom-raw-denim'
+      ? fit([b.centerX,b.maxY], [150,538], baseScale*.8, d)
+      : fit([b.centerX,b.minY], CANONICAL_MANNEQUIN_LANDMARKS.waist, baseScale,d);
   } else if (category === 'shoes') {
     p = fit([b.centerX,b.maxY],[150,562],(id==='shoes-guoc-moc'?64:70)/b.width,d);
   } else if (id === 'bag-gam-vintage') {
@@ -55,10 +60,11 @@ for (const [id, data] of Object.entries(measuredAssets)) {
   } else if (id === 'bag-tote-linen') {
     p = fit([b.centerX,b.minY],[198,138],94/b.width,d);
   } else if (id === 'bag-techwear-crossbody') {
-    // Source strap actually runs upper-right to lower-left; anchor to right shoulder.
-    p = fit([b.minX+b.width*.83,b.minY],CANONICAL_MANNEQUIN_LANDMARKS.shoulderRight,164/b.height,d);
+    // The source strap rises on the right. Its top is tucked behind the shoulder in the renderer.
+    p = fit([b.minX+b.width*.83,b.minY],[190,127],160/b.height,d);
   } else if (id === 'accent-non-la') {
-    p = fit([b.centerX,b.minY],[150,10],108/b.width,d);
+    // Brim frames the forehead rather than covering the mannequin's eyes and nose.
+    p = fit([b.centerX,b.minY],[150,10],100/b.width,d);
   } else if (id === 'accent-y2k-shades') {
     p = fit([b.centerX,(b.minY+b.maxY)/2],[150,74],38/b.width,d);
   } else if (id === 'accent-silver-jewelry') {
@@ -67,7 +73,7 @@ for (const [id, data] of Object.entries(measuredAssets)) {
     p = fit([b.centerX,b.minY],[106,264],40/b.width,d);
   }
   PHOTO_LAYER_CONFIG[category][id] = { ...data, catalogId:id, name:names[id], svgPlacement:p,
-    preserveAspectRatio:'xMidYMid meet',renderOrder:{core:4,bottom:2,shoes:3,bag:5,accent:6}[category],
+    preserveAspectRatio:'xMidYMid meet',renderOrder:{core:4,bottom:3,shoes:2,bag:5,accent:6}[category],
     // Source sleeves occlude the canonical arms; no separate pose is introduced.
     hideArms:category==='core',
     // Aperture of the wide sleeve; the concealed hand carries the handle at this seam.

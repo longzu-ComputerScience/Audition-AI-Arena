@@ -1,6 +1,45 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 
+test('denim hem, footwear depth, crossbody strap and non-la fitting stay isolated',async({page})=>{
+  await page.goto('/tools/visual-fixture.html');
+  const fitting=await page.evaluate(async()=>{
+    const path='/src/data/photoLayerFitting.ts';
+    const {getPhotoLayerConfig}=await import(/* @vite-ignore */ path);
+    const denim=getPhotoLayerConfig('bottom','bottom-raw-denim')!;
+    const nonLa=getPhotoLayerConfig('accent','accent-non-la')!;
+    const p=denim.svgPlacement, bounds=denim.visibleBounds;
+    return {
+      denimWidth:p.width, denimHem:p.y+bounds.maxY*p.height/denim.sourceDimensions.height,
+      nonLaBrim:nonLa.svgPlacement.y+nonLa.visibleBounds.maxY*nonLa.svgPlacement.height/nonLa.sourceDimensions.height
+    };
+  });
+  // Wide denim is scaled uniformly to the two feet rather than exaggerated to its full rise.
+  expect(fitting.denimWidth).toBeLessThan(145);
+  expect(fitting.denimHem).toBeCloseTo(538,0);
+  expect(fitting.nonLaBrim).toBeGreaterThan(57);
+  expect(fitting.nonLaBrim).toBeLessThan(67);
+
+  for(const core of ['ao-tu-than','ao-dai','ao-nhat-binh','ao-ngu-than','ao-tac']){
+    await page.evaluate(core=>(window as any).setTestOutfit({core,bottom:2,shoes:0,bag:2,accent:3}),core);
+    await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id',core);
+    await expect(page.locator('#photo-layer-bottom image')).toHaveAttribute('href','/images/layers/bottoms/bottom-raw-denim.png');
+    await expect(page.locator('#photo-layer-shoes image')).toHaveAttribute('href','/images/layers/shoes/shoes-guoc-moc.png');
+    await expect(page.locator('#photo-layer-bag image')).toHaveAttribute('mask',/^url\(#necklace-.+-strap-mask\)$/);
+    await expect(page.locator('#photo-layer-accent image')).toHaveAttribute('href','/images/layers/accessories/accent-non-la.png');
+    const correctDepth=await page.evaluate(()=>{
+      const shoe=document.querySelector('#photo-layer-shoes')!;
+      const bottom=document.querySelector('#photo-layer-bottom')!;
+      return Boolean(shoe.compareDocumentPosition(bottom)&Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(correctDepth).toBe(true);
+  }
+  // Other bags must not inherit the crossbody masking/crop.
+  await page.evaluate(()=>(window as any).setTestOutfit({bag:0,bottom:0,accent:null}));
+  await expect(page.locator('#photo-layer-bag image')).toHaveAttribute('href','/images/layers/bags/bag-gam-vintage.png');
+  await expect(page.locator('#photo-layer-bag image')).not.toHaveAttribute('mask',/./);
+});
+
 test('all 675 catalog outfits render their selected photo layers',async({page})=>{
   await page.goto('/tools/visual-fixture.html');
   const count=await page.evaluate(async()=>{

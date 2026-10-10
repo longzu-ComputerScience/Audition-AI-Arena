@@ -1167,6 +1167,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             width={bagPhotoConfig.svgPlacement.width}
             height={bagPhotoConfig.svgPlacement.height}
             preserveAspectRatio={bagPhotoConfig.preserveAspectRatio}
+            mask={items.bag.id === 'bag-techwear-crossbody' ? `url(#${necklaceClipId}-strap-mask)` : undefined}
           />
           {items.bag.id === 'bag-gam-vintage' && (
             <path transform={`translate(${carry[0]-36} ${carry[1]-294})`} d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" />
@@ -2020,21 +2021,23 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >
-          <defs><clipPath id={necklaceClipId}><rect x="0" y="116" width="300" height="484" /></clipPath></defs>
+          <defs>
+            <clipPath id={necklaceClipId}><rect x="0" y="116" width="300" height="484" /></clipPath>
+            {/* The upper loop of the crossbody strap goes behind the right shoulder, not over the collar. */}
+            <linearGradient id={`${necklaceClipId}-strap-fade`} x1="0" y1="123" x2="0" y2="192" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="black" />
+              <stop offset=".68" stopColor="black" />
+              <stop offset="1" stopColor="white" />
+            </linearGradient>
+            <mask id={`${necklaceClipId}-strap-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="600">
+              <rect x="0" y="0" width="300" height="600" fill="white" />
+              <path d="M175 109 H225 V196 H186 L177 158 Z" fill={`url(#${necklaceClipId}-strap-fade)`} />
+            </mask>
+          </defs>
           {/* 1. Neutral Mannequin Body (Fixed, no re-mount animation) */}
           {renderMannequinBody()}
 
-          {/* 2. Selected Bottom Garment (Crossfade on bottom change) */}
-          <motion.g
-            key={`bottom-${items.bottom.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={layerTransition}
-          >
-            {renderBottomGarment()}
-          </motion.g>
-
-          {/* 3. Selected Footwear (Crossfade on shoes change) */}
+          {/* 2. Footwear sits behind trouser hems, including wide denim cuffs. */}
           <motion.g
             key={`shoes-${items.shoes.id}`}
             initial={{ opacity: 0 }}
@@ -2042,6 +2045,16 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             transition={layerTransition}
           >
             {renderShoes()}
+          </motion.g>
+
+          {/* 3. Bottom garment naturally covers the upper part of the shoes. */}
+          <motion.g
+            key={`bottom-${items.bottom.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={layerTransition}
+          >
+            {renderBottomGarment()}
           </motion.g>
 
           {/* 4. Selected Core Việt Phục (Dominant piece, crossfade on core change) */}
