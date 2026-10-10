@@ -17,7 +17,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     // Preview-only A/B timing, never enabled for production users.
     const requestedVariant = process.env.VERCEL_ENV === 'preview' ? request.headers.get('x-stylist-bench') : null;
-    const variant = ['baseline', 'minimal', 'lite-first', 'fast-safe', 'low', 'bounded', 'low-bounded', 'lite-bounded', 'balanced'].includes(requestedVariant ?? '') ? requestedVariant : null;
+    const variant = ['baseline', 'minimal', 'lite-first', 'fast-safe', 'low', 'bounded', 'low-bounded', 'lite-bounded', 'balanced', 'balanced2'].includes(requestedVariant ?? '') ? requestedVariant : null;
     const trace: NonNullable<StylistBenchmarkOptions['trace']> = [];
     const options: StylistBenchmarkOptions | undefined = variant ? { trace } : undefined;
     if (variant === 'minimal') options!.thinkingLevel = 'minimal';
@@ -27,6 +27,7 @@ export async function POST(request: Request): Promise<Response> {
     if (variant === 'bounded' || variant === 'low-bounded' || variant === 'lite-bounded') options!.timeoutMs = 12_000;
     if (variant === 'lite-bounded') options!.candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
     if (variant === 'balanced') { options!.thinkingLevel = 'low'; options!.timeoutMs = 12_000; options!.onlyPrimaryThinking = true; }
+    if (variant === 'balanced2') { options!.thinkingLevel = 'low'; options!.onlyPrimaryThinking = true; options!.primaryTimeoutMs = 16_000; options!.fallbackTimeoutMs = 10_000; }
     const started = performance.now();
     const result = await generateStylistAdvice(parsed.body, options);
     if (!variant) return jsonResponse(result);

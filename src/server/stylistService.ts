@@ -265,6 +265,8 @@ export interface StylistBenchmarkOptions {
   thinkingLevel?: 'minimal' | 'low';
   onlyPrimaryThinking?: boolean;
   timeoutMs?: number;
+  primaryTimeoutMs?: number;
+  fallbackTimeoutMs?: number;
   trace?: Array<{ model: string; elapsedMs: number; outcome: string; status?: number; errorName?: string; errorHint?: string }>;
 }
 
@@ -324,6 +326,9 @@ export async function generateStylistAdvice(
 
   for (const model of candidateModels) {
     const startedAt = performance.now();
+    const modelTimeoutMs = model === candidateModels[0]
+      ? (benchmark?.primaryTimeoutMs ?? benchmark?.timeoutMs)
+      : (benchmark?.fallbackTimeoutMs ?? benchmark?.timeoutMs);
     try {
       const response = await ai.models.generateContent({
         model,
@@ -332,7 +337,7 @@ export async function generateStylistAdvice(
           responseMimeType: 'application/json',
           temperature: 0.6,
           ...(benchmark?.thinkingLevel && (!benchmark.onlyPrimaryThinking || model === candidateModels[0]) ? { thinkingConfig: { thinkingLevel: benchmark.thinkingLevel === 'minimal' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW } } : {}),
-          ...(benchmark?.timeoutMs ? { httpOptions: { timeout: benchmark.timeoutMs } } : {}),
+          ...(modelTimeoutMs ? { httpOptions: { timeout: modelTimeoutMs } } : {}),
         },
       });
 
