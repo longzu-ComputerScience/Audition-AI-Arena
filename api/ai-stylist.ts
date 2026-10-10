@@ -1,5 +1,5 @@
-import { generateStylistAdvice } from '../src/server/stylistService';
-import { jsonResponse, readJsonRequest } from '../src/server/serverlessHttp';
+import { generateStylistAdvice } from '../src/server/stylistService.js';
+import { jsonResponse, readJsonRequest } from '../src/server/serverlessHttp.js';
 
 // Vercel file-based function: POST /api/ai-stylist
 export async function POST(request: Request): Promise<Response> {

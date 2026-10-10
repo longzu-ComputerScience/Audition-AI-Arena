@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import {
   ValidatedOutfitSelection,
   buildFashionEditorialPrompt,
-} from './promptBuilder';
+} from './promptBuilder.js';
 
 export interface GenerateImageResult {
   success: boolean;

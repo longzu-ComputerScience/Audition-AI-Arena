@@ -1,6 +1,6 @@
-import { validateAndResolveOutfit } from '../src/server/promptBuilder';
-import { generateOutfitEditorialImage } from '../src/server/imageService';
-import { jsonResponse, readJsonRequest } from '../src/server/serverlessHttp';
+import { validateAndResolveOutfit } from '../src/server/promptBuilder.js';
+import { generateOutfitEditorialImage } from '../src/server/imageService.js';
+import { jsonResponse, readJsonRequest } from '../src/server/serverlessHttp.js';
 
 // Leave space below Vercel's 4.5 MB maximum response payload.
 const MAX_JSON_RESPONSE_BYTES = 4_000_000;

@@ -1,6 +1,6 @@
-import { ActiveSupportItems, CoreVietPhucId, SetupData, SupportCategoryId, SupportOption } from '../types';
-import { CORE_ITEMS, SUPPORT_ITEMS, resolveCoreGarmentColor } from '../data/mockFashionData';
-import { computeActualRemix, isSolemnOccasion } from './fashionCalculations';
+import { ActiveSupportItems, CoreVietPhucId, SetupData, SupportCategoryId, SupportOption } from '../types.js';
+import { CORE_ITEMS, SUPPORT_ITEMS, resolveCoreGarmentColor } from '../data/mockFashionData.js';
+import { computeActualRemix, isSolemnOccasion } from './fashionCalculations.js';
 
 export interface RecommendationContext extends SetupData {
   targetRemix: number;

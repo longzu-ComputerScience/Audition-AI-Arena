@@ -4,7 +4,7 @@ import {
   GuardrailResult,
   SetupData,
   HeritageCheckItem,
-} from '../types';
+} from '../types.js';
 
 export function isSolemnOccasion(occasion: string): boolean {
   return ['Sự kiện trang trọng', 'Lễ tốt nghiệp / Bế giảng', 'Đón Tết cổ truyền', 'Đám cưới / Ăn hỏi bạn bè'].includes(occasion);
