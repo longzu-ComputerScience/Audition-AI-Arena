@@ -96,6 +96,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   // Photo fabric recoloring state
   const [, refreshRecolor] = useState(0);
   const [failedRecolorKey, setFailedRecolorKey] = useState<string | null>(null);
+  // Preview-only opt-in diagnostic; does not affect normal studio rendering.
+  const showPhotoDiagnostics = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('photo_debug');
+  const [photoDiagnostic, setPhotoDiagnostic] = useState('Waiting for photo processing');
 
   const selectedConfigs = [getPhotoLayerConfig('core', core.id), getPhotoLayerConfig('bottom', items.bottom.id),
     getPhotoLayerConfig('shoes', items.shoes.id), getPhotoLayerConfig('bag', items.bag.id), getPhotoLayerConfig('accent', items.accent?.id)];
@@ -527,6 +530,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     if (renderMode !== 'photo') return;
     retryPhotoImage(config.imageSrc);
     retryPhotoImage(config.fabricMaskSrc);
+    if (showPhotoDiagnostics) setPhotoDiagnostic('Starting recolor: loading source and fabric mask');
 
     recolorGarmentImage(
       config.imageSrc,
@@ -537,12 +541,14 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       .then((recoloredUrl) => {
         if (!isCancelled) {
           releaseResult = retainRecoloredImage(recoloredUrl);
+          if (showPhotoDiagnostics) setPhotoDiagnostic('Recolor completed: blob image verified by loader');
           refreshRecolor(revision => revision + 1);
         }
       })
       .catch((err) => {
         if (!isCancelled) {
           console.error('[MannequinCanvas] Fabric recoloring failed:', err);
+          if (showPhotoDiagnostics) setPhotoDiagnostic(`RECOLOR_FAILED: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`);
           setFailedRecolorKey(recolorKey);
         }
       });
@@ -933,7 +939,10 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               href={photoSrc}
               data-garment-id={core.id}
               data-fabric-color={primaryFabricColor}
-              onError={() => setFailedRecolorKey(recolorKey)}
+              onError={() => {
+                if (showPhotoDiagnostics) setPhotoDiagnostic('SVG_BLOB_RENDER_FAILED: HTMLImage loaded but inline SVG image rejected the blob URL');
+                setFailedRecolorKey(recolorKey);
+              }}
               x={config.svgPlacement.x}
               y={config.svgPlacement.y}
               width={config.svgPlacement.width}
@@ -1849,6 +1858,11 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           : `Màu vải ảnh thực tế: ${displayPalette.find(p => p.hex.toLowerCase() === primaryFabricColor.toLowerCase())?.name || primaryFabricColor}`}</span>
       </div>
 
+      {showPhotoDiagnostics && (
+        <pre data-photo-diagnostic className="mb-2 p-2 text-[10px] whitespace-pre-wrap break-all border border-[#B3261E] bg-white text-[#3D342C]" role="note">
+          {`PHOTO DIAGNOSTIC (preview only)\nCore: ${core.id}\nColor: ${primaryFabricColor}\nFailure key: ${failedRecolorKey || 'none'}\nCore photo ready: ${photoCoreReady}\nStage: ${photoDiagnostic}\nBrowser: ${navigator.userAgent}`}
+        </pre>
+      )}
       {/* Main 2D Mannequin Canvas - Responsive horizontal breathing room on all devices so hotspots never overlap mannequin */}
       <div
         ref={stageRef}
