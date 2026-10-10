@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useReducer, forwardRef } from 'react';
-import { AnimatePresence, motion, useReducedMotion, useIsPresent } from 'motion/react';
+import React, { useState, useMemo, useEffect, useReducer } from 'react';
+import { AnimatePresence } from 'motion/react';
 import {
   SetupData,
   SupportOption,
@@ -31,15 +31,7 @@ import { RemixStudio } from './components/RemixStudio';
 import { LookbookModal } from './components/LookbookModal';
 import { AboutModal } from './components/AboutModal';
 
-// Forward the DOM ref for popLayout; exiting content must also leave the keyboard/accessibility tree.
-const PageTransition = forwardRef<HTMLDivElement, { page:string; reduceMotion:boolean; children:React.ReactNode }>(({page,reduceMotion,children},ref) => {
-  const present=useIsPresent();
-  return <motion.div ref={ref} data-page={page} className="w-full bg-[#FAF7EE]" inert={!present} aria-hidden={!present}
-    initial={false} animate={{opacity:1,pointerEvents:'auto'}} exit={{opacity:0,pointerEvents:'none'}} transition={{duration:reduceMotion?0:.12}}>{children}</motion.div>;
-});
-
 export default function App() {
-  const reduceMotion = useReducedMotion() ?? false;
   // Global Step State: 1 | 2 | 3
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState<1 | 2 | 3>(1);
@@ -61,7 +53,7 @@ export default function App() {
     if (step === 1 && targetStep !== 1) setHasSeenIntro(true);
     setStep(targetStep);
     setMaxUnlockedStep((prev) => (targetStep > prev ? targetStep : prev));
-    // Incoming layout aligns immediately; the old page leaves the flow during its fade.
+    // Destination layout effects will align the incoming page after the old exit animation.
   };
 
   // Intro text word-by-word animation play-only-once state for DiscoveryScreen
@@ -235,9 +227,8 @@ export default function App() {
 
       {/* Main Multi-step Content (Preserving state across back/forward navigation) */}
       <main className="flex-1 w-full relative" data-active-step={step}>
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
           {step === 1 && onboardingState === 'active' && (
-            <PageTransition key="step-1-onboarding" page="onboarding" reduceMotion={reduceMotion}>
             <InteractiveOnboarding
               key="step-1-onboarding"
               setupData={setupData}
@@ -249,11 +240,9 @@ export default function App() {
               onSelectLocation={handleOnboardingSelectLocation}
               onSkip={handleSkipOnboarding}
             />
-            </PageTransition>
           )}
 
           {step === 1 && onboardingState !== 'active' && (
-            <PageTransition key="step-1-discovery" page="discovery" reduceMotion={reduceMotion}>
             <DiscoveryScreen
               key="step-1-discovery"
               setupData={setupData}
@@ -266,11 +255,9 @@ export default function App() {
               shouldFocusFirstUnconfirmed={pendingSkipFocus}
               onConsumedInitialFocus={() => setPendingSkipFocus(false)}
             />
-            </PageTransition>
           )}
 
           {step === 2 && (
-            <PageTransition key="step-2" page="concept" reduceMotion={reduceMotion}>
             <ConceptReveal
               key="step-2"
               setupData={setupData}
@@ -279,11 +266,9 @@ export default function App() {
               onBack={() => goToStep(1)}
               onProceed={() => goToStep(3)}
             />
-            </PageTransition>
           )}
 
           {step === 3 && (
-            <PageTransition key="step-3" page="remix" reduceMotion={reduceMotion}>
             <RemixStudio
               key="step-3"
               core={currentCore}
@@ -308,7 +293,6 @@ export default function App() {
                 if (preferredColor) handleChangeSetup({ preferredColor });
               }}
             />
-            </PageTransition>
           )}
         </AnimatePresence>
       </main>

@@ -187,6 +187,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
 
   return (
     <motion.div
+      data-page="onboarding"
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}

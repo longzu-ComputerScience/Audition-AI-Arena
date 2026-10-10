@@ -1,5 +1,5 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 import {
   CoreItem,
   ActiveSupportItems,
@@ -72,7 +72,6 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   recommendationTrace,
   onRecommendAgain,
 }) => {
-  const reduceMotion = useReducedMotion();
   const workspaceAnchorRef = useRef<HTMLDivElement | null>(null);
 
   // Only one selector open at a time
@@ -106,10 +105,11 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
 
   return (
     <motion.section
-      initial={{ opacity: reduceMotion ? 1 : 0 }}
+      data-page="remix"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: reduceMotion ? 1 : 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       className="max-w-[1440px] mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 space-y-5"
     >
       {/* Studio Header & Back Button */}

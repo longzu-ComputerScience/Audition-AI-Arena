@@ -73,10 +73,11 @@ export const DiscoveryScreen: React.FC<DiscoveryScreenProps> = ({
   useLayoutEffect(() => { alignPageToTop(); }, []);
   return (
     <motion.div
-      initial={{ opacity: shouldReduceMotion ? 1 : 0 }}
+      data-page="discovery"
+      initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: shouldReduceMotion ? 1 : 0 }}
-      transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+      exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+      transition={{ duration: shouldReduceMotion ? 0 : 0.26, ease: 'easeOut' }}
       className="relative max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-10"
     >
       <button
