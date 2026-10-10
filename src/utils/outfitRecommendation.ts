@@ -32,7 +32,7 @@ export const LOCATION_CONTEXT: Record<string, LocationKind> = {
   'Ninh Bình': 'outdoor', 'Tràng An': 'outdoor', 'Đường sách / Bảo tàng Mỹ thuật': 'artistic',
 };
 export const RECOMMENDATION_WEIGHTS = {
-  remix: .48, occasion: .13, location: .07, style: .12, color: .09, core: .07, cohesion: .04,
+  remix: .24, occasion: .19, location: .14, style: .18, color: .13, core: .08, cohesion: .04,
 } as const;
 export type ScoreDimensions = Record<keyof typeof RECOMMENDATION_WEIGHTS, number>;
 export interface RankedOutfit {
@@ -120,7 +120,7 @@ export function scoreOutfit(context: RecommendationContext, items: ActiveSupport
   const coreHex = resolveCoreGarmentColor(context.coreGarment, context.preferredColor).hex;
   const caution = isSolemnOccasion(context.occasion) && actualRemix >= 80;
   const dimensions: ScoreDimensions = {
-    remix: clamp(1 - distance / 30),
+    remix: clamp(1 - distance / 48),
     occasion: clamp(mean(active.map(i => occasionScore(TRAITS[i.id], context.occasion))) - (caution ? .3 : 0)),
     location: mean(active.map(i => locationScore(TRAITS[i.id], context.location))),
     style: mean(active.map(i => styleScore(TRAITS[i.id], context.style))),
@@ -143,9 +143,14 @@ export function rankOutfits(context: RecommendationContext, current?: ActiveSupp
     ranked.push(scoreOutfit(context, { bottom: bottom!, shoes: shoes!, bag: bag!, accent }));
   }
   const nearest = Math.min(...ranked.map(r => r.distance));
-  // Outside nearest achievable distance + 8 points, use a steep bounded soft penalty.
-  // This respects impossible 0/100 endpoints and manual locks without excluding the catalog.
-  for (const r of ranked) r.score -= Math.min(1, Math.max(0, r.distance - nearest - 8) * .035);
+  // Mid-range dial positions allow contextual trade-offs, but the endpoints
+  // (near 0 and 100) must remain strongly traditional or modern respectively.
+  // At extremes, penalize candidates farther from the closest achievable remix.
+  const target = Number.isFinite(context.targetRemix) ? Math.max(0,Math.min(100,context.targetRemix)) : 50;
+  const extremity = clamp((Math.abs(target - 50) - 30) / 20);
+  const tolerance = 12 - 10 * extremity;
+  const slope = .008 + .020 * extremity;
+  for (const r of ranked) r.score -= Math.min(.45, Math.max(0, r.distance - nearest - tolerance) * slope);
   return ranked.sort((a, b) => b.score - a.score || a.distance - b.distance || (outfitKey(a.items) < outfitKey(b.items) ? -1 : outfitKey(a.items) > outfitKey(b.items) ? 1 : 0));
 }
 export function recommendOutfit(context: RecommendationContext, current?: ActiveSupportItems, manual: ManualSlots = {}): RankedOutfit {

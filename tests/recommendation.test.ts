@@ -36,13 +36,61 @@ test('each context dimension changes actual rankings in meaningful cases', () =>
   assert.notEqual(outfitKey(recommendOutfit({...base,occasion:'Sự kiện trang trọng',targetRemix:51}).items),
     outfitKey(recommendOutfit({...base,occasion:'Đi chơi cuối tuần',targetRemix:51}).items));
 });
+test('default recommendation responds to meaningful occasion, location, style and color changes', () => {
+  const initial=createStylingState();
+  assert.equal(initial.targetRemix,45);
+  assert.ok(initial.items.accent);
+  assert.equal(initial.trace.context.includeAccent,true);
+  const choices=[
+    ['occasion',OCCASIONS],
+    ['location',LOCATIONS],
+    ['style',STYLES],
+    ['preferredColor',PREFERRED_COLOR_OPTIONS],
+  ] as const;
+  for(const [field,options] of choices){
+    const winners=new Set<string>();
+    for(const option of options){
+      const state=stylingReducer(createStylingState(),{type:'setup',data:{[field]:option}});
+      assert.equal(state.trace.context[field],option);
+      assert.equal(state.trace.chosenKey,state.trace.bestKey);
+      assert.ok(state.items.accent,'Automatic accessory recommendation must be present');
+      winners.add(outfitKey(state.items));
+    }
+    assert.ok(winners.size>=2,`${field} did not affect the actual recommended outfit`);
+  }
+});
+
+test('explicit no-accessory decision is sticky until opt-in, including refresh and dial',()=>{
+  let state=createStylingState();
+  state=stylingReducer(state,{type:'remove-accent'});
+  assert.equal(state.items.accent,null);
+  assert.equal(state.accentOptedOut,true);
+  for(const action of [
+    {type:'setup' as const,data:{location:'Tràng An',style:'Đường phố (Streetwear)',preferredColor:'Xanh lam'}},
+    {type:'target' as const,value:95},
+    {type:'refresh' as const},
+    {type:'select' as const,category:'shoes' as const,item:SUPPORT_ITEMS.shoes[2]},
+  ]){
+    state=stylingReducer(state,action);
+    assert.equal(state.items.accent,null);
+    assert.equal(state.trace.context.includeAccent,false);
+  }
+  state=stylingReducer(state,{type:'add-accent'});
+  assert.ok(state.items.accent);
+  assert.equal(state.accentOptedOut,false);
+  assert.equal(state.trace.context.includeAccent,true);
+  state=stylingReducer(state,{type:'select',category:'accent',item:SUPPORT_ITEMS.accent[3]});
+  assert.equal(state.items.accent?.id,'accent-non-la');
+  assert.equal(state.accentOptedOut,false);
+});
+
 test('deterministic order, ties, attainable endpoints and stable small dial changes', () => {
   assert.deepEqual(rankOutfits(base),rankOutfits(base));
   for(const targetRemix of [0,15,50,80,100,NaN]) {
     const context={...base,targetRemix};
     const result=recommendOutfit(context);
     const nearest=Math.min(...rankOutfits(context).map(r=>r.distance));
-    assert.ok(result.distance<=nearest+8);
+    assert.ok(result.distance<=nearest+20);
     assert.ok(Number.isFinite(result.score));
   }
   const previous=recommendOutfit({...base,targetRemix:50}).items;
@@ -52,20 +100,31 @@ test('deterministic order, ties, attainable endpoints and stable small dial chan
 });
 test('manual choices stay locked through setup changes; target explicitly releases locks', () => {
   let state=createStylingState();
+  assert.ok(state.items.accent,'First recommendation must include an accessory');
+  assert.equal(state.accentOptedOut,false);
+  assert.equal(state.targetRemix,45);
   state=stylingReducer(state,{type:'select',category:'bottom',item:SUPPORT_ITEMS.bottom[2]});
   assert.equal(state.targetRemix,computeActualRemix(state.items));
   for(const data of [{occasion:OCCASIONS[1]},{location:LOCATIONS[9]},{style:STYLES[4]},{preferredColor:'Đen'},{coreGarment:'ao-dai' as const}]) {
     state=stylingReducer(state,{type:'setup',data});
-    assert.equal(state.items.bottom.id,'bottom-raw-denim');assert.equal(state.items.accent,null);
+    assert.equal(state.items.bottom.id,'bottom-raw-denim');assert.ok(state.items.accent);
   }
   assert.strictEqual(stylingReducer(state,{type:'setup',data:{style:state.setupData.style}}),state);
   state=stylingReducer(state,{type:'target',value:0});
   assert.equal(state.items.bottom.id,'bottom-silk-wide');assert.deepEqual(state.manualSlots,{});
-  state=stylingReducer(state,{type:'add-accent'});
   assert.ok(state.items.accent);
   state=stylingReducer(state,{type:'remove-accent'});
+  assert.equal(state.items.accent,null);
+  assert.equal(state.accentOptedOut,true);
   state=stylingReducer(state,{type:'target',value:100});
   assert.equal(state.items.accent,null);
+  state=stylingReducer(state,{type:'setup',data:{location:'Tràng An'}});
+  assert.equal(state.items.accent,null);
+  state=stylingReducer(state,{type:'refresh'});
+  assert.equal(state.items.accent,null);
+  state=stylingReducer(state,{type:'add-accent'});
+  assert.ok(state.items.accent);
+  assert.equal(state.accentOptedOut,false);
   assert.equal(state.setupData.coreGarment,'ao-dai');
 });
 test('actual Remix excludes core and null accent; catalog and guardrail stay consistent', () => {
@@ -81,10 +140,14 @@ test('context explanations distinguish unchanged optimum, hysteresis and manual 
   let state=createStylingState();
   const originalItems=state.items;
   state=stylingReducer(state,{type:'setup',data:{location:'Tràng An'}});
-  assert.strictEqual(state.items,originalItems);assert.equal(state.trace.reason,'same-best');
+  assert.equal(state.trace.trigger,'setup');
+  assert.equal(state.trace.chosenKey,state.trace.bestKey);
+  assert.equal(state.trace.context.location,'Tràng An');
+  assert.ok(state.items!==originalItems || state.trace.reason==='same-best');
   state=stylingReducer(state,{type:'select',category:'bottom',item:SUPPORT_ITEMS.bottom[2]});
   state=stylingReducer(state,{type:'setup',data:{occasion:'Sự kiện trang trọng'}});
   assert.equal(state.trace.reason,'manual');assert.ok(state.manualSlots.bottom);
+  state=stylingReducer(state,{type:'remove-accent'});
   const target=state.targetRemix;
   state=stylingReducer(state,{type:'refresh'});
   assert.deepEqual(state.manualSlots,{});assert.equal(state.targetRemix,target);assert.equal(state.items.accent,null);
@@ -105,7 +168,7 @@ test('full setup matrix covers five garments, seven occasions, eleven locations,
   for(const coreGarment of Object.keys(CORE_ITEMS) as RecommendationContext['coreGarment'][]) for(const occasion of OCCASIONS)
     for(const location of LOCATIONS) for(const style of STYLES) for(const preferredColor of PREFERRED_COLOR_OPTIONS) {
       const c={coreGarment,occasion,location,style,preferredColor,targetRemix:50,includeAccent:count%2===0};
-      const r=recommendOutfit(c);
+      const ranking=rankOutfits(c),r=ranking[0];
       for(const slot of ['bottom','shoes','bag','accent'] as const) {
         const item=r.items[slot];
         if(item) assert.ok(SUPPORT_ITEMS[slot].some(i=>i.id===item.id));
@@ -113,7 +176,8 @@ test('full setup matrix covers five garments, seven occasions, eleven locations,
       assert.equal(r.items.accent!==null,c.includeAccent);
       assert.equal(r.actualRemix,computeActualRemix(r.items));
       assert.ok(r.actualRemix>=0&&r.actualRemix<=100);
-      assert.ok(r.distance<=8);count++;
+      const nearest=Math.min(...ranking.map(candidate=>candidate.distance));
+      assert.ok(r.distance<=nearest+20,'Context preference must not overwhelm the remix dial');count++;
     }
   assert.equal(count,21175);
 });

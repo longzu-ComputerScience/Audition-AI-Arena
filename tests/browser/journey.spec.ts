@@ -31,15 +31,17 @@ async function studio(page:Page) {
 test('existing journey, manual locks, dial, optional accent and navigation',async({page},info)=>{
   const errors:string[]=[]; page.on('pageerror',e=>errors.push(e.message));
   await studio(page);
-  await expect(page.locator('#photo-layer-accent')).toHaveCount(0);
+  await expect(page.locator('#photo-layer-accent image')).toHaveAttribute('href',/accent-/);
   await page.getByRole('button',{name:/Tủ Đồ Phối Kèm/}).click();
+  await page.getByRole('button',{name:'Gỡ bỏ phụ kiện',exact:true}).click();
+  await expect(page.locator('#photo-layer-accent')).toHaveCount(0);
   await page.getByRole('button',{name:'Thay đổi',exact:true}).nth(0).click();
   await page.getByRole('option',{name:/Raw Denim/}).click();
   await expect(page.locator('#photo-layer-bottom image')).toHaveAttribute('href',/bottom-raw-denim/);
   const actual=Number(await page.locator('#remix-dial-slider').inputValue());
   expect(actual).toBeGreaterThan(15);
   await page.getByRole('button',{name:'+ Thêm phụ kiện',exact:true}).click();
-  await expect(page.locator('#photo-layer-accent image')).toHaveAttribute('href',/silver-jewelry/);
+  await expect(page.locator('#photo-layer-accent image')).toHaveAttribute('href',/accent-/);
   await page.getByRole('button',{name:'Gỡ bỏ phụ kiện',exact:true}).click();
   await expect(page.locator('#photo-layer-accent')).toHaveCount(0);
   await page.locator('header nav button').nth(0).click();
@@ -114,9 +116,11 @@ test('AI receives the current snapshot and applies a valid suggestion only on re
   await page.locator('#ai-stylist-input').fill('Kiểm tra ngữ cảnh hiện tại');
   await page.getByRole('button',{name:'Tư vấn',exact:true}).click();
   await expect(page.getByText('Gợi ý tại máy',{exact:true})).toBeVisible();
-  expect(snapshot.coreId).toBe('ao-dai');expect(snapshot.occasion).toBe('Sự kiện trang trọng');expect(snapshot.accentId).toBeNull();
+  expect(snapshot.coreId).toBe('ao-dai');expect(snapshot.occasion).toBe('Sự kiện trang trọng');
   const byId=(slot:'bottom'|'shoes'|'bag')=>SUPPORT_ITEMS[slot].find(i=>i.id===snapshot[`${slot}Id`])!;
-  expect(snapshot.actualRemix).toBe(computeActualRemix({bottom:byId('bottom'),shoes:byId('shoes'),bag:byId('bag'),accent:null}));
+  const accent=SUPPORT_ITEMS.accent.find(i=>i.id===snapshot.accentId);
+  expect(accent).toBeDefined();
+  expect(snapshot.actualRemix).toBe(computeActualRemix({bottom:byId('bottom'),shoes:byId('shoes'),bag:byId('bag'),accent:accent!}));
   expect(snapshot.targetRemix).toBe(Number(await page.locator('#remix-dial-slider').inputValue()));
   await expect(page.locator('#photo-layer-bottom image')).toHaveAttribute('href',before!);
   await page.getByRole('button',{name:'Áp dụng món này',exact:true}).click();
