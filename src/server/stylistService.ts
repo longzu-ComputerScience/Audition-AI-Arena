@@ -4,10 +4,10 @@ import {
   SUPPORT_ITEMS,
   OCCASIONS,
   LOCATIONS,
-} from '../data/mockFashionData';
-import { CoreItem, SupportOption, SupportCategoryId } from '../types';
-import { computeActualRemix, evaluateGuardrail } from '../utils/fashionCalculations';
-import { recommendOutfit } from '../utils/outfitRecommendation';
+} from '../data/mockFashionData.js';
+import { CoreItem, SupportOption, SupportCategoryId } from '../types.js';
+import { computeActualRemix, evaluateGuardrail } from '../utils/fashionCalculations.js';
+import { recommendOutfit } from '../utils/outfitRecommendation.js';
 
 export interface StylistRequestPayload {
   coreId: string;

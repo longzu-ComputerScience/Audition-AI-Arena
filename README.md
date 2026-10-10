@@ -152,7 +152,7 @@ The Python image-preparation dependencies are **not needed to serve the producti
 
 ## Deployment and project notes
 
-- The current deployment path is an Express-hosted Vite build. Other hosts (including static-only or serverless platforms) may require an adapter and separate API deployment.
+- Vercel (Vite framework) uses the four root `api/*.ts` serverless Functions. `GEMINI_API_KEY` must be configured for the **Preview** environment (and separately for Production when approved); it is never exposed with a `VITE_` prefix. The root `api/` routes are the Vercel adapter; `server.ts` continues to serve Express locally or on Node.js hosts.
 - The heritage garment is not structurally altered by the local recommendation algorithm; cultural notes and warnings are informational.
 - `IMPLEMENTATION_REPORT.md` and `STABILIZATION_REPORT.md` are **historical QA snapshots**. Some recorded weights, branch names, and screenshots describe earlier development states; use the current source and test suite for live behavior.
 - Source assets have their own provenance records. Check rights and redistribution terms before reusing them outside this project.

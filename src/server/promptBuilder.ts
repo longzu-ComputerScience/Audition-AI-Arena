@@ -6,8 +6,8 @@ import {
   PREFERRED_COLOR_OPTIONS,
   COLOR_MAP,
   resolveCoreGarmentColor,
-} from '../data/mockFashionData';
-import { CoreItem, SupportOption, CoreVietPhucId } from '../types';
+} from '../data/mockFashionData.js';
+import { CoreItem, SupportOption, CoreVietPhucId } from '../types.js';
 
 export interface GenerateOutfitRequestPayload {
   coreId: string;

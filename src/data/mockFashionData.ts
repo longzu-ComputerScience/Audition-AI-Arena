@@ -1,4 +1,4 @@
-import { recommendOutfit } from '../utils/outfitRecommendation';
+import { recommendOutfit } from '../utils/outfitRecommendation.js';
 import {
   CoreItem,
   SupportOption,
@@ -7,7 +7,7 @@ import {
   SetupData,
   ConceptData,
   ActiveSupportItems,
-} from '../types';
+} from '../types.js';
 
 export const CORE_ITEMS: Record<CoreVietPhucId, CoreItem> = {
   'ao-nhat-binh': {
