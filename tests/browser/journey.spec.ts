@@ -1068,7 +1068,7 @@ test('accessory dragging fallback remains keyboard accessible when a bag or acce
   await page.getByRole('button',{name:'Chọn Áo Nhật Bình',exact:true}).click();
   await page.locator('header nav button').nth(2).click();
   await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-nhat-binh');
-  // Nhật Bình normally paints its photo necklace beneath the collar; its vector fallback must still have movable geometry.
+  // The front-draped necklace must remain movable when its photo falls back to the existing vector.
   for(const category of ['bag','accent'] as const)for(let index=0;index<SUPPORT_ITEMS[category].length;index++){
     await selectMovableItem(page,category,index);
     const layer=movable(page,category),before=await accessoryPoint(layer);
@@ -1080,4 +1080,76 @@ test('accessory dragging fallback remains keyboard accessible when a bag or acce
     await expect(layer).toHaveAttribute('data-offset-y','0');
     await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id','ao-nhat-binh');
   }
+});
+
+
+test('silver necklace conceals its rear loop on all five garments with a moving clip and persistent custom positions',async({page},info)=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/api/ai-status',r=>r.fulfill({json:{isAvailable:false,hasApiKey:false}}));
+  await studio(page);
+  fs.mkdirSync('artifacts/visual',{recursive:true});
+  for(const coreId of ['ao-nhat-binh','ao-tac','ao-dai','ao-tu-than','ao-ngu-than'] as const){
+    await page.getByRole('button',{name:'Sắc Việt',exact:true}).click();
+    await page.getByRole('button',{name:`Chọn ${CORE_ITEMS[coreId].name}`,exact:true}).click();
+    await page.locator('header nav button').nth(2).click();
+    await expect(page.locator('#photo-layer-core image')).toHaveAttribute('data-garment-id',coreId);
+    await selectMovableItem(page,'accent',0);
+    const accent=movable(page,'accent'),defaults=await accessoryPoint(accent);
+    await expect(accent).toHaveAttribute('data-offset-x','0');await expect(accent).toHaveAttribute('data-offset-y','0');
+    await expect(page.locator('#photo-layer-accent image')).toHaveCount(1);
+    const geometry=await accent.evaluate(e=>{
+      const image=e.querySelector<SVGImageElement>('#photo-layer-accent image')!;
+      const hit=e.querySelector<SVGGraphicsElement>('[data-accessory-hit-area]')!;
+      const core=document.querySelector('#photo-layer-core')!;
+      const b=hit.getBBox();
+      (window as any).silverPhotoNode=image;
+      return {inFront:Boolean(core.compareDocumentPosition(image)&Node.DOCUMENT_POSITION_FOLLOWING),
+        clipped:image.hasAttribute('clip-path'),
+        clipTop:Number(e.querySelector('clipPath rect')!.getAttribute('y')),
+        localClip:e.contains(e.querySelector('clipPath')),
+        concealedBackHit:(hit as SVGGeometryElement).isPointInFill(new DOMPoint(150,Number(image.getAttribute('y'))+1)),
+        path:hit.getAttribute('d'), x:b.x,y:b.y,width:b.width,height:b.height,
+        ratio:Number(image.getAttribute('width'))/Number(image.getAttribute('height'))};
+    });
+    expect(geometry.inFront).toBe(true);expect(geometry.clipped).toBe(true);
+    expect(geometry.localClip).toBe(true);expect(geometry.concealedBackHit).toBe(false);
+    expect(geometry.y).toBe(geometry.clipTop);expect(geometry.y).toBeGreaterThanOrEqual(118);expect(geometry.y).toBeLessThanOrEqual(123);
+    expect(geometry.y+geometry.height).toBeGreaterThan(145);expect(geometry.y+geometry.height).toBeLessThan(155);
+    expect(geometry.x).toBeGreaterThan(128);expect(geometry.x+geometry.width).toBeLessThan(172);
+    expect(geometry.width).toBeGreaterThan(37);expect(geometry.width).toBeLessThan(41);expect(geometry.ratio).toBeCloseTo(800/720,5);
+    await page.locator('svg[aria-label^="Mannequin"]').screenshot({path:`artifacts/visual/silver-${coreId}-${info.project.name}.png`});
+    const hit=await accessoryHitPoint(accent);
+    const lineBefore=await page.locator('[data-leader-category="accent"] circle').evaluate(e=>({x:Number(e.getAttribute('cx')),y:Number(e.getAttribute('cy'))}));
+    await dragAccessory(page,'accent',12,55,info.project.name==='mobile');
+    const custom=await accessoryPoint(accent);
+    expect(custom.x-defaults.x).toBeCloseTo(12/hit.scale,1);expect(custom.y-defaults.y).toBeCloseTo(55/hit.scale,1);
+    const lineAfter=await page.locator('[data-leader-category="accent"] circle').evaluate(e=>({x:Number(e.getAttribute('cx')),y:Number(e.getAttribute('cy'))}));
+    expect(lineAfter.x-lineBefore.x).toBeCloseTo(12,1);expect(lineAfter.y-lineBefore.y).toBeCloseTo(55,1);
+    const movedClip=await accent.evaluate(e=>{
+      const rect=e.querySelector<SVGGraphicsElement>('clipPath rect')!;
+      const hit=e.querySelector<SVGGraphicsElement>('[data-accessory-hit-area]')!;
+      // The clip belongs to this translated group, not the fixed mannequin/collar.
+      return {clipTop:Number(rect.getAttribute('y')),path:hit.getAttribute('d'),
+        offset:Number((e as SVGGElement).dataset.offsetY), top:hit.getBBox().y};
+    });
+    expect(movedClip.clipTop).toBe(geometry.clipTop);expect(movedClip.path).toBe(geometry.path);
+    expect(movedClip.top+movedClip.offset).toBeCloseTo(custom.y,4);
+    await page.locator('svg[aria-label^="Mannequin"]').screenshot({path:`artifacts/visual/silver-moved-${coreId}-${info.project.name}.png`});
+    await page.getByRole('heading',{name:'Bản phối 2D trực tiếp',exact:true}).click();
+    await expect(page.locator('[data-accessory-selection]')).toHaveCount(0);
+    expect(await accessoryPoint(accent)).toEqual(custom);
+    expect(await accent.evaluate(e=>Boolean(document.querySelector('#photo-layer-core')!.compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    const previousColor=await page.locator('#photo-layer-core image').getAttribute('data-fabric-color');
+    await page.locator('[role="radio"][aria-checked="false"]').first().click();
+    await expect(page.locator('#photo-layer-core image')).not.toHaveAttribute('data-fabric-color',previousColor!);
+    await expect.poll(()=>accessoryPoint(accent)).toEqual(custom);
+    expect(await page.evaluate(()=>document.querySelector('#photo-layer-accent image')===(window as any).silverPhotoNode)).toBe(true);
+    await page.getByRole('button',{name:'Chọn để di chuyển phụ kiện',exact:true}).click();
+    await page.keyboard.press('ArrowRight');expect((await accessoryPoint(accent)).x).toBeCloseTo(custom.x+5,4);
+    await page.getByRole('button',{name:'Đặt lại vị trí phụ kiện',exact:true}).click();
+    await expect.poll(()=>accessoryPoint(accent)).toEqual(defaults);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  }
+  expect(errors).toEqual([]);
 });

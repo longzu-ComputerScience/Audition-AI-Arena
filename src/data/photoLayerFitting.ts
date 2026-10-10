@@ -23,6 +23,8 @@ export interface LayerPhotoItemConfig {
   fittingAnchors?: { neck: number[]; hem: number[] };
   hideArms?: boolean;
   bagCarryAnchor?: [number, number];
+  /** Front-only necklace cut in local SVG coordinates; moves with the accessory. */
+  frontClipTop?: number;
   validated: boolean;
 }
 export type GarmentPhotoLayerConfig = LayerPhotoItemConfig;
@@ -38,6 +40,22 @@ const names: Record<string, string> = {
 /** Uniform scale about a measured anchor; no aspect-ratio distortion. */
 function fit(source: number[], target: number[], scale: number, d: { width: number; height: number }) {
   return { x: target[0]-source[0]*scale, y: target[1]-source[1]*scale, width:d.width*scale, height:d.height*scale };
+}
+// The PNG includes the back of the closed necklace. Hide only that upper section,
+// preserving both descending front strands and the original lotus/pendant pixels.
+const SILVER_FRONT_SOURCE_Y = 160;
+const SILVER_WEAR_FITTING: Record<string, { frontTop: number; width: number }> = {
+  'ao-nhat-binh': { frontTop: 118, width: 40 },
+  'ao-tac': { frontTop: 121, width: 40 },
+  'ao-dai': { frontTop: 119, width: 38 },
+  'ao-tu-than': { frontTop: 119, width: 38 },
+  'ao-ngu-than': { frontTop: 123, width: 40 },
+};
+function fitSilverNecklace(config: LayerPhotoItemConfig, coreId: string): LayerPhotoItemConfig {
+  const { frontTop, width } = SILVER_WEAR_FITTING[coreId] ?? SILVER_WEAR_FITTING['ao-dai'];
+  return { ...config, frontClipTop: frontTop,
+    svgPlacement: fit([config.visibleBounds.centerX, SILVER_FRONT_SOURCE_Y], [150, frontTop],
+      width / config.visibleBounds.width, config.sourceDimensions) };
 }
 export const PHOTO_LAYER_CONFIG: PhotoLayerOutfitMap = { core:{}, bottom:{}, shoes:{}, bag:{}, accent:{} };
 for (const [id, data] of Object.entries(measuredAssets)) {
@@ -90,6 +108,7 @@ export function getOutfitLayerConfig(coreId: string, category: Category, itemId?
   const config = getPhotoLayerConfig(category, itemId);
   if (!config) return undefined;
   const b = config.visibleBounds, d = config.sourceDimensions;
+  if (itemId === 'accent-silver-jewelry') return fitSilverNecklace(config, coreId);
   if (itemId === 'bag-gam-vintage') {
     const carry = getPhotoLayerConfig('core', coreId)?.bagCarryAnchor ?? CANONICAL_MANNEQUIN_LANDMARKS.handLeft;
     const scale = (coreId === 'ao-dai' ? .8 : 1) * 68/b.width;

@@ -1354,7 +1354,15 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     if (isPhotoModeActive && accentPhotoConfig && accentStatus === 'loading') return <g data-pending-layer="accent" />;
     if (isPhotoModeActive && accentPhotoConfig && accentStatus === 'ready') {
       return (
-        <g id="photo-layer-accent" className="select-none pointer-events-none" clipPath={items.accent.id === 'accent-silver-jewelry' ? `url(#${necklaceClipId})` : undefined}>
+        <g id="photo-layer-accent" className="select-none pointer-events-none">
+          {accentPhotoConfig.frontClipTop !== undefined && (
+            <defs>
+              {/* Local to the movable group: no fixed collar cut when the user drags away. */}
+              <clipPath id={`${necklaceClipId}-front`} clipPathUnits="userSpaceOnUse">
+                <rect x="0" y={accentPhotoConfig.frontClipTop} width="300" height={600-accentPhotoConfig.frontClipTop} />
+              </clipPath>
+            </defs>
+          )}
           {items.accent.id === 'accent-quai-thao-mini' && (() => {
             const p=accentPhotoConfig.svgPlacement, b=accentPhotoConfig.visibleBounds;
             const x=p.x+b.centerX*p.width/accentPhotoConfig.sourceDimensions.width;
@@ -1363,6 +1371,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           })()}
           <image
             href={accentPhotoConfig.imageSrc}
+            clipPath={accentPhotoConfig.frontClipTop !== undefined ? `url(#${necklaceClipId}-front)` : undefined}
             x={accentPhotoConfig.svgPlacement.x}
             y={accentPhotoConfig.svgPlacement.y}
             width={accentPhotoConfig.svgPlacement.width}
@@ -1485,7 +1494,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       case 'accent-silver-jewelry':
       default:
         return (
-          <g id="accent-silver-jewelry" stroke="#7C756B" strokeWidth="1.2" strokeLinejoin="round">
+          <g id="accent-silver-jewelry" transform={`translate(0 ${(accentPhotoConfig?.frontClipTop ?? 119)-112})`} stroke="#7C756B" strokeWidth="1.2" strokeLinejoin="round">
             {/* Silver Thai Lotus Pendant Necklace resting on chest */}
             {/* Chain draped around neck */}
             <path
@@ -2088,9 +2097,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >
-          <defs>
-            <clipPath id={necklaceClipId}><rect x="0" y="116" width="300" height="484" /></clipPath>
-          </defs>
           {/* 1. Neutral Mannequin Body (Fixed, no re-mount animation) */}
           {renderMannequinBody()}
 
@@ -2115,8 +2121,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           </motion.g>
 
           {/* 4. Selected Core Việt Phục (Dominant piece, crossfade on core change) */}
-          {/* Nhật Bình's embroidered collar occludes necklace chains beside its real opening. */}
-          {core.id === 'ao-nhat-binh' && items.accent?.id === 'accent-silver-jewelry' && isPhotoModeActive && accentStatus === 'ready' && !accessoryPositions.accent && selectedAccessory !== 'accent' && renderAccent()}
           <motion.g
             key={`core-${core.id}`}
             initial={{ opacity: 0 }}
@@ -2126,22 +2130,21 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             {renderCoreGarment()}
           </motion.g>
 
-          {/* Movable layers keep the original artwork/size. The selected layer is painted last. */}
+          {/* Only the necklace's front strands and lotus remain above the garment.
+              The rear loop is concealed; its clip and hit contour move with the artwork.
+              All other layers retain their order; the selected layer is painted last. */}
           {(['bag', 'accent'] as MovableCategory[]).sort((a, b) => Number(a === selectedAccessory) - Number(b === selectedAccessory)).map(category => {
             const item = items[category];
             if (!item) return null;
             const status = category === 'bag' ? bagStatus : accentStatus;
             const config = getOutfitLayerConfig(core.id, category, item.id, items.bag.id);
-            const necklaceBehindCore = category === 'accent' && core.id === 'ao-nhat-binh' && item.id === 'accent-silver-jewelry'
-              && isPhotoModeActive && accentStatus === 'ready' && !accessoryPositions.accent && selectedAccessory !== 'accent';
             return <MovableAccessory key={category} category={category} itemId={item.id} name={item.name} coreId={core.id}
               photoConfig={config} photoReady={isPhotoModeActive && status === 'ready'} pending={isPhotoModeActive && status === 'loading'}
               position={accessoryPositions[category]} selected={selectedAccessory === category}
-              nodeRef={category === 'bag' ? bagNodeRef : accentNodeRef}
-              clipTop={category === 'accent' && item.id === 'accent-silver-jewelry' && isPhotoModeActive ? 116 : undefined}
+              nodeRef={category === 'bag' ? bagNodeRef : accentNodeRef} clipTop={config?.frontClipTop}
               onSelect={setSelectedAccessory} onMove={onMoveAccessory} onOffset={updateAccessoryOffset}>
               <motion.g key={`${category}-${item.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={layerTransition}>
-                {category === 'bag' ? renderBag() : necklaceBehindCore ? null : renderAccent()}
+                {category === 'bag' ? renderBag() : renderAccent()}
               </motion.g>
             </MovableAccessory>;
           })}
