@@ -263,6 +263,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm giải thích m
 export interface StylistBenchmarkOptions {
   candidateModels?: string[];
   thinkingLevel?: 'minimal' | 'low';
+  onlyPrimaryThinking?: boolean;
   timeoutMs?: number;
   trace?: Array<{ model: string; elapsedMs: number; outcome: string; status?: number; errorName?: string; errorHint?: string }>;
 }
@@ -330,7 +331,7 @@ export async function generateStylistAdvice(
         config: {
           responseMimeType: 'application/json',
           temperature: 0.6,
-          ...(benchmark?.thinkingLevel ? { thinkingConfig: { thinkingLevel: benchmark.thinkingLevel === 'minimal' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW } } : {}),
+          ...(benchmark?.thinkingLevel && (!benchmark.onlyPrimaryThinking || model === candidateModels[0]) ? { thinkingConfig: { thinkingLevel: benchmark.thinkingLevel === 'minimal' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW } } : {}),
           ...(benchmark?.timeoutMs ? { httpOptions: { timeout: benchmark.timeoutMs } } : {}),
         },
       });
