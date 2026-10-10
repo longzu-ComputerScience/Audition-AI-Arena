@@ -676,6 +676,17 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     if (isPhotoModeActive && bottomPhotoConfig && bottomStatus === 'ready') {
       return (
         <g id="photo-layer-bottom" className="select-none pointer-events-none">
+          {items.bottom.id === 'bottom-raw-denim' && (
+            <defs>
+              {/* Raw denim photo has a detached white cast shadow past source x=310.
+                  Clip only that spill; the fabric itself reaches x≈291 at most. */}
+              <clipPath id={`${necklaceClipId}-denim-cloth`} clipPathUnits="userSpaceOnUse">
+                <rect x={bottomPhotoConfig.svgPlacement.x} y={bottomPhotoConfig.svgPlacement.y}
+                  width={310 * bottomPhotoConfig.svgPlacement.width / bottomPhotoConfig.sourceDimensions.width}
+                  height={bottomPhotoConfig.svgPlacement.height} />
+              </clipPath>
+            </defs>
+          )}
           <image
             href={bottomPhotoConfig.imageSrc}
             x={bottomPhotoConfig.svgPlacement.x}
@@ -683,6 +694,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             width={bottomPhotoConfig.svgPlacement.width}
             height={bottomPhotoConfig.svgPlacement.height}
             preserveAspectRatio={bottomPhotoConfig.preserveAspectRatio}
+            clipPath={items.bottom.id === 'bottom-raw-denim' ? `url(#${necklaceClipId}-denim-cloth)` : undefined}
           />
         </g>
       );
@@ -1160,6 +1172,19 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       const carry = corePhotoConfig?.bagCarryAnchor ?? [36,294];
       return (
         <g id="photo-layer-bag" className="select-none pointer-events-none">
+          {items.bag.id === 'bag-techwear-crossbody' && (
+            <defs>
+              {/* Source-pixel mask: preserve the RIGHT buckle strap and the pouch.
+                  Exclude only the LEFT diagonal loop (which is NOT the worn strap).
+                  This contour tracks the opening between the two strap branches. */}
+              <mask id={`${necklaceClipId}-strap-mask`} maskUnits="userSpaceOnUse"
+                maskContentUnits="userSpaceOnUse" x="0" y="0" width="300" height="600">
+                <g transform={`translate(${bagPhotoConfig.svgPlacement.x} ${bagPhotoConfig.svgPlacement.y}) scale(${bagPhotoConfig.svgPlacement.width / bagPhotoConfig.sourceDimensions.width})`}>
+                  <path d="M510 0 L540 120 L535 240 L512 340 L442 402 L346 441 L0 465 L0 800 L644 800 L644 0 Z" fill="white" />
+                </g>
+              </mask>
+            </defs>
+          )}
           <image
             href={bagPhotoConfig.imageSrc}
             x={bagPhotoConfig.svgPlacement.x}
@@ -2023,16 +2048,6 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
         >
           <defs>
             <clipPath id={necklaceClipId}><rect x="0" y="116" width="300" height="484" /></clipPath>
-            {/* The upper loop of the crossbody strap goes behind the right shoulder, not over the collar. */}
-            <linearGradient id={`${necklaceClipId}-strap-fade`} x1="0" y1="123" x2="0" y2="192" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="black" />
-              <stop offset=".68" stopColor="black" />
-              <stop offset="1" stopColor="white" />
-            </linearGradient>
-            <mask id={`${necklaceClipId}-strap-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="600">
-              <rect x="0" y="0" width="300" height="600" fill="white" />
-              <path d="M175 109 H225 V196 H186 L177 158 Z" fill={`url(#${necklaceClipId}-strap-fade)`} />
-            </mask>
           </defs>
           {/* 1. Neutral Mannequin Body (Fixed, no re-mount animation) */}
           {renderMannequinBody()}
