@@ -84,11 +84,19 @@ export async function requestStylistAdvice(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s timeout
 
+  // Opt-in Preview experiment only. Normal and Production calls retain default behavior.
+  const stylistBenchmark = new URLSearchParams(window.location.search).get('stylist_bench');
+  const benchmarkHeaders: Record<string, string> =
+    stylistBenchmark === 'balanced2' || stylistBenchmark === 'baseline'
+      ? { 'X-Stylist-Bench': stylistBenchmark }
+      : {};
+
   try {
     const response = await fetch('/api/ai-stylist', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...benchmarkHeaders,
       },
       body: JSON.stringify(params),
       signal: controller.signal,
