@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, CoreItem } from '../types';
 import { CORE_ITEMS } from '../data/mockFashionData';
-import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
+import { getGarmentLayerPreview } from '../data/layeredOutfitMap';
 
 interface GarmentPreviewProps {
   coreGarment: CoreVietPhucId;
@@ -324,7 +324,7 @@ export const GarmentSilhouetteSvg: React.FC<GarmentSilhouetteSvgProps> = ({
 export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) => {
   const shouldReduceMotion = useReducedMotion();
   const currentCore: CoreItem = CORE_ITEMS[coreGarment] || CORE_ITEMS['ao-ngu-than'];
-  const demoMedia = getCoreGarmentDemoMedia(coreGarment);
+  const demoMedia = getGarmentLayerPreview(coreGarment);
   const [imgError, setImgError] = useState<boolean>(false);
 
   useEffect(() => {
@@ -381,7 +381,7 @@ export const GarmentPreview: React.FC<GarmentPreviewProps> = ({ coreGarment }) =
       {/* Caption & Defining Attributes */}
       <div className="space-y-2 pt-2 border-t border-[#EAE3D6]">
         <p className="text-xs text-[#7A6E63] text-center italic font-normal">
-          {showRealPhoto ? 'Ảnh chụp tư liệu phục dựng thực tế' : 'Minh họa phom dáng 2D cơ bản'}
+          {showRealPhoto ? 'Ảnh tách nền trang phục' : 'Minh họa phom dáng 2D cơ bản'}
         </p>
 
         {/* Bullet points of defining silhouette features */}

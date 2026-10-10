@@ -1,0 +1,596 @@
+{
+  "ao-nhat-binh": {
+    "sourceDimensions": {
+      "width": 994,
+      "height": 1200
+    },
+    "visibleBounds": {
+      "minX": 3,
+      "maxX": 990,
+      "minY": 4,
+      "maxY": 1196,
+      "width": 988,
+      "height": 1193,
+      "centerX": 496.5
+    },
+    "imageSrc": "/images/layers/ao-nhat-binh.png",
+    "originalDimensions": {
+      "width": 1792,
+      "height": 2400
+    },
+    "crop": [
+      119,
+      324,
+      1688,
+      2218
+    ],
+    "resizeScale": 0.6335797254487856,
+    "sha256": "ed11193646270b6120f36842b16c75bb68e19f0e2c57d1a02114bd9690cb3079",
+    "fabricMaskSrc": "/images/layers/masks/ao-nhat-binh-fabric-mask.png",
+    "isRecolorable": true,
+    "baseFabricLuminance": 64.8,
+    "fittingAnchors": {
+      "neck": [
+        492.2914466737064,
+        2.5343189017951424
+      ],
+      "hem": [
+        492.2914466737064,
+        1195.5649419218585
+      ]
+    },
+    "targetNeck": [
+      150,
+      105
+    ],
+    "targetHem": 414
+  },
+  "ao-tac": {
+    "sourceDimensions": {
+      "width": 813,
+      "height": 975
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 806,
+      "minY": 6,
+      "maxY": 968,
+      "width": 801,
+      "height": 963,
+      "centerX": 406.0
+    },
+    "imageSrc": "/images/layers/ao-tac.png",
+    "originalDimensions": {
+      "width": 895,
+      "height": 1200
+    },
+    "crop": [
+      41,
+      140,
+      854,
+      1115
+    ],
+    "resizeScale": 1,
+    "sha256": "d8440f9a00775b3baffed990ec7cae78b23f85c2b496a055cda3168b478eecac",
+    "fabricMaskSrc": "/images/layers/masks/ao-tac-fabric-mask.png",
+    "isRecolorable": true,
+    "baseFabricLuminance": 174.17,
+    "fittingAnchors": {
+      "neck": [
+        406,
+        6
+      ],
+      "hem": [
+        406,
+        968
+      ]
+    },
+    "targetNeck": [
+      150,
+      105
+    ],
+    "targetHem": 435
+  },
+  "ao-dai": {
+    "sourceDimensions": {
+      "width": 713,
+      "height": 1044
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 706,
+      "minY": 6,
+      "maxY": 1037,
+      "width": 701,
+      "height": 1032,
+      "centerX": 356.0
+    },
+    "imageSrc": "/images/layers/ao-dai.png",
+    "originalDimensions": {
+      "width": 895,
+      "height": 1200
+    },
+    "crop": [
+      91,
+      80,
+      804,
+      1124
+    ],
+    "resizeScale": 1,
+    "sha256": "1f14ec366a649493a62a9f688e9d72479c2235211911ed211f140263a8c34b73",
+    "fabricMaskSrc": "/images/layers/masks/ao-dai-fabric-mask.png",
+    "isRecolorable": true,
+    "baseFabricLuminance": 185.02,
+    "fittingAnchors": {
+      "neck": [
+        356,
+        7
+      ],
+      "hem": [
+        356,
+        1037
+      ]
+    },
+    "targetNeck": [
+      150,
+      105
+    ],
+    "targetHem": 510
+  },
+  "ao-tu-than": {
+    "sourceDimensions": {
+      "width": 679,
+      "height": 1041
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 672,
+      "minY": 6,
+      "maxY": 1034,
+      "width": 667,
+      "height": 1029,
+      "centerX": 339.0
+    },
+    "imageSrc": "/images/layers/ao-tu-than.png",
+    "originalDimensions": {
+      "width": 896,
+      "height": 1200
+    },
+    "crop": [
+      108,
+      81,
+      787,
+      1122
+    ],
+    "resizeScale": 1,
+    "sha256": "d71e01a5df3c74a4fd358702ae99e2b6960f0f6a317e612580ff36b5c6223b1a",
+    "fabricMaskSrc": "/images/layers/masks/ao-tu-than-fabric-mask.png",
+    "isRecolorable": true,
+    "baseFabricLuminance": 173.8,
+    "fittingAnchors": {
+      "neck": [
+        339,
+        7
+      ],
+      "hem": [
+        339,
+        1034
+      ]
+    },
+    "targetNeck": [
+      150,
+      105
+    ],
+    "targetHem": 485
+  },
+  "ao-ngu-than": {
+    "sourceDimensions": {
+      "width": 724,
+      "height": 909
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 717,
+      "minY": 6,
+      "maxY": 902,
+      "width": 712,
+      "height": 897,
+      "centerX": 361.5
+    },
+    "imageSrc": "/images/layers/ao-ngu-than.png",
+    "originalDimensions": {
+      "width": 895,
+      "height": 1200
+    },
+    "crop": [
+      87,
+      143,
+      811,
+      1052
+    ],
+    "resizeScale": 1,
+    "sha256": "07318a7ed2b9bf709e08295079379798460757ff0c47989cccfc96009eab3bed",
+    "fabricMaskSrc": "/images/layers/masks/ao-ngu-than-fabric-mask.png",
+    "isRecolorable": true,
+    "baseFabricLuminance": 91.16,
+    "fittingAnchors": {
+      "neck": [
+        360,
+        9
+      ],
+      "hem": [
+        360,
+        902
+      ]
+    },
+    "targetNeck": [
+      150,
+      105
+    ],
+    "targetHem": 433
+  },
+  "bottom-silk-wide": {
+    "sourceDimensions": {
+      "width": 363,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 2,
+      "maxX": 359,
+      "minY": 2,
+      "maxY": 797,
+      "width": 358,
+      "height": 796,
+      "centerX": 180.5
+    },
+    "imageSrc": "/images/layers/quan-lua.png",
+    "originalDimensions": {
+      "width": 2048,
+      "height": 2048
+    },
+    "crop": [
+      621,
+      142,
+      1428,
+      1922
+    ],
+    "resizeScale": 0.449438202247191,
+    "sha256": "561dde11a495b2fe8f0fa1c786b8dd110fb7e01592e6b989a001eb641410d0a4"
+  },
+  "bottom-tailored-trousers": {
+    "sourceDimensions": {
+      "width": 285,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 2,
+      "maxX": 282,
+      "minY": 3,
+      "maxY": 797,
+      "width": 281,
+      "height": 795,
+      "centerX": 142.0
+    },
+    "imageSrc": "/images/layers/bottoms/bottom-tailored-trousers.png",
+    "originalDimensions": {
+      "width": 2048,
+      "height": 2048
+    },
+    "crop": [
+      706,
+      145,
+      1333,
+      1903
+    ],
+    "resizeScale": 0.4550625711035267,
+    "sha256": "6eed6e97a43e963e5343f88c02a32b6ff33e9d8690eac35c7dfc3cc6c67c148f"
+  },
+  "bottom-raw-denim": {
+    "sourceDimensions": {
+      "width": 458,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 452,
+      "minY": 5,
+      "maxY": 794,
+      "width": 448,
+      "height": 790,
+      "centerX": 228.5
+    },
+    "imageSrc": "/images/layers/bottoms/bottom-raw-denim.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "crop": [
+      346,
+      70,
+      851,
+      952
+    ],
+    "resizeScale": 0.9070294784580499,
+    "sha256": "3c2d26de9da92061cf227492313e6c0e88802fe12a0030fddb46ac946fb907ae"
+  },
+  "shoes-guoc-moc": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 686
+    },
+    "visibleBounds": {
+      "minX": 4,
+      "maxX": 794,
+      "minY": 5,
+      "maxY": 680,
+      "width": 791,
+      "height": 676,
+      "centerX": 399.0
+    },
+    "imageSrc": "/images/layers/shoes/shoes-guoc-moc.png",
+    "originalDimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "crop": [
+      139,
+      207,
+      1116,
+      1045
+    ],
+    "resizeScale": 0.8188331627430911,
+    "sha256": "ff40ecc48ac9c97d4d798d4f44effd907f8a8bff51cbb15838a4ec44914867cd"
+  },
+  "shoes-chunky-loafer": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 513
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 5,
+      "maxY": 507,
+      "width": 790,
+      "height": 503,
+      "centerX": 399.5
+    },
+    "imageSrc": "/images/layers/shoes/shoes-chunky-loafer.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 720
+    },
+    "crop": [
+      62,
+      71,
+      961,
+      648
+    ],
+    "resizeScale": 0.8898776418242491,
+    "sha256": "46a6f7144d2046cf3a544f7be90b22c7db2a27f3ed156382517e54003423ee3e"
+  },
+  "shoes-retro-sneaker": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 524
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 6,
+      "maxY": 518,
+      "width": 790,
+      "height": 513,
+      "centerX": 399.5
+    },
+    "imageSrc": "/images/layers/shoes/shoes-retro-sneaker.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 720
+    },
+    "crop": [
+      62,
+      64,
+      962,
+      653
+    ],
+    "resizeScale": 0.8888888888888888,
+    "sha256": "a3f44ca1d47e9ee61c8b155d9894d8d99e248eea60fa70f102b1ad09ffe68fc6"
+  },
+  "bag-gam-vintage": {
+    "sourceDimensions": {
+      "width": 698,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 4,
+      "maxX": 693,
+      "minY": 4,
+      "maxY": 795,
+      "width": 690,
+      "height": 792,
+      "centerX": 348.5
+    },
+    "imageSrc": "/images/layers/bags/bag-gam-vintage.png",
+    "originalDimensions": {
+      "width": 1254,
+      "height": 1254
+    },
+    "crop": [
+      110,
+      28,
+      1174,
+      1247
+    ],
+    "resizeScale": 0.6562756357670222,
+    "sha256": "d42594e95b28d7a270bf008fa10dec43b8512983b4117cf7e0a6ccf9c9064e6c"
+  },
+  "bag-tote-linen": {
+    "sourceDimensions": {
+      "width": 652,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 645,
+      "minY": 6,
+      "maxY": 793,
+      "width": 641,
+      "height": 788,
+      "centerX": 325.0
+    },
+    "imageSrc": "/images/layers/bags/bag-tote-linen.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "crop": [
+      157,
+      77,
+      866,
+      947
+    ],
+    "resizeScale": 0.9195402298850575,
+    "sha256": "7059726a1ba530568f6e0b7cd0931e8ba5d90262fa026ba12cc604b712220e10"
+  },
+  "bag-techwear-crossbody": {
+    "sourceDimensions": {
+      "width": 644,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 638,
+      "minY": 5,
+      "maxY": 793,
+      "width": 633,
+      "height": 789,
+      "centerX": 322.0
+    },
+    "imageSrc": "/images/layers/bags/bag-techwear-crossbody.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "crop": [
+      167,
+      84,
+      858,
+      942
+    ],
+    "resizeScale": 0.9324009324009324,
+    "sha256": "bc38481df02d24738d6c347a9d4da33c8413f27723237bf3d6ceded96929c742"
+  },
+  "accent-non-la": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 430
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 793,
+      "minY": 5,
+      "maxY": 424,
+      "width": 789,
+      "height": 420,
+      "centerX": 399.0
+    },
+    "imageSrc": "/images/layers/accessories/accent-non-la.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 720
+    },
+    "crop": [
+      62,
+      114,
+      962,
+      598
+    ],
+    "resizeScale": 0.8888888888888888,
+    "sha256": "a8f08f8d885492a0544a32830c6674a29d90aa365134263adeba815fb9dd5a43"
+  },
+  "accent-quai-thao-mini": {
+    "sourceDimensions": {
+      "width": 633,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 626,
+      "minY": 5,
+      "maxY": 793,
+      "width": 621,
+      "height": 789,
+      "centerX": 316.0
+    },
+    "imageSrc": "/images/layers/accessories/accent-quai-thao-mini.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "crop": [
+      171,
+      76,
+      853,
+      938
+    ],
+    "resizeScale": 0.9280742459396751,
+    "sha256": "da85f355e60cd8ce81387e29dcafd2db691a79abb1c27de3b90cc7eee2957ad1"
+  },
+  "accent-y2k-shades": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 190
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 793,
+      "minY": 5,
+      "maxY": 183,
+      "width": 789,
+      "height": 179,
+      "centerX": 399.0
+    },
+    "imageSrc": "/images/layers/accessories/accent-y2k-shades.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 720
+    },
+    "crop": [
+      62,
+      253,
+      963,
+      467
+    ],
+    "resizeScale": 0.8879023307436182,
+    "sha256": "18e1882d066e59ca35fd6256877397056f1e469c838a6f768cfdcc458467a964"
+  },
+  "accent-silver-jewelry": {
+    "sourceDimensions": {
+      "width": 800,
+      "height": 720
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 6,
+      "maxY": 713,
+      "width": 790,
+      "height": 708,
+      "centerX": 399.5
+    },
+    "imageSrc": "/images/layers/accessories/accent-silver-jewelry.png",
+    "originalDimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "crop": [
+      63,
+      109,
+      958,
+      915
+    ],
+    "resizeScale": 0.8938547486033519,
+    "sha256": "ed139c05317485e8b4486e041a8c9befe2f6cd5b82041d64709258ec4761025b"
+  }
+}

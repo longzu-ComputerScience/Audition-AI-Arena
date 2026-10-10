@@ -6,6 +6,10 @@ import {
   HeritageCheckItem,
 } from '../types';
 
+export function isSolemnOccasion(occasion: string): boolean {
+  return ['Sự kiện trang trọng', 'Lễ tốt nghiệp / Bế giảng', 'Đón Tết cổ truyền', 'Đám cưới / Ăn hỏi bạn bè'].includes(occasion);
+}
+
 /**
  * Calculates Actual Remix as the average modernityScore of active, non-null support items.
  * Core garment is strictly excluded.
@@ -197,14 +201,8 @@ export function evaluateGuardrail(
   }
 
   // 3. Context & High Remix Solemnity Check (Yellow status for high remix in solemn events)
-  const solemnOccasions = [
-    'Sự kiện trang trọng',
-    'Lễ tốt nghiệp / Bế giảng',
-    'Đón Tết cổ truyền',
-  ];
-
   const currentModernity = actualRemix ?? 50;
-  const isSolemn = solemnOccasions.some((occ) => occasion.includes(occ));
+  const isSolemn = isSolemnOccasion(occasion);
 
   if (isSolemn && currentModernity >= 80) {
     const heritageChecks: HeritageCheckItem[] = [

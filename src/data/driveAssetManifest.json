@@ -267,5 +267,686 @@
     "optimizedPath": "public/images/catalog/bags/bag-tote-linen.webp",
     "sizeBytes": 44252,
     "status": "success"
+  },
+  {
+    "id": "1D3J3kPK7acEUaCqXuqWy3GfERzq3TD15",
+    "name": "ao-nhat-binh-layer.png",
+    "role": "photo-layer",
+    "itemId": "ao-nhat-binh",
+    "target": "public/images/layers/ao-nhat-binh.png",
+    "rawPath": "assets/sources/drive/ao-nhat-binh-layer.png",
+    "rawSha256": "ca0333027d2c070bc8740f624de506ba989b03ed5733d0f78a1cb454e32f8e1d",
+    "processingInput": "assets/sources/baseline/ao-nhat-binh.png",
+    "inputSha256": "5167b624d4e44a7d43f13c36c7962a549c72720a7fee59fc1d4cf7ba40172771",
+    "optimizedPath": "public/images/layers/ao-nhat-binh.png",
+    "sha256": "ed11193646270b6120f36842b16c75bb68e19f0e2c57d1a02114bd9690cb3079",
+    "sizeBytes": 1578716,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize; measured display-form neck cleanup",
+    "sourceDimensions": {
+      "width": 994,
+      "height": 1200
+    },
+    "visibleBounds": {
+      "minX": 3,
+      "maxX": 990,
+      "minY": 4,
+      "maxY": 1196,
+      "width": 988,
+      "height": 1193,
+      "centerX": 496.5
+    },
+    "crop": [
+      119,
+      324,
+      1688,
+      2218
+    ],
+    "resizeScale": 0.6335797254487856,
+    "maskPath": "public/images/layers/masks/ao-nhat-binh-fabric-mask.png",
+    "maskSha256": "d61d79b6de312c7cc8e5ff21be63b02b639007e251e8044346a3d1e604e50f93",
+    "baseFabricLuminance": 64.8
+  },
+  {
+    "id": "1Csfgw0Mo367bUl8v6AsuwTzeXU_LAgmA",
+    "name": "AoTac-layer.png",
+    "role": "photo-layer",
+    "itemId": "ao-tac",
+    "target": "public/images/layers/ao-tac.png",
+    "rawPath": "assets/sources/drive/AoTac-layer.png",
+    "rawSha256": "8832d8b742d837f96154ce713215423a31983892750e90b2908f1930449ff52c",
+    "processingInput": "assets/sources/baseline/ao-tac.png",
+    "inputSha256": "d420bbc84f1d8808f1b15c161d1b5a490ad005275e4337dda19cf2a49823847a",
+    "optimizedPath": "public/images/layers/ao-tac.png",
+    "sha256": "d8440f9a00775b3baffed990ec7cae78b23f85c2b496a055cda3168b478eecac",
+    "sizeBytes": 626411,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 813,
+      "height": 975
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 806,
+      "minY": 6,
+      "maxY": 968,
+      "width": 801,
+      "height": 963,
+      "centerX": 406.0
+    },
+    "crop": [
+      41,
+      140,
+      854,
+      1115
+    ],
+    "resizeScale": 1,
+    "maskPath": "public/images/layers/masks/ao-tac-fabric-mask.png",
+    "maskSha256": "bd0268846b5c9591f0b0d3042fce1a3649d9aa8cd443c659676c559b1329c591",
+    "baseFabricLuminance": 174.17
+  },
+  {
+    "id": "1iZg7wnJVjTiguK4Psj3-pqsELg2QGwGF",
+    "name": "AoDai-layer.jpg",
+    "role": "photo-layer",
+    "itemId": "ao-dai",
+    "target": "public/images/layers/ao-dai.png",
+    "rawPath": "assets/sources/drive/AoDai-layer.jpg",
+    "rawSha256": "fac1b191c43aac7970a44c8279807c2a0c2b9aede500cc79e619b1943a71d672",
+    "processingInput": "assets/sources/drive/AoDai-layer.jpg",
+    "inputSha256": "fac1b191c43aac7970a44c8279807c2a0c2b9aede500cc79e619b1943a71d672",
+    "optimizedPath": "public/images/layers/ao-dai.png",
+    "sha256": "1f14ec366a649493a62a9f688e9d72479c2235211911ed211f140263a8c34b73",
+    "sizeBytes": 503260,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "GrabCut connected-garment segmentation; inner edge feather; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 713,
+      "height": 1044
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 706,
+      "minY": 6,
+      "maxY": 1037,
+      "width": 701,
+      "height": 1032,
+      "centerX": 356.0
+    },
+    "crop": [
+      91,
+      80,
+      804,
+      1124
+    ],
+    "resizeScale": 1,
+    "maskPath": "public/images/layers/masks/ao-dai-fabric-mask.png",
+    "maskSha256": "20adc465a1f5aa3e6fbb7fd4fc1e228fc954dd5b5521c962837c3079509f7ec1",
+    "baseFabricLuminance": 185.02
+  },
+  {
+    "id": "1qSlcwBdXA8wRjNNgxc6pOms1wVx_Q3XX",
+    "name": "AoTuThan-layer.jpg",
+    "role": "photo-layer",
+    "itemId": "ao-tu-than",
+    "target": "public/images/layers/ao-tu-than.png",
+    "rawPath": "assets/sources/drive/AoTuThan-layer.jpg",
+    "rawSha256": "e424b06ededf86a37f64b1532d1f4fb4544acfd981a908aa2dddf042882b3844",
+    "processingInput": "assets/sources/drive/AoTuThan-layer.jpg",
+    "inputSha256": "e424b06ededf86a37f64b1532d1f4fb4544acfd981a908aa2dddf042882b3844",
+    "optimizedPath": "public/images/layers/ao-tu-than.png",
+    "sha256": "d71e01a5df3c74a4fd358702ae99e2b6960f0f6a317e612580ff36b5c6223b1a",
+    "sizeBytes": 590516,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "GrabCut connected-garment segmentation; inner edge feather; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 679,
+      "height": 1041
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 672,
+      "minY": 6,
+      "maxY": 1034,
+      "width": 667,
+      "height": 1029,
+      "centerX": 339.0
+    },
+    "crop": [
+      108,
+      81,
+      787,
+      1122
+    ],
+    "resizeScale": 1,
+    "maskPath": "public/images/layers/masks/ao-tu-than-fabric-mask.png",
+    "maskSha256": "676ad625fc4c74f6a0be33ac307887c5570b431ca6f149bad1ae845ae85261f3",
+    "baseFabricLuminance": 173.8
+  },
+  {
+    "id": "1NXKlD7zFg9bMQOVSlKiokOZpF37wzliC",
+    "name": "AoNguThan-layer.jpg",
+    "role": "photo-layer",
+    "itemId": "ao-ngu-than",
+    "target": "public/images/layers/ao-ngu-than.png",
+    "rawPath": "assets/sources/drive/AoNguThan-layer.jpg",
+    "rawSha256": "865ed61e79d95745201bf5ba94681dff44d9ce793fa57c3c7ec20772f31ac590",
+    "processingInput": "assets/sources/drive/AoNguThan-layer.jpg",
+    "inputSha256": "865ed61e79d95745201bf5ba94681dff44d9ce793fa57c3c7ec20772f31ac590",
+    "optimizedPath": "public/images/layers/ao-ngu-than.png",
+    "sha256": "07318a7ed2b9bf709e08295079379798460757ff0c47989cccfc96009eab3bed",
+    "sizeBytes": 369557,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "GrabCut connected-garment segmentation; inner edge feather; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 724,
+      "height": 909
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 717,
+      "minY": 6,
+      "maxY": 902,
+      "width": 712,
+      "height": 897,
+      "centerX": 361.5
+    },
+    "crop": [
+      87,
+      143,
+      811,
+      1052
+    ],
+    "resizeScale": 1,
+    "maskPath": "public/images/layers/masks/ao-ngu-than-fabric-mask.png",
+    "maskSha256": "325301564f81bc8ea53a94f77b7ef1e6d2f38ab7f1a5d7aaa3150ddb48883ba6",
+    "baseFabricLuminance": 91.16
+  },
+  {
+    "id": "1bTss4mq2Eqwaqp1-Vpb9nPTDJf_EDDgR",
+    "name": "quan-lua-layer.png",
+    "role": "photo-layer",
+    "itemId": "bottom-silk-wide",
+    "target": "public/images/layers/quan-lua.png",
+    "rawPath": "assets/sources/drive/quan-lua-layer.png",
+    "rawSha256": "2b2ff4e79245f8d9603c35bb7358646bd00f2535f334e810bc3cbc03e66c2b37",
+    "processingInput": "assets/sources/baseline/quan-lua.png",
+    "inputSha256": "985443356fe8f5ed876745f7ab0a75575781396891528ae7041fbb3e01ec3d98",
+    "optimizedPath": "public/images/layers/quan-lua.png",
+    "sha256": "561dde11a495b2fe8f0fa1c786b8dd110fb7e01592e6b989a001eb641410d0a4",
+    "sizeBytes": 267244,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 363,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 2,
+      "maxX": 359,
+      "minY": 2,
+      "maxY": 797,
+      "width": 358,
+      "height": 796,
+      "centerX": 180.5
+    },
+    "crop": [
+      621,
+      142,
+      1428,
+      1922
+    ],
+    "resizeScale": 0.449438202247191
+  },
+  {
+    "id": "1yGIsXbKlNOjtq_hw7xXZx84mfrfEfamQ",
+    "name": "QuanTay-layer.png",
+    "role": "photo-layer",
+    "itemId": "bottom-tailored-trousers",
+    "target": "public/images/layers/bottoms/bottom-tailored-trousers.png",
+    "rawPath": "assets/sources/drive/QuanTay-layer.png",
+    "rawSha256": "258db587752915646870c0dc7feff91aff3d39b2bafa0b4fd0ea8a4ea5137f17",
+    "processingInput": "assets/sources/baseline/bottoms/bottom-tailored-trousers.png",
+    "inputSha256": "6e600ee487404c5f52faee149d5e4fa97f82e99a04afff81d737992844b4caf5",
+    "optimizedPath": "public/images/layers/bottoms/bottom-tailored-trousers.png",
+    "sha256": "6eed6e97a43e963e5343f88c02a32b6ff33e9d8690eac35c7dfc3cc6c67c148f",
+    "sizeBytes": 312496,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 285,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 2,
+      "maxX": 282,
+      "minY": 3,
+      "maxY": 797,
+      "width": 281,
+      "height": 795,
+      "centerX": 142.0
+    },
+    "crop": [
+      706,
+      145,
+      1333,
+      1903
+    ],
+    "resizeScale": 0.4550625711035267
+  },
+  {
+    "id": "1sTkxS3FRSexyrIwGjWLs-21mE_luH9gs",
+    "name": "QuanDenim-layer.png",
+    "role": "photo-layer",
+    "itemId": "bottom-raw-denim",
+    "target": "public/images/layers/bottoms/bottom-raw-denim.png",
+    "rawPath": "assets/sources/drive/QuanDenim-layer.png",
+    "rawSha256": "643bdacfe73b933d6db50f6422290dbc8626b9b30a86c816a5c80a7879ffc0fb",
+    "processingInput": "assets/sources/baseline/bottoms/bottom-raw-denim.png",
+    "inputSha256": "4d99092bf2c51cb76a4ee18fa461966c914554a3df5a448b325e465f59eb0800",
+    "optimizedPath": "public/images/layers/bottoms/bottom-raw-denim.png",
+    "sha256": "3c2d26de9da92061cf227492313e6c0e88802fe12a0030fddb46ac946fb907ae",
+    "sizeBytes": 428159,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 458,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 452,
+      "minY": 5,
+      "maxY": 794,
+      "width": 448,
+      "height": 790,
+      "centerX": 228.5
+    },
+    "crop": [
+      346,
+      70,
+      851,
+      952
+    ],
+    "resizeScale": 0.9070294784580499
+  },
+  {
+    "id": "1qjVKXWP95aARS_KDLr29BHc0KBRNdc3w",
+    "name": "guoc-moc-layer.png",
+    "role": "photo-layer",
+    "itemId": "shoes-guoc-moc",
+    "target": "public/images/layers/shoes/shoes-guoc-moc.png",
+    "rawPath": "assets/sources/drive/guoc-moc-layer.png",
+    "rawSha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9",
+    "processingInput": "assets/sources/baseline/shoes/shoes-guoc-moc.png",
+    "inputSha256": "f651afd66e63870049fbeb5f6abca33c94a0c475f689b4962980a3f9849594b9",
+    "optimizedPath": "public/images/layers/shoes/shoes-guoc-moc.png",
+    "sha256": "ff40ecc48ac9c97d4d798d4f44effd907f8a8bff51cbb15838a4ec44914867cd",
+    "sizeBytes": 900162,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 686
+    },
+    "visibleBounds": {
+      "minX": 4,
+      "maxX": 794,
+      "minY": 5,
+      "maxY": 680,
+      "width": 791,
+      "height": 676,
+      "centerX": 399.0
+    },
+    "crop": [
+      139,
+      207,
+      1116,
+      1045
+    ],
+    "resizeScale": 0.8188331627430911
+  },
+  {
+    "id": "1o2RX9n-OcSjgoadkcg7XM0yJF46SqXlH",
+    "name": "shoes-chunky-loafer-layer.png",
+    "role": "photo-layer",
+    "itemId": "shoes-chunky-loafer",
+    "target": "public/images/layers/shoes/shoes-chunky-loafer.png",
+    "rawPath": "assets/sources/drive/shoes-chunky-loafer-layer.png",
+    "rawSha256": "77f51d6581df704a17110b393fa10152be79f739fd21909f5c95108468cf0280",
+    "processingInput": "assets/sources/baseline/shoes/shoes-chunky-loafer.png",
+    "inputSha256": "77f51d6581df704a17110b393fa10152be79f739fd21909f5c95108468cf0280",
+    "optimizedPath": "public/images/layers/shoes/shoes-chunky-loafer.png",
+    "sha256": "46a6f7144d2046cf3a544f7be90b22c7db2a27f3ed156382517e54003423ee3e",
+    "sizeBytes": 470161,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 513
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 5,
+      "maxY": 507,
+      "width": 790,
+      "height": 503,
+      "centerX": 399.5
+    },
+    "crop": [
+      62,
+      71,
+      961,
+      648
+    ],
+    "resizeScale": 0.8898776418242491
+  },
+  {
+    "id": "1-bOxEPKP0W-eZDMckOK2Zz3neHto64UH",
+    "name": "shoes-retro-sneaker-layer.png",
+    "role": "photo-layer",
+    "itemId": "shoes-retro-sneaker",
+    "target": "public/images/layers/shoes/shoes-retro-sneaker.png",
+    "rawPath": "assets/sources/drive/shoes-retro-sneaker-layer.png",
+    "rawSha256": "80b41864bc9ba189bab0e07cc741d9912378a1ec2d605cbcf9ca2ba15432d96a",
+    "processingInput": "assets/sources/baseline/shoes/shoes-retro-sneaker.png",
+    "inputSha256": "80b41864bc9ba189bab0e07cc741d9912378a1ec2d605cbcf9ca2ba15432d96a",
+    "optimizedPath": "public/images/layers/shoes/shoes-retro-sneaker.png",
+    "sha256": "a3f44ca1d47e9ee61c8b155d9894d8d99e248eea60fa70f102b1ad09ffe68fc6",
+    "sizeBytes": 594587,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 524
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 6,
+      "maxY": 518,
+      "width": 790,
+      "height": 513,
+      "centerX": 399.5
+    },
+    "crop": [
+      62,
+      64,
+      962,
+      653
+    ],
+    "resizeScale": 0.8888888888888888
+  },
+  {
+    "id": "1OZYstPbox2zlObAKX2kwc3LO82JoecJx",
+    "name": "bag-gam-layer.png",
+    "role": "photo-layer",
+    "itemId": "bag-gam-vintage",
+    "target": "public/images/layers/bags/bag-gam-vintage.png",
+    "rawPath": "assets/sources/drive/bag-gam-layer.png",
+    "rawSha256": "8f463826e65e13d148a2141723101106596e45b1b32949465019f1781f5a7b7a",
+    "processingInput": "assets/sources/baseline/bags/bag-gam-vintage.png",
+    "inputSha256": "8f463826e65e13d148a2141723101106596e45b1b32949465019f1781f5a7b7a",
+    "optimizedPath": "public/images/layers/bags/bag-gam-vintage.png",
+    "sha256": "d42594e95b28d7a270bf008fa10dec43b8512983b4117cf7e0a6ccf9c9064e6c",
+    "sizeBytes": 1112068,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 698,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 4,
+      "maxX": 693,
+      "minY": 4,
+      "maxY": 795,
+      "width": 690,
+      "height": 792,
+      "centerX": 348.5
+    },
+    "crop": [
+      110,
+      28,
+      1174,
+      1247
+    ],
+    "resizeScale": 0.6562756357670222
+  },
+  {
+    "id": "1NW8TKU6vV3Zbi_yO29-zU-5-d5Ok7Uho",
+    "name": "bag-tote-linen-layer.png",
+    "role": "photo-layer",
+    "itemId": "bag-tote-linen",
+    "target": "public/images/layers/bags/bag-tote-linen.png",
+    "rawPath": "assets/sources/drive/bag-tote-linen-layer.png",
+    "rawSha256": "52b5cb75de42079d954f0fa266238f06a7683586a33dc557be3b99b6a83fab0f",
+    "processingInput": "assets/sources/baseline/bags/bag-tote-linen.png",
+    "inputSha256": "52b5cb75de42079d954f0fa266238f06a7683586a33dc557be3b99b6a83fab0f",
+    "optimizedPath": "public/images/layers/bags/bag-tote-linen.png",
+    "sha256": "7059726a1ba530568f6e0b7cd0931e8ba5d90262fa026ba12cc604b712220e10",
+    "sizeBytes": 660445,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 652,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 645,
+      "minY": 6,
+      "maxY": 793,
+      "width": 641,
+      "height": 788,
+      "centerX": 325.0
+    },
+    "crop": [
+      157,
+      77,
+      866,
+      947
+    ],
+    "resizeScale": 0.9195402298850575
+  },
+  {
+    "id": "13Lzs_gsWEAbccBGAkfT2L1oodRXdfYQo",
+    "name": "bag-techwear-crossbody-layer.png",
+    "role": "photo-layer",
+    "itemId": "bag-techwear-crossbody",
+    "target": "public/images/layers/bags/bag-techwear-crossbody.png",
+    "rawPath": "assets/sources/drive/bag-techwear-crossbody-layer.png",
+    "rawSha256": "ec37b53515fa88efd756a44fac0ba8099341f928f984335d4b7cf98fccb9f989",
+    "processingInput": "assets/sources/baseline/bags/bag-techwear-crossbody.png",
+    "inputSha256": "ec37b53515fa88efd756a44fac0ba8099341f928f984335d4b7cf98fccb9f989",
+    "optimizedPath": "public/images/layers/bags/bag-techwear-crossbody.png",
+    "sha256": "bc38481df02d24738d6c347a9d4da33c8413f27723237bf3d6ceded96929c742",
+    "sizeBytes": 521026,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 644,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 638,
+      "minY": 5,
+      "maxY": 793,
+      "width": 633,
+      "height": 789,
+      "centerX": 322.0
+    },
+    "crop": [
+      167,
+      84,
+      858,
+      942
+    ],
+    "resizeScale": 0.9324009324009324
+  },
+  {
+    "id": "1vTR3wqlRrFe7GJeOgYqBJStHZ_Y6i93_",
+    "name": "accent-non-la-layer.png",
+    "role": "photo-layer",
+    "itemId": "accent-non-la",
+    "target": "public/images/layers/accessories/accent-non-la.png",
+    "rawPath": "assets/sources/drive/accent-non-la-layer.png",
+    "rawSha256": "169d397ce3ff74791b6bcfa1e707c529f8ee173fb0993d197596dd8d83fa6b98",
+    "processingInput": "assets/sources/baseline/accessories/accent-non-la.png",
+    "inputSha256": "169d397ce3ff74791b6bcfa1e707c529f8ee173fb0993d197596dd8d83fa6b98",
+    "optimizedPath": "public/images/layers/accessories/accent-non-la.png",
+    "sha256": "a8f08f8d885492a0544a32830c6674a29d90aa365134263adeba815fb9dd5a43",
+    "sizeBytes": 453419,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 430
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 793,
+      "minY": 5,
+      "maxY": 424,
+      "width": 789,
+      "height": 420,
+      "centerX": 399.0
+    },
+    "crop": [
+      62,
+      114,
+      962,
+      598
+    ],
+    "resizeScale": 0.8888888888888888
+  },
+  {
+    "id": "1jcsMgjAuWaMZt7_vO3NE7LFbtRhEFLLW",
+    "name": "accent-quai-thao-mini-layer.png",
+    "role": "photo-layer",
+    "itemId": "accent-quai-thao-mini",
+    "target": "public/images/layers/accessories/accent-quai-thao-mini.png",
+    "rawPath": "assets/sources/drive/accent-quai-thao-mini-layer.png",
+    "rawSha256": "004e81f8f57fc1aa758a932beddeb5b1c0c5fa72eb918770748a36aa7ea51f3b",
+    "processingInput": "assets/sources/baseline/accessories/accent-quai-thao-mini.png",
+    "inputSha256": "004e81f8f57fc1aa758a932beddeb5b1c0c5fa72eb918770748a36aa7ea51f3b",
+    "optimizedPath": "public/images/layers/accessories/accent-quai-thao-mini.png",
+    "sha256": "da85f355e60cd8ce81387e29dcafd2db691a79abb1c27de3b90cc7eee2957ad1",
+    "sizeBytes": 717156,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 633,
+      "height": 800
+    },
+    "visibleBounds": {
+      "minX": 6,
+      "maxX": 626,
+      "minY": 5,
+      "maxY": 793,
+      "width": 621,
+      "height": 789,
+      "centerX": 316.0
+    },
+    "crop": [
+      171,
+      76,
+      853,
+      938
+    ],
+    "resizeScale": 0.9280742459396751
+  },
+  {
+    "id": "1iWkxuMhVEyZbj_KFnMnJm0uATQqEUCtD",
+    "name": "accent-y2k-shades-layer.png",
+    "role": "photo-layer",
+    "itemId": "accent-y2k-shades",
+    "target": "public/images/layers/accessories/accent-y2k-shades.png",
+    "rawPath": "assets/sources/drive/accent-y2k-shades-layer.png",
+    "rawSha256": "69e99098c803a583964fd28dd6411456c84951597c25ccbfefe285f79e4be492",
+    "processingInput": "assets/sources/baseline/accessories/accent-y2k-shades.png",
+    "inputSha256": "69e99098c803a583964fd28dd6411456c84951597c25ccbfefe285f79e4be492",
+    "optimizedPath": "public/images/layers/accessories/accent-y2k-shades.png",
+    "sha256": "18e1882d066e59ca35fd6256877397056f1e469c838a6f768cfdcc458467a964",
+    "sizeBytes": 161982,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 190
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 793,
+      "minY": 5,
+      "maxY": 183,
+      "width": 789,
+      "height": 179,
+      "centerX": 399.0
+    },
+    "crop": [
+      62,
+      253,
+      963,
+      467
+    ],
+    "resizeScale": 0.8879023307436182
+  },
+  {
+    "id": "1L1rGdRvJxWBqKzUzn8jK1hCq1tCPVqNq",
+    "name": "accent-silver-jewelry-layer.png",
+    "role": "photo-layer",
+    "itemId": "accent-silver-jewelry",
+    "target": "public/images/layers/accessories/accent-silver-jewelry.png",
+    "rawPath": "assets/sources/drive/accent-silver-jewelry-layer.png",
+    "rawSha256": "3c6abbc3159e77c2f3ec1bf528e935ba239e68e52df5785e597d95a8d832abe1",
+    "processingInput": "assets/sources/baseline/accessories/accent-silver-jewelry.png",
+    "inputSha256": "3c6abbc3159e77c2f3ec1bf528e935ba239e68e52df5785e597d95a8d832abe1",
+    "optimizedPath": "public/images/layers/accessories/accent-silver-jewelry.png",
+    "sha256": "ed139c05317485e8b4486e041a8c9befe2f6cd5b82041d64709258ec4761025b",
+    "sizeBytes": 415891,
+    "status": "success",
+    "alphaValidated": true,
+    "conversion": "Reuse existing transparent cutout; alpha crop; uniform resize",
+    "sourceDimensions": {
+      "width": 800,
+      "height": 720
+    },
+    "visibleBounds": {
+      "minX": 5,
+      "maxX": 794,
+      "minY": 6,
+      "maxY": 713,
+      "width": 790,
+      "height": 708,
+      "centerX": 399.5
+    },
+    "crop": [
+      63,
+      109,
+      958,
+      915
+    ],
+    "resizeScale": 0.8938547486033519
   }
 ]

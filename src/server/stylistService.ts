@@ -6,6 +6,8 @@ import {
   LOCATIONS,
 } from '../data/mockFashionData';
 import { CoreItem, SupportOption, SupportCategoryId } from '../types';
+import { computeActualRemix, evaluateGuardrail } from '../utils/fashionCalculations';
+import { recommendOutfit } from '../utils/outfitRecommendation';
 
 export interface StylistRequestPayload {
   coreId: string;
@@ -108,8 +110,8 @@ export function validateStylistPayload(body: unknown): {
   const preferredColor =
     typeof payload.preferredColor === 'string' ? payload.preferredColor : 'Để hệ thống gợi ý';
 
-  const targetRemix = typeof payload.targetRemix === 'number' ? payload.targetRemix : 45;
-  const actualRemix = typeof payload.actualRemix === 'number' ? payload.actualRemix : 50;
+  const targetRemix = typeof payload.targetRemix === 'number' && Number.isFinite(payload.targetRemix) ? Math.max(0, Math.min(100, payload.targetRemix)) : 45;
+  const actualRemix = computeActualRemix({ bottom, shoes, bag, accent });
   const userQuery = typeof payload.userQuery === 'string' ? payload.userQuery.trim() : '';
   const consultationType =
     typeof payload.consultationType === 'string' ? payload.consultationType : 'general';
@@ -137,6 +139,23 @@ export function validateStylistPayload(body: unknown): {
 /**
  * Builds the AI Stylist prompt for Gemini.
  */
+export function resolveStylistGuardrail(
+  data: NonNullable<ReturnType<typeof validateStylistPayload>['data']>,
+  assessment?: { status?: unknown; reason?: unknown; checklist?: unknown }
+): StylistAdviceOutput['guardrailAssessment'] {
+  const setup = { coreGarment:data.core.id, occasion:data.occasion, location:data.location, style:data.style, preferredColor:data.preferredColor };
+  const local = evaluateGuardrail(data.userQuery,data.core,{bottom:data.bottom,shoes:data.shoes,bag:data.bag,accent:data.accent},setup,data.actualRemix);
+  const aiStatus = assessment?.status === 'orange' || assessment?.status === 'yellow' ? assessment.status : 'green';
+  const severity = { green:0,yellow:1,orange:2 };
+  const useLocal = severity[local.status] >= severity[aiStatus];
+  return {
+    status:useLocal?local.status:aiStatus,
+    reason:useLocal?local.message:typeof assessment?.reason==='string'?assessment.reason:local.message,
+    checklist:Array.isArray(assessment?.checklist)?assessment.checklist.filter((s):s is string=>typeof s==='string'):
+      ['Bảo toàn cổ áo và hàng khuy nguyên bản','Phom dáng và độ rủ tà áo chuẩn mực','Phù hợp tính tôn nghiêm của bối cảnh'],
+  };
+}
+
 function buildStylistPrompt(data: NonNullable<ReturnType<typeof validateStylistPayload>['data']>): string {
   const {
     core,
@@ -353,23 +372,7 @@ export async function generateStylistAdvice(
           culturalHighlight:
             parsed.culturalHighlight ||
             `Y phục ${validation.data.core.name} tỏa sáng với vẻ đẹp thanh lịch trường tồn khi được tôn vinh đúng mực.`,
-          guardrailAssessment: {
-            status:
-              parsed.guardrailAssessment?.status === 'orange' ||
-              parsed.guardrailAssessment?.status === 'yellow'
-                ? parsed.guardrailAssessment.status
-                : 'green',
-            reason:
-              parsed.guardrailAssessment?.reason ||
-              'Bản phối bảo toàn trọn vẹn kết cấu cốt lõi và phù hợp với bối cảnh.',
-            checklist: Array.isArray(parsed.guardrailAssessment?.checklist)
-              ? parsed.guardrailAssessment.checklist
-              : [
-                  'Bảo toàn cổ áo và hàng khuy nguyên bản',
-                  'Phom dáng và độ rủ tà áo chuẩn mực',
-                  'Phù hợp tính tôn nghiêm của bối cảnh',
-                ],
-          },
+          guardrailAssessment: resolveStylistGuardrail(validation.data, parsed.guardrailAssessment),
           modelUsed: model,
         };
       }
@@ -385,15 +388,19 @@ export async function generateStylistAdvice(
 }
 
 /**
- * High quality expert heuristic fallback ensuring the user always gets a rich response.
+ * Deterministic local advice after Gemini candidates fail; clearly identified to users.
  */
-function generateHeuristicExpertStyling(
+export function generateHeuristicExpertStyling(
   data: NonNullable<ReturnType<typeof validateStylistPayload>['data']>,
   originalError?: string
 ): StylistAdviceOutput {
   const { core, bottom, shoes, bag, accent, occasion, location, actualRemix, style } = data;
 
-  const review = `Bản phối giữa ${core.vietnameseTitle} cùng ${bottom.name} và ${shoes.name} tạo nên diện mạo ${style.toLowerCase()} ấn tượng với chỉ số Remix đạt ${actualRemix}%. Sự gặp gỡ giữa chất liệu ${bottom.material.split('&')[0]} hiện đại và kết cấu di sản tạo nên nét đẹp đĩnh đạc, rất phù hợp cho không gian ${location}.`;
+  const setup = { coreGarment: core.id, occasion, location, style, preferredColor: data.preferredColor };
+  const items = { bottom, shoes, bag, accent };
+  const recommendation = recommendOutfit({ ...setup, targetRemix: data.targetRemix, includeAccent: accent !== null }, items);
+  const guardrail = evaluateGuardrail(data.userQuery, core, items, setup, actualRemix);
+  const review = `Gợi ý tại máy: bản phối hiện tại đạt ${actualRemix}% Remix. ${recommendation.rationale}`;
 
   let accentRecommendation =
     'Bạn có thể bổ sung thêm nón lá truyền thống, chuỗi bạc hoặc nón quai thao mini để tăng chiều sâu điểm nhấn cho trang phục.';
@@ -411,25 +418,16 @@ function generateHeuristicExpertStyling(
 
   const recommendations = [
     `Khi xuất hiện tại ${occasion}, hãy để tà áo buông thả tự nhiên bên ngoài ${bottom.name} nhằm khoe trọn đường cắt may di sản.`,
-    `Túi ${bag.name} và ${shoes.name} mang lại sự thoải mái cho việc di chuyển, tạo cảm giác thanh lịch và năng động.`,
+    shoes.id === 'shoes-guoc-moc'
+      ? `Guốc mộc giữ nét truyền thống; nếu cần đi bộ nhiều tại ${location}, cân nhắc giày trong tủ đồ phù hợp hơn với việc di chuyển.`
+      : `Giữ ${shoes.name} gọn dưới gấu quần; đặt ${bag.name} để không che chi tiết cổ áo và hàng khuy.`,
     accentRecommendation,
   ];
 
   const suggestedItems: StylistSuggestedItem[] = [];
-  if (actualRemix > 70) {
-    suggestedItems.push({
-      category: 'shoes',
-      itemId: 'shoes-guoc-moc',
-      itemName: 'Guốc Mộc Sơn Mài Quai Nhung',
-      reason: 'Cân bằng độ hiện đại, tăng tính cổ kính trang nhã cho sự kiện.',
-    });
-  } else if (actualRemix < 30) {
-    suggestedItems.push({
-      category: 'bottom',
-      itemId: 'bottom-tailored-trousers',
-      itemName: 'Quần Tây',
-      reason: 'Tăng nhịp điệu đương đại và sự đĩnh đạc thanh lịch cho dáng đứng.',
-    });
+  for (const category of ['bottom', 'shoes', 'bag', 'accent'] as const) {
+    const item = recommendation.items[category];
+    if (item && item.id !== items[category]?.id) suggestedItems.push({ category, itemId: item.id, itemName: item.name, reason: recommendation.rationale });
   }
 
   return {
@@ -439,14 +437,14 @@ function generateHeuristicExpertStyling(
     suggestedItems,
     culturalHighlight: `Kết cấu ${core.heritageDna[0] || 'phom dáng nguyên bản'} của ${core.name} là tâm điểm thị giác. Hãy gìn giữ sự ngay ngắn của cổ áo và hàng khuy cài để tôn trọn phong thái tiền nhân.`,
     guardrailAssessment: {
-      status: 'green',
-      reason: 'Cấu trúc di sản cốt lõi được bảo toàn nguyên vẹn; bản phối dung hòa tinh tế.',
+      status: guardrail.status,
+      reason: guardrail.message,
       checklist: [
         'Giữ trọn vẹn cổ áo và hàng khuy nguyên bản',
         'Phom dáng và tà áo buông rủ tự nhiên',
         'Tôn trọng không khí văn hóa của bối cảnh',
       ],
     },
-    modelUsed: 'Expert Stylist Engine',
+    modelUsed: 'Local Context Stylist',
   };
 }

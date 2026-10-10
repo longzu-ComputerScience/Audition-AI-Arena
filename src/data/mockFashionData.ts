@@ -1,3 +1,4 @@
+import { recommendOutfit } from '../utils/outfitRecommendation';
 import {
   CoreItem,
   SupportOption,
@@ -394,7 +395,14 @@ export const COLOR_MAP: Record<string, { name: string; hex: string }> = {
   'Tím Huế': { name: 'Tím Huế', hex: '#683363' },
   'Xanh rêu cổ kính': { name: 'Xanh Rêu Cổ Kính', hex: '#4B5842' },
   'Nâu trầm': { name: 'Nâu Trầm', hex: '#543D2B' },
+  // Existing palette swatches use the same canonical preference system when clicked
+  // in the Studio, so the Concept and AI snapshot also receive their exact color.
+  ...Object.fromEntries(Object.values(CORE_ITEMS).flatMap(core => core.palette.map(swatch => [swatch.name, swatch]))),
 };
+
+export function preferredColorForHex(hex: string): string | undefined {
+  return Object.keys(COLOR_MAP).find(name => COLOR_MAP[name].hex.toLowerCase() === hex.toLowerCase());
+}
 
 // Curated Garment-Specific Palettes for "Để hệ thống gợi ý" (Rule A)
 const DEFAULT_GARMENT_PALETTES: Record<CoreVietPhucId, { name: string; hex: string }[]> = {
@@ -819,80 +827,12 @@ export function generateConcept(setup: SetupData): ConceptData {
   };
 }
 
-// Combinations search for Target Remix
+// Backward-compatible public helper; all callers can provide the full current context.
 export function findBestSupportCombination(
   targetRemix: number,
   includeAccent: boolean,
-  currentItems?: ActiveSupportItems
-): {
-  bottom: SupportOption;
-  shoes: SupportOption;
-  bag: SupportOption;
-  accent: SupportOption | null;
-} {
-  const bottoms = SUPPORT_ITEMS.bottom;
-  const shoes = SUPPORT_ITEMS.shoes;
-  const bags = SUPPORT_ITEMS.bag;
-  const accents = SUPPORT_ITEMS.accent;
-
-  let bestDiff = Infinity;
-  let best = {
-    bottom: bottoms[0],
-    shoes: shoes[0],
-    bag: bags[0],
-    accent: includeAccent ? accents[0] : null,
-  };
-
-  // If currentItems are provided and match the includeAccent condition,
-  // initialize baseline with currentItems so we only switch when a strictly closer combination exists.
-  if (currentItems && (includeAccent ? Boolean(currentItems.accent) : !currentItems.accent)) {
-    const currentScores = [
-      currentItems.bottom.modernityScore,
-      currentItems.shoes.modernityScore,
-      currentItems.bag.modernityScore,
-    ];
-    if (includeAccent && currentItems.accent) {
-      currentScores.push(currentItems.accent.modernityScore);
-    }
-    const currentAvg = currentScores.reduce((a, b) => a + b, 0) / currentScores.length;
-    bestDiff = Math.abs(currentAvg - targetRemix);
-    best = {
-      bottom: currentItems.bottom,
-      shoes: currentItems.shoes,
-      bag: currentItems.bag,
-      accent: includeAccent ? currentItems.accent : null,
-    };
-  }
-
-  if (includeAccent) {
-    for (const b of bottoms) {
-      for (const s of shoes) {
-        for (const g of bags) {
-          for (const a of accents) {
-            const avg = (b.modernityScore + s.modernityScore + g.modernityScore + a.modernityScore) / 4;
-            const diff = Math.abs(avg - targetRemix);
-            if (diff < bestDiff - 0.001) {
-              bestDiff = diff;
-              best = { bottom: b, shoes: s, bag: g, accent: a };
-            }
-          }
-        }
-      }
-    }
-  } else {
-    for (const b of bottoms) {
-      for (const s of shoes) {
-        for (const g of bags) {
-          const avg = (b.modernityScore + s.modernityScore + g.modernityScore) / 3;
-          const diff = Math.abs(avg - targetRemix);
-          if (diff < bestDiff - 0.001) {
-            bestDiff = diff;
-            best = { bottom: b, shoes: s, bag: g, accent: null };
-          }
-        }
-      }
-    }
-  }
-
-  return best;
+  currentItems?: ActiveSupportItems,
+  setup: SetupData = { coreGarment: 'ao-ngu-than', occasion: 'Chụp ảnh kỷ niệm / Lookbook', location: 'Đại Nội Huế', style: 'Thanh lịch', preferredColor: 'Để hệ thống gợi ý' }
+): ActiveSupportItems {
+  return recommendOutfit({ ...setup, targetRemix, includeAccent }, currentItems).items;
 }

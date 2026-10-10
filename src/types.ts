@@ -98,6 +98,7 @@ export interface StylistRecommendationItem {
 }
 
 export interface StylistAdviceResult {
+  modelUsed?: string;
   success: boolean;
   review: string;
   recommendations: string[];

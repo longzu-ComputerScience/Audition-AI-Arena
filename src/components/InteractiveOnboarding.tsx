@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CoreVietPhucId, SetupData } from '../types';
 import { CORE_ITEMS, OCCASIONS, LOCATIONS } from '../data/mockFashionData';
-import { getCoreGarmentDemoMedia } from '../data/demoImageMap';
+import { getGarmentLayerPreview } from '../data/layeredOutfitMap';
 import { GarmentSilhouetteSvg } from './GarmentPreview';
 import { alignElementBelowStickyHeader } from '../utils/scrollAlignment';
 import {
@@ -405,9 +405,9 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                       </div>
                     </div>
 
-                    {/* Editorial Reference Photograph with fallback to 2D Silhouette SVG */}
+                    {/* Isolated garment photograph with fallback to the existing silhouette SVG */}
                     {(() => {
-                      const demoMedia = getCoreGarmentDemoMedia(item.id);
+                      const demoMedia = getGarmentLayerPreview(item.id);
                       const photoSrc = demoMedia?.previewSrc;
                       const hasValidPhoto = Boolean(photoSrc && !failedGarmentImages[item.id]);
 
@@ -417,7 +417,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                             <div className="relative w-full h-full flex items-center justify-center">
                               <img
                                 src={photoSrc}
-                                alt={`Ảnh tham khảo Việt phục ${item.name}`}
+                                alt={`Ảnh tách nền trang phục ${item.name}`}
                                 onError={() =>
                                   setFailedGarmentImages((prev) => ({ ...prev, [item.id]: true }))
                                 }
@@ -425,7 +425,7 @@ export const InteractiveOnboarding: React.FC<InteractiveOnboardingProps> = ({
                                 className="w-full h-full object-contain object-center transition-transform duration-200 group-hover:scale-[1.03]"
                               />
                               <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[9px] font-mono tracking-tight text-[#7A6E63] bg-[#FFFDF9]/90 backdrop-blur-[2px] rounded-xs border border-[#E5DEC9]">
-                                Ảnh tham khảo
+                                Trang phục
                               </span>
                             </div>
                           ) : (

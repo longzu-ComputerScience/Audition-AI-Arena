@@ -46,6 +46,9 @@ interface RemixStudioProps {
   onApplyRefinement: (text: string) => void;
   onBackToConcept: () => void;
   onOpenCoreDetail?: () => void;
+  onSelectFabricColor?: (hex: string) => void;
+  displayMode?: 'svg' | 'photo';
+  onDisplayModeChange?: (mode: 'svg' | 'photo') => void;
 }
 
 export const RemixStudio: React.FC<RemixStudioProps> = ({
@@ -64,6 +67,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
   onApplyRefinement,
   onBackToConcept,
   onOpenCoreDetail,
+  onSelectFabricColor,
+  displayMode,
+  onDisplayModeChange,
 }) => {
   const workspaceAnchorRef = useRef<HTMLDivElement | null>(null);
 
@@ -140,6 +146,9 @@ export const RemixStudio: React.FC<RemixStudioProps> = ({
             onSelectSupportItem={onSelectSupportItem}
             onRemoveAccent={onRemoveAccent}
             onOpenCoreDetail={onOpenCoreDetail}
+            onSelectFabricColor={onSelectFabricColor}
+          displayMode={displayMode}
+          onDisplayModeChange={onDisplayModeChange}
           />
         </div>
 

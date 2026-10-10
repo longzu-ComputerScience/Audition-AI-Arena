@@ -4,6 +4,7 @@ import {
   OCCASIONS,
   LOCATIONS,
   PREFERRED_COLOR_OPTIONS,
+  COLOR_MAP,
   resolveCoreGarmentColor,
 } from '../data/mockFashionData';
 import { CoreItem, SupportOption, CoreVietPhucId } from '../types';
@@ -101,7 +102,7 @@ export function validateAndResolveOutfit(
 
   const preferredColor =
     typeof p.preferredColor === 'string' &&
-    (PREFERRED_COLOR_OPTIONS as readonly string[]).includes(p.preferredColor)
+    ((PREFERRED_COLOR_OPTIONS as readonly string[]).includes(p.preferredColor) || Boolean(COLOR_MAP[p.preferredColor]))
       ? p.preferredColor
       : 'Để hệ thống gợi ý';
 

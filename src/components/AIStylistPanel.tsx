@@ -24,7 +24,7 @@ import {
   SupportOption,
   SupportCategoryId,
 } from '../types';
-import { SUPPORT_ITEMS } from '../data/mockFashionData';
+import { SUPPORT_ITEMS, resolveCoreGarmentColor } from '../data/mockFashionData';
 import { requestStylistAdvice } from '../services/aiStylistApi';
 
 interface AIStylistPanelProps {
@@ -72,7 +72,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
     {
       id: 'color',
       label: '🎨 Hài hòa màu sắc',
-      prompt: `Làm sao để màu sắc các phụ kiện tôn trọn tông màu ${core.palette[0]?.name || 'áo'} mà vẫn hiện đại?`,
+      prompt: `Làm sao để màu sắc các phụ kiện tôn trọn tông màu ${resolveCoreGarmentColor(core.id, setupData.preferredColor).name} mà vẫn hiện đại?`,
       type: 'color' as const,
     },
     {
@@ -141,7 +141,7 @@ export const AIStylistPanel: React.FC<AIStylistPanelProps> = ({
             <h2 className="text-sm font-semibold uppercase tracking-wider text-[#241E1A] flex items-center gap-2">
               <span>Trợ lý phối đồ AI</span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-normal normal-case bg-[#F5ECE0] text-[#8C3428] border border-[#ECDCCB]">
-                Gemini 3.8
+                {adviceResult?.modelUsed === 'Local Context Stylist' ? 'Gợi ý tại máy' : 'Gemini 3.8'}
               </span>
             </h2>
             <p className="text-[11px] text-[#7A6E63] font-serif">

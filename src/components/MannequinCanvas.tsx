@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
@@ -38,6 +38,9 @@ interface MannequinCanvasProps {
   onSelectSupportItem?: (category: SupportCategoryId, item: SupportOption) => void;
   onRemoveAccent?: () => void;
   onOpenCoreDetail?: () => void;
+  onSelectFabricColor?: (hex: string) => void;
+  displayMode?: 'svg' | 'photo';
+  onDisplayModeChange?: (mode: 'svg' | 'photo') => void;
 }
 
 function parseHexRgb(hex: string): [number, number, number] {
@@ -76,53 +79,53 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   onSelectSupportItem,
   onRemoveAccent,
   onOpenCoreDetail,
+  onSelectFabricColor,
+  displayMode,
+  onDisplayModeChange,
 }) => {
   const shouldReduceMotion = useReducedMotion();
+  const necklaceClipId = `necklace-${useId().replace(/:/g, '')}`;
 
   // Active quick-select category ('accent' | 'bag' | 'bottom' | 'shoes' | null) across all devices
   const [activeQuickCategory, setActiveQuickCategory] = useState<SupportCategoryId | null>(null);
   const [failedThumbIds, setFailedThumbIds] = useState<Record<string, boolean>>({});
 
-  // Photo Layers (Demo) state - Default is strictly 'svg'
-  const [renderMode, setRenderMode] = useState<'svg' | 'photo'>('svg');
+  // Prefer photography once selected layers and the matching recolor are ready.
+  const [internalRenderMode, setInternalRenderMode] = useState<'svg' | 'photo'>('photo');
+  const renderMode = displayMode ?? internalRenderMode;
+  const setRenderMode = (mode: 'svg' | 'photo') => onDisplayModeChange ? onDisplayModeChange(mode) : setInternalRenderMode(mode);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [erroredImages, setErroredImages] = useState<Record<string, boolean>>({});
 
   // Photo fabric recoloring state
-  const [recoloredPhotoSrc, setRecoloredPhotoSrc] = useState<string | null>(null);
+  const [recoloredPhoto, setRecoloredPhoto] = useState<{ key: string; src: string } | null>(null);
   const [isRecoloring, setIsRecoloring] = useState<boolean>(false);
   const [recolorError, setRecolorError] = useState<boolean>(false);
 
-  // Preload all available photo layer transparent PNG cutouts across categories
+  const selectedConfigs = [getPhotoLayerConfig('core', core.id), getPhotoLayerConfig('bottom', items.bottom.id),
+    getPhotoLayerConfig('shoes', items.shoes.id), getPhotoLayerConfig('bag', items.bag.id), getPhotoLayerConfig('accent', items.accent?.id)];
+  const selectedImageKey = selectedConfigs.map(c => c?.imageSrc ?? '').join('|');
+  // Decode selected images only, not the entire high-resolution wardrobe on every mount.
   useEffect(() => {
     let isMounted = true;
-    const allConfigs = [
-      ...Object.values(PHOTO_LAYER_CONFIG.core),
-      ...Object.values(PHOTO_LAYER_CONFIG.bottom),
-      ...Object.values(PHOTO_LAYER_CONFIG.shoes),
-      ...Object.values(PHOTO_LAYER_CONFIG.bag),
-      ...Object.values(PHOTO_LAYER_CONFIG.accent),
-    ];
+    const allConfigs = selectedConfigs.filter((c) => Boolean(c));
 
     allConfigs.forEach((cfg) => {
+      if (!cfg) return;
       const img = new Image();
-      img.src = cfg.imageSrc;
-      if (img.complete && img.naturalWidth > 0) {
-        if (isMounted) setLoadedImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
-      } else {
         img.onload = () => {
           if (isMounted) setLoadedImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
         };
         img.onerror = () => {
           if (isMounted) setErroredImages((prev) => ({ ...prev, [cfg.imageSrc]: true }));
         };
-      }
+      img.src = cfg!.imageSrc;
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [selectedImageKey]);
 
   const corePhotoConfig = getPhotoLayerConfig('core', core.id);
   const bottomPhotoConfig = getPhotoLayerConfig('bottom', items.bottom?.id);
@@ -136,7 +139,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
   const isBottomImageLoaded = Boolean(
     bottomPhotoConfig && loadedImages[bottomPhotoConfig.imageSrc] && !erroredImages[bottomPhotoConfig.imageSrc]
   );
-  const primaryImagesReady = isCoreImageLoaded && isBottomImageLoaded;
+  const primaryImagesReady = isCoreImageLoaded && isBottomImageLoaded && selectedConfigs.every(c => !c || (loadedImages[c.imageSrc] && !erroredImages[c.imageSrc]));
 
   // Active ONLY when mode is 'photo', combination is supported, and primary photo assets are loaded cleanly
   const isPhotoModeActive = renderMode === 'photo' && isSupportedCombination && primaryImagesReady;
@@ -531,17 +534,12 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     ease: 'easeInOut' as const,
   };
 
-  const [selectedColorHex, setSelectedColorHex] = useState<string>(
-    fabricColor || core.palette[0]?.hex || '#8C3B24'
-  );
-
-  useEffect(() => {
-    if (fabricColor) {
-      setSelectedColorHex(fabricColor);
-    }
-  }, [fabricColor]);
-
-  const primaryFabricColor = selectedColorHex;
+  const colorContext = `${core.id}|${fabricColor}`;
+  const [localColor, setLocalColor] = useState<{ context: string; hex: string } | null>(null);
+  const primaryFabricColor = localColor?.context === colorContext ? localColor.hex : fabricColor || core.palette[0]?.hex || '#8C3B24';
+  const recolorKey = `${core.id}|${primaryFabricColor}`;
+  const recoloredPhotoSrc = recoloredPhoto?.key === recolorKey ? recoloredPhoto.src : null;
+  const photoCoreReady = isPhotoModeActive && Boolean(recoloredPhotoSrc) && !recolorError;
   const displayPalette = palette && palette.length > 0 ? palette : core.palette;
   const fabricLuminance = getRelativeLuminance(primaryFabricColor);
 
@@ -550,13 +548,15 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     let isCancelled = false;
     const config = PHOTO_LAYER_CONFIG.core[core.id];
     if (!config?.isRecolorable || !config.fabricMaskSrc) {
-      setRecoloredPhotoSrc(null);
+      setRecoloredPhoto(null);
+      setIsRecoloring(false);
       setRecolorError(false);
       return;
     }
 
     setIsRecoloring(true);
     setRecolorError(false);
+    if (renderMode !== 'photo') { setIsRecoloring(false); return; }
 
     recolorGarmentImage(
       config.imageSrc,
@@ -566,7 +566,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     )
       .then((recoloredUrl) => {
         if (!isCancelled) {
-          setRecoloredPhotoSrc(recoloredUrl);
+          setRecoloredPhoto({ key: recolorKey, src: recoloredUrl });
           setIsRecoloring(false);
         }
       })
@@ -581,7 +581,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [core.id, primaryFabricColor]);
+  }, [core.id, primaryFabricColor, renderMode]);
 
   // Adaptive contrast strokes for internal garment pleats/seams on very dark or very light fabrics
   const isVeryDarkFabric = fabricLuminance < 0.035;
@@ -656,7 +656,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
       {/* Left Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
-        d="M108 134 C102 142 88 168 74 194 C68 206 60 220 54 234 C50 238 45 244 44 248 C45 250 48 250 50 247 C52 244 56 240 59 236 C65 222 73 208 80 196 C86 182 95 166 103 153 C105 145 107 138 108 134 Z"
+        d="M108 134 C99 145 79 181 66 208 C56 232 47 260 40 280 C37 284 32 291 32 295 C33 299 37 299 39 295 L45 283 C53 263 63 235 74 212 C87 185 101 160 110 147 Z"
+        visibility={photoCoreReady && corePhotoConfig?.hideArms ? 'hidden' : undefined}
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -665,7 +666,8 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
 
       {/* Right Arm & Hand — Canonical Relaxed A-Pose (Angled outward to support sleeves) */}
       <path
-        d="M192 134 C198 142 212 168 226 194 C232 206 240 220 246 234 C250 238 255 244 256 248 C255 250 252 250 250 247 C248 244 244 240 241 236 C235 222 227 208 220 196 C214 182 205 166 197 153 C195 145 193 138 192 134 Z"
+        d="M192 134 C201 145 221 181 234 208 C244 232 253 260 260 280 C263 284 268 291 268 295 C267 299 263 299 261 295 L255 283 C247 263 237 235 226 212 C213 185 199 160 190 147 Z"
+        visibility={photoCoreReady && corePhotoConfig?.hideArms ? 'hidden' : undefined}
         fill="#EDE1CF"
         stroke="#4A3F35"
         strokeWidth="1.4"
@@ -933,15 +935,18 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
      Supports: ao-nhat-binh | ao-tac | ao-dai | ao-tu-than | ao-ngu-than
   ------------------------------------------------------------- */
   const renderCoreGarment = () => {
-    // Isolated Photo-Layer Prototype rendering for Áo Nhật Bình
-    if (isPhotoModeActive && PHOTO_LAYER_CONFIG.core[core.id]) {
+    // Render only the recolor belonging to the current garment and fabric color.
+    if (photoCoreReady && PHOTO_LAYER_CONFIG.core[core.id]) {
       const config = PHOTO_LAYER_CONFIG.core[core.id];
-      const photoSrc = recoloredPhotoSrc || config.imageSrc;
+      const photoSrc = recoloredPhotoSrc!;
       if (!recolorError) {
         return (
           <g id="photo-layer-core" className="select-none pointer-events-none">
             <image
               href={photoSrc}
+              data-garment-id={core.id}
+              data-fabric-color={primaryFabricColor}
+              onError={() => setRecolorError(true)}
               x={config.svgPlacement.x}
               y={config.svgPlacement.y}
               width={config.svgPlacement.width}
@@ -1175,8 +1180,11 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     // Photographic Layer rendering for Bag
     const bagPhotoConfig = getPhotoLayerConfig('bag', items.bag?.id);
     if (isPhotoModeActive && bagPhotoConfig && loadedImages[bagPhotoConfig.imageSrc]) {
+      const carry = photoCoreReady && corePhotoConfig?.bagCarryAnchor;
+      const target = items.bag.id === 'bag-gam-vintage' && carry ? carry : [36,294];
+      const bagScale = photoCoreReady && core.id === 'ao-dai' && items.bag.id === 'bag-gam-vintage' ? .8 : 1;
       return (
-        <g id="photo-layer-bag" className="select-none pointer-events-none">
+        <g id="photo-layer-bag" className="select-none pointer-events-none" transform={`translate(${target[0]} ${target[1]}) scale(${bagScale}) translate(-36 -294)`}>
           <image
             href={bagPhotoConfig.imageSrc}
             x={bagPhotoConfig.svgPlacement.x}
@@ -1185,6 +1193,9 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
             height={bagPhotoConfig.svgPlacement.height}
             preserveAspectRatio={bagPhotoConfig.preserveAspectRatio}
           />
+          {items.bag.id === 'bag-gam-vintage' && (
+            <path d="M32 291 Q36 289 40 291 L39 296 Q36 298 33 295" fill="#EDE1CF" stroke="#4A3F35" strokeWidth=".8" />
+          )}
         </g>
       );
     }
@@ -1300,7 +1311,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
     const accentPhotoConfig = getPhotoLayerConfig('accent', items.accent.id);
     if (isPhotoModeActive && accentPhotoConfig && loadedImages[accentPhotoConfig.imageSrc]) {
       return (
-        <g id="photo-layer-accent" className="select-none pointer-events-none">
+        <g id="photo-layer-accent" className="select-none pointer-events-none" clipPath={items.accent.id === 'accent-silver-jewelry' ? `url(#${necklaceClipId})` : undefined}>
           <image
             href={accentPhotoConfig.imageSrc}
             x={accentPhotoConfig.svgPlacement.x}
@@ -1821,7 +1832,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
               title={
                 isSupportedCombination
                   ? `Xem thử nghiệm ghép ảnh thực tế ${core.name} và ${items.bottom.name}`
-                  : 'Chế độ ảnh ghép thử nghiệm hiện hỗ trợ cho Áo Nhật Bình và Áo Tấc'
+                  : 'Ảnh ghép chưa có dữ liệu phù hợp; hiển thị SVG'
               }
             >
               <span>Photo Layers (Demo)</span>
@@ -1838,7 +1849,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => setSelectedColorHex(c.hex)}
+                  onClick={() => onSelectFabricColor ? onSelectFabricColor(c.hex) : setLocalColor({ context: colorContext, hex: c.hex })}
                   className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer relative flex items-center justify-center ${
                     isSelected
                       ? 'ring-2 ring-[#B3261E] ring-offset-1 border-white shadow-xs scale-110'
@@ -1862,7 +1873,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {isPhotoModeActive && !recolorError && (
         <div className="flex items-center justify-between text-[11px] text-[#7A6E63] bg-[#FAF3EB] border border-[#ECDCCB] px-2.5 py-1 rounded-sm mb-2 font-serif">
           <span>
-            {isRecoloring
+            {isRecoloring || !recoloredPhotoSrc
               ? 'Đang xử lý nhuộm màu ảnh thực tế...'
               : `Màu vải ảnh thực tế: ${
                   displayPalette.find(
@@ -1883,7 +1894,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
       {/* Fallback notice if Photo mode is selected on an unsupported outfit */}
       {renderMode === 'photo' && !isSupportedCombination && (
         <div className="flex items-center justify-between text-[11px] text-[#8C6C38] bg-[#FDF9ED] border border-[#EADBBD] px-2.5 py-1 rounded-sm mb-2 font-serif">
-          <span>Chế độ ảnh ghép hiện hỗ trợ cho Áo Nhật Bình và Áo Tấc kết hợp các mẫu Quần &amp; Phụ kiện (đang hiển thị bản vẽ SVG tương ứng).</span>
+          <span>Ảnh ghép chưa có dữ liệu phù hợp; đang hiển thị bản vẽ SVG tương ứng.</span>
         </div>
       )}
 
@@ -2084,6 +2095,7 @@ export const MannequinCanvas: React.FC<MannequinCanvasProps> = ({
           preserveAspectRatio="xMidYMid meet"
           aria-label={`Mannequin 2D phối đồ Việt phục ${core.name}`}
         >
+          <defs><clipPath id={necklaceClipId}><rect x="0" y="116" width="300" height="484" /></clipPath></defs>
           {/* 1. Neutral Mannequin Body (Fixed, no re-mount animation) */}
           {renderMannequinBody()}
 
