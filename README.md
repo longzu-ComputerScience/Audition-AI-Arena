@@ -158,3 +158,9 @@ The Python image-preparation dependencies are **not needed to serve the producti
 - Source assets have their own provenance records. Check rights and redistribution terms before reusing them outside this project.
 
 **Project status:** source code and local verification workflow are provided here; this README does not assert that a particular public deployment, API model, or hosting environment is currently online.
+
+---
+
+## Author profile and links
+
+For more projects and background, see [my GitHub profile](https://github.com/longzu-ComputerScience) and [LinkedIn](https://www.linkedin.com/in/vuz-long-7b4744393/). This profile link identifies my account and does not imply sole authorship of a group project.
